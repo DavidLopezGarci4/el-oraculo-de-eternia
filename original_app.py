@@ -56,10 +56,17 @@ def buscar_kidinn():
 
         items = soup.select('div.js-product-list-item')
         if not items:
-            # Fallback selectors
-            items = soup.select('div.product-grid-item, div.search-product-item, div.item')
+            # Fallback selectors (Broad)
+            items = soup.select('div.product-grid-item, div.search-product-item, div.item, div.item_container, div[data-id]')
             log.append(f"⚠️ Selector principal falló. Fallbacks encontraron: {len(items)}")
-        
+            
+            # Último intento: Buscar enlaces directos si no hay cajas
+            if not items:
+                 potential_links = soup.select('a[href*="/masters-of-the-universe/"]')
+                 if potential_links:
+                     items = [p.parent for p in potential_links[:36]] # Limitamos a parent directo
+                     log.append(f"⚠️ Fallback enlaces directos encontró: {len(items)}")
+
         log.append(f"Items a procesar: {len(items)}")
         
         items_procesados = 0
@@ -166,6 +173,9 @@ def buscar_actiontoys():
                 try:
                     link_elem = item.select_one('a.product-loop-title')
                     if not link_elem: link_elem = item.select_one('a.woocommerce-LoopProduct-link') 
+                    # Fallback genérico: Primer enlace que encuentre en la caja
+                    if not link_elem: link_elem = item.select_one('a')
+                    
                     if not link_elem: 
                         if items_ok_pag < 3: log.append(f"⚠️ Link missing p{pagina_num} item {items_ok_pag}")
                         continue
