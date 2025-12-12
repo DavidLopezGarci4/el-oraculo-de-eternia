@@ -25,9 +25,14 @@ st.set_page_config(page_title="Rastreador Master MOTU", page_icon="⚔️", layo
 # --- UTILIDADES DE NORMALIZACIÓN (NUEVO) ---
 import requests
 
-# --- CONFIGURACIÓN DE NAVEGADOR ESTÁTICO (HEADERS) ---
+# --- CONFIGURACIÓN DE NAVEGADOR ESTÁTICO (HEADERS PRO) ---
 HEADERS_STATIC = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+    "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Connection": "keep-alive",
+    "Referer": "https://www.google.com/"
 }
 
 # --- FUNCIÓN 1: TRADEINN (Kidinn) - MODO ESTÁTICO ---
@@ -39,15 +44,18 @@ def buscar_kidinn():
     
     try:
         r = requests.get(url, headers=HEADERS_STATIC, timeout=15)
-        # Check simple anti-bot
+        
+        # Debugging visible
         if r.status_code != 200:
-            print(f"⚠️ Kidinn devolvió status {r.status_code}")
+            print(f"⚠️ Kidinn Blocked: {r.status_code}")
+            st.toast(f"⚠️ Kidinn bloqueó la conexión (Error {r.status_code})", icon="🚫")
             return []
             
         soup = BeautifulSoup(r.text, 'html.parser')
         
-        # Selectores (Mismos que antes, funcionan en estático)
         items = soup.select('div.js-product-list-item')
+        if not items:
+            print(f"⚠️ Kidinn: HTML recibido ({len(r.text)} bytes) pero 0 items encontrados. Posible cambio de selector.")
         
         for item in items:
             try:
