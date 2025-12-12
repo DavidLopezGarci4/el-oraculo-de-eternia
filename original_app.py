@@ -48,14 +48,12 @@ def buscar_kidinn():
             log.append(f"❌ Bloqueo detectado. Cabeceras respuesta: {r.headers}")
             return {'items': [], 'log': log}
             
-        # Detección de Captcha/Bloqueo
-        if "captcha" in r.text.lower() or "robot" in r.text.lower() or "access denied" in r.text.lower():
-            log.append("⚠️ DETECTADO BLOQUEO ANTI-BOT (Captcha/Robot)")
-            log.append(f"Preview HTML: {r.text[:300]}...")
-            return {'items': [], 'log': log}
-
         soup = BeautifulSoup(r.text, 'html.parser')
         
+        # Loguear Título para verificar donde estamos
+        page_title = soup.title.string.strip() if soup.title else "No Title"
+        log.append(f"Título de la página: {page_title}")
+
         items = soup.select('div.js-product-list-item')
         log.append(f"Items encontrados (selectores): {len(items)}")
         
@@ -64,6 +62,7 @@ def buscar_kidinn():
         
         for item in items:
             try:
+                # Link
                 link_obj = item.select_one('a.js-href_list_products')
                 if not link_obj: continue
                 link = link_obj['href']
@@ -130,13 +129,9 @@ def buscar_actiontoys():
                 log.append(f"❌ Bloqueo detectado en ActionToys p{pagina_num}. Cabeceras respuesta: {r.headers}")
                 break
             
-            # Detección de Captcha/Bloqueo
-            if "captcha" in r.text.lower() or "robot" in r.text.lower() or "access denied" in r.text.lower():
-                log.append(f"⚠️ DETECTADO BLOQUEO ANTI-BOT (Captcha/Robot) en ActionToys p{pagina_num}")
-                log.append(f"Preview HTML: {r.text[:300]}...")
-                break
-
             soup = BeautifulSoup(r.text, 'html.parser')
+            page_title = soup.title.string.strip() if soup.title else "No Title"
+            log.append(f"Título p{pagina_num}: {page_title}")
             
             items = soup.select('li.product, article.product-miniature, div.product-small')
             
