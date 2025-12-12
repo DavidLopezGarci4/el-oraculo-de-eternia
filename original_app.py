@@ -55,25 +55,35 @@ def buscar_kidinn():
         log.append(f"Título de la página: {page_title}")
 
         items = soup.select('div.js-product-list-item')
-        log.append(f"Items encontrados (selectores): {len(items)}")
-        
         if not items:
-            log.append(f"⚠️ HTML recibido ok pero selectores vacíos. Preview: {r.text[:300]}...")
+            # Fallback selectors
+            items = soup.select('div.product-grid-item, div.search-product-item, div.item')
+            log.append(f"⚠️ Selector principal falló. Fallbacks encontraron: {len(items)}")
         
+        log.append(f"Items a procesar: {len(items)}")
+        
+        items_procesados = 0
         for item in items:
             try:
                 # Link
-                link_obj = item.select_one('a.js-href_list_products')
-                if not link_obj: continue
+                link_obj = item.select_one('a.js-href_list_products, a')
+                if not link_obj: 
+                    log.append("⚠️ Item sin link (Kidinn)")
+                    continue
                 link = link_obj['href']
                 if not link.startswith('http'): link = "https://www.tradeinn.com" + link
 
-                titulo_obj = link_obj.select_one('h3 p') or link_obj.select_one('h3')
+                # Title
+                titulo_obj = link_obj.select_one('h3 p') or link_obj.select_one('h3') or item.select_one('p.name')
                 titulo = titulo_obj.get_text(strip=True) if titulo_obj else "Desconocido"
                 
-                if not any(x in titulo.lower() for x in ["origins", "motu", "masters", "he-man", "skeletor"]): continue
+                # Filtro
+                if not any(x in titulo.lower() for x in ["origins", "motu", "masters", "he-man", "skeletor"]): 
+                    # log.append(f"🗑️ Filtered: {titulo}") # Demasiado ruido si son muchos
+                    continue
                 
-                price_candidates = link_obj.select('div > p')
+                # Price
+                price_candidates = link_obj.select('div > p, span.price')
                 precio = "Agotado"
                 precio_val = 9999.0
                 
@@ -86,6 +96,7 @@ def buscar_kidinn():
                         except: pass
                         break
                 
+                # Imagen
                 img_obj = item.select_one('img')
                 img_src = img_obj['src'] if img_obj else None
                 
@@ -98,9 +109,11 @@ def buscar_kidinn():
                     "Enlace": link,
                     "Imagen": img_src
                 })
+                items_procesados += 1
             except Exception as item_e:
-                log.append(f"⚠️ Error procesando item en Kidinn: {item_e}")
+                log.append(f"⚠️ Error procesando item Kidinn: {item_e}")
                 continue
+        log.append(f"Kidinn: {items_procesados} items válidos extraídos.")
     except Exception as e:
         log.append(f"❌ Excepción crítica en Kidinn: {str(e)}")
         
@@ -148,17 +161,22 @@ def buscar_actiontoys():
                         log.append(f"⚠️ HTML Preview: {r.text[:300]}...")
                     break 
             
+            items_ok_pag = 0
             for item in items:
                 try:
                     link_elem = item.select_one('a.product-loop-title')
                     if not link_elem: link_elem = item.select_one('a.woocommerce-LoopProduct-link') 
-                    if not link_elem: continue
+                    if not link_elem: 
+                        # log.append(f"⚠️ Link missing p{pagina_num}")
+                        continue
                     link = link_elem['href']
                     
                     titulo_obj = link_elem.select_one('h3') or item.select_one('h2.woocommerce-loop-product__title')
                     titulo = titulo_obj.get_text(strip=True) if titulo_obj else "Desconocido"
                     
-                    if not any(x in titulo.lower() for x in ["origins", "motu", "masters", "he-man", "skeletor"]): continue
+                    if not any(x in titulo.lower() for x in ["origins", "motu", "masters", "he-man", "skeletor"]): 
+                        # log.append(f"🗑️ Filtered: {titulo}")
+                        continue
 
                     precio_obj = item.select_one('span.price')
                     precio = "Agotado"
@@ -183,9 +201,12 @@ def buscar_actiontoys():
                         "Enlace": link,
                         "Imagen": img_src
                     })
+                    items_ok_pag += 1
                 except Exception as item_e:
-                    log.append(f"⚠️ Error procesando item en ActionToys p{pagina_num}: {item_e}")
+                    log.append(f"⚠️ Error item ActionToys: {item_e}")
                     continue
+            
+            log.append(f"Página {pagina_num}: {items_ok_pag} figuras añadidas.")
             
             next_button = soup.select_one('a.next') or soup.select_one('a[rel="next"]')
             if next_button:
