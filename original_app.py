@@ -3,6 +3,21 @@ import pandas as pd
 import asyncio
 from playwright.async_api import async_playwright
 from bs4 import BeautifulSoup
+import os
+import subprocess
+import sys
+
+# --- HACK DE DESPLIEGUE: INSTALAR NAVEGADORES ---
+# Streamlit Cloud no tiene los navegadores instalados por defecto.
+# Esto comprueba si existen y si no, los instala (solo la primera vez tarda).
+try:
+    # Verificamos si chromium está disponible intentando lanzar un comando dummy o simplemente ejecutando install
+    # Usamos sys.executable para asegurar que usa el mismo entorno python
+    subprocess.run([sys.executable, "-m", "playwright", "install", "chromium"], check=True)
+    print("✅ Navegadores de Playwright instalados correctamente.")
+except Exception as e:
+    print(f"⚠️ Error intentando instalar navegadores: {e}")
+
 
 # Configuración de página con layout ancho para que quepa bien la tabla
 st.set_page_config(page_title="Rastreador Master MOTU", page_icon="⚔️", layout="wide")
