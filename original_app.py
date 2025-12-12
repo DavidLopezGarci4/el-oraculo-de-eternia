@@ -9,12 +9,12 @@ import sys
 
 # --- HACK DE DESPLIEGUE: INSTALAR NAVEGADORES ---
 # Streamlit Cloud no tiene los navegadores instalados por defecto.
-# Esto comprueba si existen y si no, los instala.
 try:
-    # Usamos os.system para asegurar compatibilidad con la shell de Linux
-    # Instalamos TODO para evitar el error de "missing chromium-headless-shell"
-    os.system("playwright install") 
-    print("✅ Navegadores instalados (comando ejecutado).")
+    # Usamos subprocess para que espere a que termine la instalación antes de seguir
+    # Instalamos TODO (incluyendo headless-shell que es lo que fallaba)
+    print("🔧 Instalando navegadores Playwright...")
+    subprocess.run([sys.executable, "-m", "playwright", "install"], check=True)
+    print("✅ Navegadores instalados correctamente.")
 except Exception as e:
     print(f"⚠️ Error instalando navegadores: {e}")
 
