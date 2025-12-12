@@ -23,74 +23,63 @@ except Exception as e:
 st.set_page_config(page_title="Rastreador Master MOTU", page_icon="⚔️", layout="wide")
 
 # --- UTILIDADES DE NORMALIZACIÓN (NUEVO) ---
-import re
+import requests
 
-def limpiar_titulo(titulo):
-    """Normaliza el nombre de la figura para la agrupación."""
-    # Convertir a minúsculas
-    texto = titulo.lower()
-    
-    # Lista de palabras "ruido" a eliminar para encontrar el nombre clave
-    palabras_ruido = [
-        r"masters of the universe", r"masters del universo", r"maestros del universo",
-        r"origins", r"motu", r"mattel", r"figura", r"figure", r"action", r"acción",
-        r"de", r"la", r"el", r"the", r"collection", r"colección", r"vintage",
-        r"masterverse", r"new", r"nuevo", r"\d+cm", r"\d+ cm", r"-", r"–", r"\."
-    ]
-    
-    for patron in palabras_ruido:
-        texto = re.sub(patron, "", texto)
-        
-    # Limpieza final
-    texto = " ".join(texto.split()) # Quitar espacios extra
-    return texto.title() # Devolver en formato Título
+# --- CONFIGURACIÓN DE NAVEGADOR ESTÁTICO (HEADERS) ---
+HEADERS_STATIC = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+}
 
-# --- FUNCIÓN 1: TRADEINN (Kidinn) ---
-async def buscar_kidinn(page):
-    """Escanea la página de Masters del Universo de Kidinn."""
-    # url = "https://www.tradeinn.com/kidinn/es/masters-of-the-universe/5883/nm" 
-    # Url cambiada a veces, usamos la base si falla, pero mantenemos la lógica actual
+# --- FUNCIÓN 1: TRADEINN (Kidinn) - MODO ESTÁTICO ---
+def buscar_kidinn():
+    """Escanea la página de Masters del Universo de Kidinn (Modo Requests)."""
     url = "https://www.tradeinn.com/kidinn/es/masters-of-the-universe/5883/nm"
     productos = []
+    print(f"🌍 Consultando Kidinn: {url}")
+    
     try:
-        # Navegar
-        await page.goto(url, wait_until="domcontentloaded", timeout=60000)
-        # Scroll rápido
-        await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
-        await page.wait_for_timeout(1500) # Reducido un poco
+        r = requests.get(url, headers=HEADERS_STATIC, timeout=15)
+        # Check simple anti-bot
+        if r.status_code != 200:
+            print(f"⚠️ Kidinn devolvió status {r.status_code}")
+            return []
+            
+        soup = BeautifulSoup(r.text, 'html.parser')
         
-        content = await page.content()
-        soup = BeautifulSoup(content, 'html.parser')
-        
+        # Selectores (Mismos que antes, funcionan en estático)
         items = soup.select('div.js-product-list-item')
         
         for item in items:
             try:
+                # Link
                 link_obj = item.select_one('a.js-href_list_products')
                 if not link_obj: continue
                 link = link_obj['href']
                 if not link.startswith('http'): 
                     link = "https://www.tradeinn.com" + link
 
+                # Title
                 titulo_obj = link_obj.select_one('h3 p') or link_obj.select_one('h3')
                 titulo = titulo_obj.get_text(strip=True) if titulo_obj else "Desconocido"
                 
+                # Filtro
                 if not any(x in titulo.lower() for x in ["origins", "motu", "masters", "he-man", "skeletor"]): continue
                 
+                # Price
                 price_candidates = link_obj.select('div > p')
-                precio = "Agotado" # Valor por defecto seguro
-                precio_val = 9999.0 # Para ordenar
+                precio = "Agotado"
+                precio_val = 9999.0
                 
                 for p in price_candidates:
                     text = p.get_text(strip=True)
                     if any(c in text for c in ['€', '$']):
                         precio = text
-                        # Intentar extraer valor numérico para ordenar
                         try:
                             precio_val = float(text.replace('€','').replace('$','').replace(',','.').strip())
                         except: pass
                         break
                 
+                # Imagen
                 img_obj = item.select_one('img')
                 img_src = img_obj['src'] if img_obj else None
                 
@@ -105,28 +94,34 @@ async def buscar_kidinn(page):
                 })
             except: continue
     except Exception as e:
-        print(f"Error Kidinn: {e}") # Usamos print para no ensuciar UI si es background
+        print(f"❌ Error Kidinn: {e}")
         
     return productos
 
-# --- FUNCIÓN 2: ACTION TOYS ---
-async def buscar_actiontoys(page):
-    """Escanea ActionToys."""
-    url_actual = "https://actiontoys.es/figuras-de-accion/masters-of-the-universe/"
+# --- FUNCIÓN 2: ACTION TOYS - MODO ESTÁTICO ---
+def buscar_actiontoys():
+    """Escanea ActionToys (Modo Requests)."""
+    base_url = "https://actiontoys.es/figuras-de-accion/masters-of-the-universe/"
     productos = []
+    
+    # En modo estático iteramos, pero requests es bloqueante, así que cuidado con muchas páginas.
+    # Como corre en un hilo aparte, no bloquea la UI.
+    url_actual = base_url
     pagina_num = 1
     max_paginas = 5
     
     while url_actual and pagina_num <= max_paginas:
         try:
-            await page.goto(url_actual, wait_until="domcontentloaded", timeout=30000)
-            await page.evaluate("window.scrollTo(0, 500)")
-            content = await page.content()
-            soup = BeautifulSoup(content, 'html.parser')
+            print(f"🌍 Consultando ActionToys p{pagina_num}: {url_actual}")
+            r = requests.get(url_actual, headers=HEADERS_STATIC, timeout=15)
+            if r.status_code != 200: break
+            
+            soup = BeautifulSoup(r.text, 'html.parser')
             
             items = soup.select('li.product, article.product-miniature, div.product-small')
             
             if not items:
+                # Fallback
                 links = soup.select('a.product-loop-title')
                 if links: items = [l.parent for l in links]
                 else: break 
@@ -150,7 +145,6 @@ async def buscar_actiontoys(page):
                     if precio_obj:
                         precio = precio_obj.get_text(strip=True)
                         try:
-                            # Limpieza básica de precio '25,90 €' -> 25.90
                             clean_p = re.sub(r'[^\d,\.]', '', precio).replace(',','.')
                             precio_val = float(clean_p)
                         except: pass
@@ -162,7 +156,7 @@ async def buscar_actiontoys(page):
                         "Figura": titulo,
                         "NombreNorm": limpiar_titulo(titulo),
                         "Precio": precio,
-                        "PrecioVal": precio_val, # Útil para ordenar ofertas
+                        "PrecioVal": precio_val,
                         "Tienda": "ActionToys",
                         "Enlace": link,
                         "Imagen": img_src
@@ -175,43 +169,28 @@ async def buscar_actiontoys(page):
                 pagina_num += 1
             else:
                 url_actual = None
-        except: break
+        except Exception as e: 
+            print(f"❌ Error ActionToys: {e}")
+            break
             
     return productos
 
-# ORQUESTADOR PARALELO
+# --- ORQUESTADOR HÍBRIDO (ASYNC WRAPPER) ---
 async def buscar_en_todas_async():
-    """Ejecuta los scrapers en paralelo para mejorar velocidad."""
-    async with async_playwright() as p:
-        # Args críticos para evitar crash en Docker/Cloud
-        browser = await p.chromium.launch(
-            headless=True, 
-            args=["--no-sandbox", "--disable-dev-shm-usage"]
-        )
-        # Contexto compartido optimizado
-        context = await browser.new_context(
-            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36",
-            viewport={'width': 1280, 'height': 800}
-        )
-
+    """
+    Ejecuta scrapers síncronos (requests) en hilos separados (asyncio.to_thread)
+    para mantener el paralelismo y la velocidad.
+    """
+    # Lanzamos las dos funciones síncronas en paralelo usando hilos
+    # Esto evita que una espere a la otra
+    resultados = await asyncio.gather(
+        asyncio.to_thread(buscar_kidinn),
+        asyncio.to_thread(buscar_actiontoys)
+    )
         
-        # Abrimos 2 páginas en paralelo (pestañas)
-        page1 = await context.new_page()
-        page2 = await context.new_page()
-        
-        # Lanzamos las tareas a la vez
-        # asyncio.gather espera a que TODAS terminen
-        # Devolvemos una tupla con los resultados
-        resultados = await asyncio.gather(
-            buscar_kidinn(page1),
-            buscar_actiontoys(page2)
-        )
-        
-        await browser.close()
-        
-        # Aplanar la lista de listas [[kidinn], [action]] -> [todos]
-        lista_final = [item for sublist in resultados for item in sublist]
-        return lista_final
+    # Aplanar resultados
+    lista_final = [item for sublist in resultados for item in sublist]
+    return lista_final
 
 # --- CACHÉ Y WRAPPER ---
 # TTL = 3600 segundos (1 hora). show_spinner=False para controlar mensaje propio
