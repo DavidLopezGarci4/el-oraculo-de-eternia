@@ -35,6 +35,15 @@ HEADERS_STATIC = {
     "Referer": "https://www.google.com/"
 }
 
+def limpiar_titulo(titulo):
+    """Normaliza el título para agrupar productos similares."""
+    import re
+    # Eliminar palabras clave comunes para agrupar
+    t = titulo.lower()
+    t = re.sub(r'masters of the universe|motu|origins|masterverse|figura|action figure|\d+\s?cm', '', t)
+    t = re.sub(r'\s+', ' ', t).strip()
+    return t.title()
+
 # --- HELPER: JSON-LD EXTRACTOR ---
 def extraer_datos_json_ld(soup, source_tag):
     """Intenta extraer productos de metadatos JSON-LD (SEO)."""
@@ -99,31 +108,39 @@ def extraer_datos_json_ld(soup, source_tag):
 
 # --- FUNCIÓN 1: TRADEINN (Kidinn) ---
 def buscar_kidinn():
-    """Escanea Kidinn y devuelve dict con items y logs."""
-    url = "https://www.tradeinn.com/kidinn/es/masters-of-the-universe/5883/nm"
-    log = [f"🌍 Conectando a Kidinn: {url}"]
-    productos = []
+    """Escanea Kidinn usando el endpoint de búsqueda (evita menús vacíos)."""
+    # Usamos el buscador interno que suele ser más robusto ante bloqueos de navegación
+    url = "https://www.tradeinn.com/kidinn/es/buscar/products-ajax"
+    params = {
+        "search": "masters of the universe origins", # Consulta específica
+        "products_per_page": 48
+    }
+    
+    log = [f"🌍 Conectando a Búsqueda Kidinn..."]
     
     try:
-        r = requests.get(url, headers=HEADERS_STATIC, timeout=15)
+        r = requests.get(url, params=params, headers=HEADERS_STATIC, timeout=15)
         log.append(f"Status Code: {r.status_code}")
         
         soup = BeautifulSoup(r.text, 'html.parser')
         
-        # ESTRATEGIA 1: JSON-LD (SEO DATA)
+        # ESTRATEGIA 1: JSON-LD (SEO DATA) - Los buscadores suelen tenerlo
         json_items = extraer_datos_json_ld(soup, "Kidinn")
         if json_items:
             log.append(f"✅ JSON-LD encontró {len(json_items)} items. Usando datos estructurados.")
-            # Ajuste de enlaces relativos si los hay
+            # Ajuste de enlaces relativos
             for p in json_items:
                 if not p['Enlace'].startswith('http'):
                     p['Enlace'] = "https://www.tradeinn.com" + p['Enlace']
             return {'items': json_items, 'log': log}
             
-        log.append("⚠️ JSON-LD no encontró nada. Probando selectores HTML...")
+        log.append("⚠️ JSON-LD no encontró nada. Probando selectores HTML en búsqueda...")
         
         # ESTRATEGIA 2: HTML SCRAPING (FALLBACK)
-        items = soup.select('div.js-product-list-item')
+        # En resultados de búsqueda, a veces cambia el selector.
+        # Probamos selectores de grid de búsqueda
+        items = soup.select('div.search-product-list-item, div.js-product-list-item, div.product-box')
+        
         if not items:
             # Fallback selectors (Broad)
             items = soup.select('div.product-grid-item, div.search-product-item, div.item, div.item_container, div[data-id]')
@@ -131,13 +148,16 @@ def buscar_kidinn():
             
             # Último intento: Buscar enlaces directos si no hay cajas
             if not items:
-                 potential_links = soup.select('a[href*="/masters-of-the-universe/"]')
+                 potential_links = soup.select('a[href*="/kidinn/es/"]')
+                 # Filtramos enlaces que parezcan de producto (tienen ID numérico o 'masters')
+                 potential_links = [l for l in potential_links if "masters" in l['href'] or re.search(r'\/\d+\/', l['href'])]
                  if potential_links:
-                     items = [p.parent for p in potential_links[:36]] # Limitamos a parent directo
+                     items = [p.parent for p in potential_links[:36]] 
                      log.append(f"⚠️ Fallback enlaces directos encontró: {len(items)}")
 
         log.append(f"Items a procesar: {len(items)}")
         
+        productos = []
         items_procesados = 0
         for idx, item in enumerate(items):
             # DEBUG SUPREMO: Ver el HTML del primer item
@@ -146,25 +166,34 @@ def buscar_kidinn():
                 
             try:
                 # Link
-                link_obj = item.select_one('a.js-href_list_products, a')
+                link_obj = item.select_one('a')
                 if not link_obj: 
-                    log.append(f"⚠️ Item {idx} sin link (Kidinn)")
-                    continue
+                    # Intento buscar el link en el padre o en el item mismo si es un <a>
+                    if item.name == 'a': link_obj = item
+                    else: continue
+                
+                if not link_obj: continue
+                    
                 link = link_obj['href']
                 if not link.startswith('http'): link = "https://www.tradeinn.com" + link
 
-                # Title
-                titulo_obj = link_obj.select_one('h3 p') or link_obj.select_one('h3') or item.select_one('p.name')
-                titulo = titulo_obj.get_text(strip=True) if titulo_obj else "Desconocido"
+                # Title - En búsqueda suele estar en h3 o p
+                titulo_obj = item.select_one('p.name, h3, div.product-title')
+                if not titulo_obj and link_obj: titulo_obj = link_obj.find(text=True)
+                
+                titulo = "Desconocido"
+                if titulo_obj:
+                    if hasattr(titulo_obj, 'get_text'): titulo = titulo_obj.get_text(strip=True)
+                    else: titulo = str(titulo_obj).strip()
                 
                 # Filtro
-                if not any(x in titulo.lower() for x in ["origins", "motu", "masters", "he-man", "skeletor"]): 
-                    # log.append(f"🗑️ Filtered: {titulo}") # Demasiado ruido si son muchos
-                    continue
+                if "motu" not in titulo.lower() and "masters" not in titulo.lower() and "origins" not in titulo.lower(): 
+                   # log.append(f"Skip title: {titulo}")
+                   continue
                 
                 # Price
-                price_candidates = link_obj.select('div > p, span.price')
-                precio = "Agotado"
+                price_candidates = item.select('div.price, span.price, p.price')
+                precio = "Ver Web"
                 precio_val = 9999.0
                 
                 for p in price_candidates:
@@ -191,13 +220,15 @@ def buscar_kidinn():
                 })
                 items_procesados += 1
             except Exception as item_e:
-                log.append(f"⚠️ Error procesando item Kidinn: {item_e}")
-                continue
-        log.append(f"Kidinn: {items_procesados} items válidos extraídos.")
-    except Exception as e:
-        log.append(f"❌ Excepción crítica en Kidinn: {str(e)}")
+                 # log.append(f"Error item: {item_e}")
+                 continue
+                 
+        log.append(f"Kidinn: {items_procesados} items extraídos.")
+        return {'items': productos, 'log': log}
         
-    return {'items': productos, 'log': log}
+    except Exception as e:
+        log.append(f"❌ Error Kidinn: {e}")
+        return {'items': [], 'log': log}
 
 # --- FUNCIÓN 2: ACTION TOYS (API MODE) ---
 def buscar_actiontoys():
