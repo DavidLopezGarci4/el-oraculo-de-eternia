@@ -109,111 +109,115 @@ def extraer_datos_json_ld(soup, source_tag):
 
 # --- FUNCIÓN 1: TRADEINN (Kidinn) ---
 def buscar_kidinn():
-    """Escanea Kidinn usando el endpoint de búsqueda (evita menús vacíos)."""
-    # Usamos el buscador interno que suele ser más robusto ante bloqueos de navegación
+    """Escanea Kidinn usando búsqueda AJAX y estrategias robustas."""
     url = "https://www.tradeinn.com/kidinn/es/buscar/products-ajax"
     params = {
-        "search": "masters of the universe origins", # Consulta específica
+        "search": "masters of the universe origins", 
         "products_per_page": 48
     }
     
     log = [f"🌍 Conectando a Búsqueda Kidinn..."]
+    productos = []
     
     try:
         r = requests.get(url, params=params, headers=HEADERS_STATIC, timeout=15)
         log.append(f"Status Code: {r.status_code}")
         
-        soup = BeautifulSoup(r.text, 'html.parser')
+        # 1. INTENTO DE PARSEO JSON (A veces devuelve JSON con HTML dentro)
+        html_content = r.text
+        try:
+            data = r.json()
+            if isinstance(data, dict) and 'html' in data:
+                html_content = data['html']
+                log.append("✅ Detectado JSON con HTML incrustado. Extrayendo...")
+        except:
+            pass # No es JSON, seguimos como HTML plano
+            
+        log.append(f"🔍 Contenido a analizar: {len(html_content)} caracteres.")
+        soup = BeautifulSoup(html_content, 'html.parser')
         
-        # ESTRATEGIA 1: JSON-LD (SEO DATA) - Los buscadores suelen tenerlo
+        # 2. DEBUG DE ENLACES (Chivato)
+        all_links = soup.select('a')
+        log.append(f"🔎 Total enlaces en página: {len(all_links)}")
+        if all_links:
+            ejemplos = [l.get('href', 'n/a') for l in all_links[:5]]
+            log.append(f"🔎 Ejemplos de href: {ejemplos}")
+
+        # 3. ESTRATEGIA JSON-LD (SEO)
         json_items = extraer_datos_json_ld(soup, "Kidinn")
         if json_items:
-            log.append(f"✅ JSON-LD encontró {len(json_items)} items. Usando datos estructurados.")
-            # Ajuste de enlaces relativos
+            log.append(f"✅ JSON-LD encontró {len(json_items)} items.")
             for p in json_items:
                 if not p['Enlace'].startswith('http'):
                     p['Enlace'] = "https://www.tradeinn.com" + p['Enlace']
             return {'items': json_items, 'log': log}
-            
-        log.append("⚠️ JSON-LD no encontró nada. Probando selectores HTML en búsqueda...")
-        
-        # ESTRATEGIA 2: HTML SCRAPING (FALLBACK)
-        # En resultados de búsqueda, a veces cambia el selector.
-        # Probamos selectores de grid de búsqueda
-        items = soup.select('div.search-product-list-item, div.js-product-list-item, div.product-box')
-        
-        if not items:
-            # Fallback selectors (Broad)
-            items = soup.select('div.product-grid-item, div.search-product-item, div.item, div.item_container, div[data-id]')
-            log.append(f"⚠️ Selector principal falló. Fallbacks encontraron: {len(items)}")
-            
-            # Último intento: Buscar enlaces directos de PRODUCTOS (terminan en /p)
-            if not items:
-                 # TradeInn usa /p para productos, /f para familias, /nm para nodos
-                 potential_links = soup.select('a[href*="/p"]') 
-                 # Filtramos para asegurar que son fichas de producto
-                 items = []
-                 for l in potential_links:
-                     href = l.get('href', '')
-                     # Debe tener /p y NO ser una paginación o script, y tener algun ID numérico
-                     if '/p' in href and re.search(r'\/\d+\/p', href):
-                         # Evitamos enlaces de menú que a veces se cuelan
-                         if 'nav' not in l.get('class', []) and 'menu' not in l.get('class', []):
-                             items.append(l.parent)
-                             
-                 # Deduplicar por link (a veces hay imagen + texto)
-                 unique_items = []
-                 seen_links = set()
-                 for it in items:
-                     lnk = it.select_one('a')['href']
-                     if lnk not in seen_links:
-                         unique_items.append(it)
-                         seen_links.add(lnk)
-                         
-                 items = unique_items[:48]
-                 log.append(f"⚠️ Fallback enlaces PRODUCTO (/p) encontró: {len(items)}")
 
-        log.append(f"Items a procesar: {len(items)}")
+        # 4. ESTRATEGIA VISUAL (IMAGEN -> LINK)
+        # Si fallan las clases, buscamos imágenes de productos y subimos al enlace
+        log.append("⚠️ Probando estrategia VISUAL (Imágenes)...")
         
-        productos = []
+        items = []
+        # Buscamos imágenes que parezcan de productos (no iconos pequeños)
+        candidate_imgs = soup.find_all('img')
+        
+        valid_containers = []
+        seen_links = set()
+        
+        for img in candidate_imgs:
+            # Subir hasta encontrar un <a>
+            parent = img.find_parent('a')
+            if not parent: continue
+            
+            href = parent.get('href', '')
+            if not href or href in seen_links: continue
+            
+            # Filtros heurísticos
+            # 1. Link debe ser relativo o tradeinn
+            if href.startswith('http') and 'tradeinn.com' not in href: continue
+             
+            # 2. Debe parecer un producto (usualmente tiene ID numérico)
+            if not re.search(r'\d+', href): continue
+            
+            # 3. La imagen no debe ser un pixel o icono (heuristicas de nombre)
+            src = img.get('src', '')
+            if 'icon' in src or 'logo' in src: continue
+            
+            valid_containers.append(parent)
+            seen_links.add(href)
+            
+        if valid_containers:
+            items = valid_containers[:48]
+            log.append(f"✅ Estrategia VISUAL encontró {len(items)} candidatos.")
+        else:
+            log.append("❌ Estrategia VISUAL falló.")
+
+        # PROCESAMIENTO
         items_procesados = 0
-        for idx, item in enumerate(items):
-            # Clonamos el item para no romper el original en debug
-            debug_str = str(item)[:300]
-            if idx == 0:
-                log.append(f"📦 DEBUG HTML KIDINN ITEM 0: {debug_str}")
-                
+        for item in items:
             try:
-                # Link
-                link_obj = item.select_one('a')
-                if not link_obj: 
-                    # Si el item mismo es el link
-                    if item.name == 'a': link_obj = item
-                    else: continue
-                
-                link = link_obj['href']
+                link = item['href']
                 if not link.startswith('http'): link = "https://www.tradeinn.com" + link
-
-                # Title
-                # Buscamos texto dentro del enlace o en hermanos
-                titulo = link_obj.get_text(strip=True)
-                if not titulo: 
-                    # Intentar buscar imagen con alt
-                    img = link_obj.find('img')
+                
+                # Título: El texto del enlace o el alt de la imagen
+                titulo = item.get_text(strip=True)
+                if not titulo:
+                    img = item.find('img')
                     if img: titulo = img.get('alt', '')
+                    
+                if not titulo: titulo = "Figura Sin Nombre"
                 
-                if not titulo: titulo = "Figura MOTU Desconocida"
+                # Filtro de seguridad
+                if "motu" not in titulo.lower() and "masters" not in titulo.lower() and "origins" not in titulo.lower():
+                     continue
+
+                # Precio
+                # A veces el precio no está dentro del <a>, sino al lado.
+                # Intentamos buscar en el padre del <a> (el div contenedor)
+                container = item.parent
+                full_text = container.get_text(separator=' ', strip=True) if container else ""
                 
-                # Filtro RELAJADO: Si estamos aqui, el link ya tenia /p y venia de una busqueda de 'masters'
-                # Solo filtramos si es claramente basura
-                if "juguete" in titulo.lower() and len(titulo) < 15: continue
-                
-                # Price
-                # Buscamos precio en el texto del padre
-                full_text = item.get_text(separator=' ', strip=True)
-                # Regex para buscar precio estilo 12,99 € o 12.99€
+                # Regex Precio
                 price_match = re.search(r'(\d+[\.,]\d{2})\s?[€$]', full_text)
-                
                 precio = "Ver Web"
                 precio_val = 9999.0
                 
@@ -224,8 +228,8 @@ def buscar_kidinn():
                     except: pass
                 
                 # Imagen
-                img_obj = item.select_one('img')
-                img_src = img_obj['src'] if img_obj else None
+                img_obj = item.find('img')
+                img_src = img_obj.get('src') if img_obj else None
                 
                 productos.append({
                     "Figura": titulo,
@@ -237,10 +241,9 @@ def buscar_kidinn():
                     "Imagen": img_src
                 })
                 items_procesados += 1
-            except Exception as item_e:
-                 continue
-                 
-        log.append(f"Kidinn: {items_procesados} items extraídos.")
+            except: continue
+            
+        log.append(f"Kidinn: {items_procesados} items procesados.")
         return {'items': productos, 'log': log}
         
     except Exception as e:
