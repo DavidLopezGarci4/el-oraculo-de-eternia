@@ -136,6 +136,7 @@ from scrapers.actiontoys import ActionToysScraper
 from circuit_breaker import CircuitBreaker
 
 from scrapers.fantasiapersonajes import FantasiaScraper
+from scrapers.frikiverso import FrikiversoScraper
 
 @st.cache_resource
 def get_circuit_breaker():
@@ -202,6 +203,28 @@ def buscar_fantasia():
         
     return {'items': productos, 'log': log}
 
+def buscar_frikiverso():
+    """Wrapper para Frikiverso."""
+    cb = get_circuit_breaker()
+    scraper = FrikiversoScraper()
+    log = [f"⚡ Iniciando Plugin: {scraper.name}"]
+    productos = []
+    try:
+        offers = cb.call(scraper.search, "masters of the universe origins")
+        log.append(f"✅ Plugin encontró {len(offers)} items.")
+        for p in offers:
+            productos.append({
+                "Figura": p.name,
+                "NombreNorm": p.normalized_name,
+                "Precio": p.display_price,
+                "PrecioVal": p.price_val,
+                "Tienda": p.store_name,
+                "Enlace": p.url,
+                "Imagen": p.image_url
+            })
+    except Exception as e:
+        log.append(f"❌ Error Frikiverso: {e}")
+    return {'items': productos, 'log': log}
 
 # --- ORQUESTADOR HÍBRIDO (ASYNC WRAPPER) ---
 async def buscar_en_todas_async():
@@ -215,7 +238,8 @@ async def buscar_en_todas_async():
     resultados = await asyncio.gather(
         asyncio.to_thread(buscar_kidinn),
         asyncio.to_thread(buscar_actiontoys),
-        asyncio.to_thread(buscar_fantasia)
+        asyncio.to_thread(buscar_fantasia),
+        asyncio.to_thread(buscar_frikiverso)
     )
         
     # Aplanar resultados y agregar logs
