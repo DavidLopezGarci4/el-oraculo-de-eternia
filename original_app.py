@@ -501,5 +501,18 @@ if start:
                     if "❌" in linea or "⚠️" in linea:
                         st.error(linea)
                     else:
-                        st.text(linea)
+                st.text(linea)
+
+# --- DEBUGGING (Solapa para verificar sistema de archivos) ---
+with st.expander("🔧 Diagnóstico de Archivos (Debug)"):
+    st.write("Directorio actual:", os.getcwd())
+    st.write("Archivos en raíz:", os.listdir('.'))
+    if os.path.exists('data'):
+        st.write("Archivos en /data:", os.listdir('data'))
+    else:
+        st.error("⚠️ La carpeta 'data' NO existe.")
+        
+    snapshot_path = os.path.join(os.path.dirname(__file__), 'data', 'products_snapshot.json')
+    st.write(f"Ruta esperada JSON: {snapshot_path}")
+    st.write(f"¿Existe?: {os.path.exists(snapshot_path)}")
 
