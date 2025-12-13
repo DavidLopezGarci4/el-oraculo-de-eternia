@@ -11,6 +11,7 @@ class FantasiaScraper(ScraperPlugin):
     """
     Scraper para Fantasia Personajes usando el buscador estándar de PrestaShop.
     """
+    name = "Fantasia Personajes"
     
     def search(self, query: str) -> list[ProductOffer]:
         start_time = datetime.datetime.now()

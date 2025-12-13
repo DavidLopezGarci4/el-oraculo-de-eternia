@@ -1,0 +1,33 @@
+--- Testing Frikiverso Scraper ---
+Scraper Name: Frikiverso
+🔎 Searching for 'origins'...
+DEBUG FRIKIVERSO: URL=https://frikiverso.es/es/buscar?controller=search&s=masters+of+the+universe+origins Status=200 Len=231230
+DEBUG FRIKIVERSO: Found 8 items
+DEBUG FRIKIVERSO: URL=https://frikiverso.es/es/buscar?controller=search&s=masters+of+the+universe+origins&page=2 Status=200 Len=190383
+DEBUG FRIKIVERSO: Found 0 items
+✅ Found 8 items.
+--- Item 1 ---
+Title: Figura Vehículo Tanque Tiburón Masters del Universo Origins
+Price: 27,60 € (27.6)
+Link: https://frikiverso.es/es/masters-del-universo/589-masters-of-the-universe-masters-del-universo-origenes-vehiculo-tanque-tiburon-coche-de-juguete-mattel-gxp43-0887961960211.html
+Image: https://frikiverso.es/411418-home_default/masters-of-the-universe-masters-del-universo-origenes-vehiculo-tanque-tiburon-coche-de-juguete-mattel-gxp43.jpg
+--- Item 2 ---
+Title: Figura Panthor Master del Universo Origins Articulada 18 cms
+Price: 20,72 € (20.72)
+Link: https://frikiverso.es/es/30-/586-masters-of-the-universe-masters-del-universo-origenes-figura-panthor-muneco-articulado-de-juguete-con-armadura-mattel-gvn4-0887961930849.html
+Image: https://frikiverso.es/411644-home_default/masters-of-the-universe-masters-del-universo-origenes-figura-panthor-muneco-articulado-de-juguete-con-armadura-mattel-gvn4.jpg
+--- Item 3 ---
+Title: Figura Skeletor Battle Armor Masters del Universo Articulada 15 cms
+Price: 12,48 € (12.48)
+Link: https://frikiverso.es/es/20-/473-masters-of-the-universe-masters-del-universo-origenes-figura-skeletor-muneco-articulado-de-juguete-con-accesorios-mattel-g-0887961929614.html
+Image: https://frikiverso.es/416233-home_default/masters-of-the-universe-masters-del-universo-origenes-figura-skeletor-muneco-articulado-de-juguete-con-accesorios-mattel-g.jpg
+--- Item 4 ---
+Title: Nave Wind Rider Masters del Universo Vehículo Retro
+Price: 29,10 € (29.1)
+Link: https://frikiverso.es/es/masters-del-universo/778-masters-of-the-universe-masters-del-universo-origenes-nave-wind-rider-vehiculo-de-juguete-para-figuras-mattel-gyy34-0887961982886.html
+Image: https://frikiverso.es/399996-home_default/masters-of-the-universe-masters-del-universo-origenes-nave-wind-rider-vehiculo-de-juguete-para-figuras-mattel-gyy34.jpg
+--- Item 5 ---
+Title: Figura Skeletor Master of the Univers Origins Articulada 15 cms
+Price: 12,10 € (12.1)
+Link: https://frikiverso.es/es/top-ventas/573-masters-of-the-universe-masters-del-universo-origenes-figura-skeletor-muneco-articulado-de-juguete-mattel-hgh45-0194735049103.html
+Image: https://frikiverso.es/1069768-home_default/masters-of-the-universe-masters-del-universo-origenes-figura-skeletor-muneco-articulado-de-juguete-mattel-hgh45.jpg

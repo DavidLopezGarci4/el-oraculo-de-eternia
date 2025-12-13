@@ -11,6 +11,7 @@ class FrikiversoScraper(ScraperPlugin):
     """
     Scraper para Frikiverso usando el buscador estándar de PrestaShop.
     """
+    name = "Frikiverso"
     
     def search(self, query: str) -> list[ProductOffer]:
         start_time = datetime.datetime.now()
@@ -38,7 +39,7 @@ class FrikiversoScraper(ScraperPlugin):
             try:
                 r = requests.get(url, headers=headers, timeout=20)
                 soup = BeautifulSoup(r.text, 'html.parser')
-                items = soup.select('.product-miniature')
+                items = soup.select('.js-product-miniature')
                 
                 if not items:
                     break
@@ -47,7 +48,7 @@ class FrikiversoScraper(ScraperPlugin):
                 for item in items:
                     try:
                         # Title
-                        title_elem = item.select_one('.product-title a')
+                        title_elem = item.select_one('.s_title_block a')
                         if not title_elem:
                             continue
                         title = title_elem.get_text(strip=True)
@@ -58,13 +59,13 @@ class FrikiversoScraper(ScraperPlugin):
                         seen_urls.add(link)
                         
                         # Image
-                        img_elem = item.select_one('.thumbnail-container img')
+                        img_elem = item.select_one('.front-image')
                         image_url = None
                         if img_elem:
                             image_url = img_elem.get('data-src') or img_elem.get('src')
                             
                         # Price
-                        price_elem = item.select_one('.product-price')
+                        price_elem = item.select_one('.product-price-and-shipping .price')
                         price_str = "0.00€"
                         price_val = 0.0
                         if price_elem:
