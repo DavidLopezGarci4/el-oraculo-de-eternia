@@ -4,6 +4,7 @@ import asyncio
 # from playwright.async_api import async_playwright # REMOVED
 from bs4 import BeautifulSoup
 import os
+from logger import log_structured
 # import subprocess # REMOVED
 # import sys # REMOVED
 
