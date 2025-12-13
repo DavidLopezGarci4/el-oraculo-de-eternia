@@ -234,23 +234,61 @@ async def buscar_en_todas_async():
     Combina resultados y logs.
     """
     # Lanzamos las funciones síncronas en paralelo usando hilos
-    # Esto evita que una espere a la otra
-    resultados = await asyncio.gather(
-        asyncio.to_thread(buscar_kidinn),
-        asyncio.to_thread(buscar_actiontoys),
-        asyncio.to_thread(buscar_fantasia),
-        asyncio.to_thread(buscar_frikiverso)
-    )
-        
-    # Aplanar resultados y agregar logs
-    lista_productos = []
-    lista_logs = []
+    # Esto evita que una espere                # Attempt to load from snapshot first for "blocked" stores
+    snapshot_file = os.path.join(os.path.dirname(__file__), 'data', 'products_snapshot.json')
     
-    for res in resultados:
-        lista_productos.extend(res['items'])
+    fantasia_items = []
+    frikiverso_items = []
+    
+    if os.path.exists(snapshot_file):
+        try:
+            with open(snapshot_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                for p in data:
+                    if p['store_name'] == "Fantasia Personajes":
+                        fantasia_items.append(ProductOffer(**p))
+                    elif p['store_name'] == "Frikiverso":
+                        frikiverso_items.append(ProductOffer(**p))
+            log_structured("SNAPSHOT_LOADED", {"fantasia": len(fantasia_items), "frikiverso": len(frikiverso_items)})
+        except Exception as e:
+            log_structured("SNAPSHOT_ERROR", {"error": str(e)})
+
+    # Run scrapers (ActionToys always live, others if snapshot missing)
+    tasks = [asyncio.to_thread(buscar_actiontoys)]
+    
+    if not fantasia_items:
+        tasks.append(asyncio.to_thread(buscar_fantasia))
+        
+    if not frikiverso_items:
+        tasks.append(asyncio.to_thread(buscar_frikiverso))
+    
+    # Execute live tasks
+    live_results = await asyncio.gather(*tasks)
+    
+    # Combine everything
+    todos_los_productos = []
+    lista_logs = [] # Initialize logs list here
+    
+    for res in live_results:
+        todos_los_productos.extend(res['items'])
         lista_logs.extend(res['log'])
         
-    return lista_productos, lista_logs
+    # Add snapshot items to the product list (they don't have a 'log' entry in this structure)
+    for p_offer in fantasia_items + frikiverso_items:
+        todos_los_productos.append({
+            "Figura": p_offer.name,
+            "NombreNorm": p_offer.normalized_name,
+            "Precio": p_offer.display_price,
+            "PrecioVal": p_offer.price_val,
+            "Tienda": p_offer.store_name,
+            "Enlace": p_offer.url,
+            "Imagen": p_offer.image_url
+        })
+    
+    # Check Kidinn (Phase H3 Placeholder) - if it were active, it would be added to tasks
+    # For now, it's explicitly disabled and not included in the new gather logic.
+    
+    return todos_los_productos, lista_logs
 
 # --- CACHÉ Y WRAPPER ---
 # TTL = 3600 segundos (1 hora). show_spinner=False para controlar mensaje propio
