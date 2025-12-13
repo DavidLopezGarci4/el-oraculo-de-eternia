@@ -241,18 +241,31 @@ async def buscar_en_todas_async():
     fantasia_items = []
     frikiverso_items = []
     
+    snapshot_logs = []
     if os.path.exists(snapshot_file):
         try:
             with open(snapshot_file, 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 for p in data:
+                    # Fix missing currency if needed (backward compatibility)
+                    if 'currency' not in p:
+                        p['currency'] = '€'
+                        
                     if p['store_name'] == "Fantasia Personajes":
                         fantasia_items.append(ProductOffer(**p))
                     elif p['store_name'] == "Frikiverso":
                         frikiverso_items.append(ProductOffer(**p))
-            log_structured("SNAPSHOT_LOADED", {"fantasia": len(fantasia_items), "frikiverso": len(frikiverso_items)})
+            
+            msg = f"✅ SNAPSHOT CARGADO: Fantasia={len(fantasia_items)}, Frikiverso={len(frikiverso_items)}"
+            log_structured("SNAPSHOT_LOADED", {"msg": msg})
+            snapshot_logs.append(msg)
+            
         except Exception as e:
+            err_msg = f"❌ ERROR CARGANDO SNAPSHOT: {str(e)}"
             log_structured("SNAPSHOT_ERROR", {"error": str(e)})
+            snapshot_logs.append(err_msg)
+    else:
+        snapshot_logs.append("⚠️ Archivo snapshot no encontrado.")
 
     # Run scrapers (ActionToys always live, others if snapshot missing)
     tasks = [asyncio.to_thread(buscar_actiontoys)]
@@ -273,6 +286,9 @@ async def buscar_en_todas_async():
     for res in live_results:
         todos_los_productos.extend(res['items'])
         lista_logs.extend(res['log'])
+        
+    # Add snapshot logs to the UI logs
+    lista_logs.extend(snapshot_logs)
         
     # Add snapshot items to the product list (they don't have a 'log' entry in this structure)
     for p_offer in fantasia_items + frikiverso_items:
