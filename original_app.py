@@ -257,15 +257,20 @@ async def buscar_en_todas_async():
                         frikiverso_items.append(ProductOffer(**p))
             
             msg = f"✅ SNAPSHOT CARGADO: Fantasia={len(fantasia_items)}, Frikiverso={len(frikiverso_items)}"
+            print(f"DEBUG_CONSOLE: {msg}") # Console log
             log_structured("SNAPSHOT_LOADED", {"msg": msg})
             snapshot_logs.append(msg)
             
         except Exception as e:
             err_msg = f"❌ ERROR CARGANDO SNAPSHOT: {str(e)}"
+            print(f"DEBUG_CONSOLE: {err_msg}") # Console log
             log_structured("SNAPSHOT_ERROR", {"error": str(e)})
             snapshot_logs.append(err_msg)
+            
     else:
-        snapshot_logs.append("⚠️ Archivo snapshot no encontrado.")
+        warn_msg = f"⚠️ Archivo snapshot no encontrado en: {snapshot_file}"
+        print(f"DEBUG_CONSOLE: {warn_msg}") # Console log
+        snapshot_logs.append(warn_msg)
 
     # Run scrapers (ActionToys always live, others if snapshot missing)
     tasks = [asyncio.to_thread(buscar_actiontoys)]
@@ -477,6 +482,11 @@ if start:
             
             # Ordenar por precio
             items_unicos.sort(key=lambda x: x['PrecioVal'])
+            
+            # Notificación visual si se usó Snapshot
+            for log in logs_debug:
+                if "SNAPSHOT CARGADO" in log:
+                    st.toast(log, icon="📂")
             
             st.success(f"¡Combate finalizado! {len(items_unicos)} figuras únicas encontradas.")
             with st.expander("📝 Logs técnicos"):
