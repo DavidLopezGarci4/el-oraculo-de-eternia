@@ -199,134 +199,73 @@ def buscar_kidinn():
         
     return {'items': productos, 'log': log}
 
-# --- FUNCIÓN 2: ACTION TOYS - MODO ESTÁTICO ---
+# --- FUNCIÓN 2: ACTION TOYS (API MODE) ---
 def buscar_actiontoys():
-    """Escanea ActionToys y devuelve dict con items y logs."""
-    base_url = "https://actiontoys.es/figuras-de-accion/masters-of-the-universe/"
-    log = [f"🌍 Conectando a ActionToys: {base_url}"]
+    """Escanea ActionToys usando su API pública (WooCommerce)."""
+    # Endpoint directo, sin parsear HTML. Mucho más rápido y sin bloqueos.
+    url_api = "https://actiontoys.es/wp-json/wc/store/products"
+    params = {
+        "search": "masters of the universe origins",
+        "per_page": 50, # Pedimos 50 de una vez
+        "page": 1
+    }
+    
+    log = [f"🌍 Consultando API ActionToys: {url_api}"]
     productos = []
     
-    # En modo estático iteramos, pero requests es bloqueante, así que cuidado con muchas páginas.
-    # Como corre en un hilo aparte, no bloquea la UI.
-    url_actual = base_url
-    pagina_num = 1
-    max_paginas = 5
-    
-    while url_actual and pagina_num <= max_paginas:
+    while True:
         try:
-            log.append(f"🌍 Consultando ActionToys p{pagina_num}: {url_actual}")
-            r = requests.get(url_actual, headers=HEADERS_STATIC, timeout=15)
-            log.append(f"Página {pagina_num} Status: {r.status_code}")
+            r = requests.get(url_api, params=params, headers=HEADERS_STATIC, timeout=15)
+            log.append(f"API Página {params['page']} Status: {r.status_code}")
             
-            if r.status_code != 200: 
-                log.append(f"❌ Bloqueo detectado en ActionToys p{pagina_num}. Cabeceras respuesta: {r.headers}")
-                break
+            if r.status_code != 200: break
             
-            soup = BeautifulSoup(r.text, 'html.parser')
-            page_title = soup.title.string.strip() if soup.title else "No Title"
-            log.append(f"Título p{pagina_num}: {page_title}")
+            data = r.json()
+            if not data: break # Fin de resultados
             
-            # ESTRATEGIA 1: JSON-LD (SEO DATA)
-            json_items = extraer_datos_json_ld(soup, "ActionToys")
-            if json_items:
-                log.append(f"✅ JSON-LD p{pagina_num}: {len(json_items)} items encontrados.")
-                productos.extend(json_items)
-                
-                # Chequear paginación via link 'next'
-                next_button = soup.select_one('a.next') or soup.select_one('a[rel="next"]')
-                if next_button:
-                    url_actual = next_button['href']
-                    pagina_num += 1
-                    continue
-                else: break
+            log.append(f"API encontró {len(data)} items.")
             
-            log.append("⚠️ JSON-LD vacío. Usando HTML Scraping...")
-            
-            items = soup.select('li.product, article.product-miniature, div.product-small')
-            
-            log.append(f"Página {pagina_num} Items: {len(items)}")
-            
-            if not items:
-                # Fallback
-                links = soup.select('a.product-loop-title')
-                if links: 
-                    items = [l.parent for l in links]
-                    log.append(f"Página {pagina_num} Items (Fallback): {len(items)}")
-                else:
-                    if pagina_num == 1:
-                        log.append(f"⚠️ HTML Preview: {r.text[:300]}...")
-                    break 
-            
-            items_ok_pag = 0
-            for idx, item in enumerate(items):
-                # DEBUG SUPREMO: Ver el HTML del primer item
-                if idx == 0:
-                    log.append(f"📦 DEBUG HTML ITEM 0 (P{pagina_num}): {str(item)[:600]}")
-                
+            for item in data:
                 try:
-                    link_elem = item.select_one('a.product-loop-title')
-                    if not link_elem: link_elem = item.select_one('a.woocommerce-LoopProduct-link') 
-                    # Fallback genérico: Primer enlace que encuentre en la caja
-                    if not link_elem: link_elem = item.select_one('a')
+                    titulo = item.get('name', 'Desconocido')
+                    # Filtro de seguridad
+                    if "masters" not in titulo.lower() and "origins" not in titulo.lower(): continue
                     
-                    if not link_elem: 
-                        if items_ok_pag < 3: log.append(f"⚠️ Link missing p{pagina_num} item {idx}")
-                        continue
-                    link = link_elem['href']
+                    price_data = item.get('prices', {})
+                    # El precio viene en céntimos (ej: 2249 -> 22.49) o string formateado
+                    price_val = float(price_data.get('price', 0)) / 100.0
+                    price_str = f"{price_val:.2f}€"
                     
-                    titulo_obj = link_elem.select_one('h3') or item.select_one('h2.woocommerce-loop-product__title')
-                    titulo = titulo_obj.get_text(strip=True) if titulo_obj else "Desconocido"
+                    link = item.get('permalink')
                     
-                    # LOG DE DEBUG (Solo primeros 3 por pagina)
-                    if items_ok_pag < 3:
-                        log.append(f"🔎 Debug p{pagina_num}: Título='{titulo}' Link='{link}'")
-                    
-                    # FILTRO DESACTIVADO TEMPORALMENTE (Para forzar resultados)
-                    # if not any(x in titulo.lower() for x in ["origins", "motu", "masters", "he-man", "skeletor"]): 
-                    #    if items_ok_pag < 3: log.append(f"🗑️ Filtered: {titulo}")
-                    #    continue
-
-                    precio_obj = item.select_one('span.price')
-                    precio = "Agotado"
-                    precio_val = 9999.0
-                    
-                    if precio_obj:
-                        precio = precio_obj.get_text(strip=True)
-                        try:
-                            clean_p = re.sub(r'[^\d,\.]', '', precio).replace(',','.')
-                            precio_val = float(clean_p)
-                        except: pass
-                    
-                    img_obj = item.select_one('img')
-                    img_src = img_obj['src'] if img_obj else None
+                    # Imagen
+                    images = item.get('images', [])
+                    img_src = images[0].get('src') if images else None
                     
                     productos.append({
                         "Figura": titulo,
                         "NombreNorm": limpiar_titulo(titulo),
-                        "Precio": precio,
-                        "PrecioVal": precio_val,
+                        "Precio": price_str,
+                        "PrecioVal": price_val,
                         "Tienda": "ActionToys",
                         "Enlace": link,
                         "Imagen": img_src
                     })
-                    items_ok_pag += 1
-                except Exception as item_e:
-                    log.append(f"⚠️ Error item ActionToys: {item_e}")
-                    continue
+                except: continue
             
-            log.append(f"Página {pagina_num}: {items_ok_pag} figuras añadidas.")
+            # Paginación
+            if len(data) < params['per_page']: break # Si devuelve menos de los pedidos, es la última
+            params['page'] += 1
+            if params['page'] > 5: break # Límite de seguridad
             
-            next_button = soup.select_one('a.next') or soup.select_one('a[rel="next"]')
-            if next_button:
-                url_actual = next_button['href']
-                pagina_num += 1
-            else:
-                url_actual = None
-        except Exception as e: 
-            log.append(f"❌ Error crítico en ActionToys p{pagina_num}: {str(e)}")
+        except Exception as e:
+            log.append(f"❌ Error API ActionToys: {e}")
             break
             
     return {'items': productos, 'log': log}
+
+# (Resto de código antiguo borrado/comentado para evitar conflictos)
+
 
 # --- ORQUESTADOR HÍBRIDO (ASYNC WRAPPER) ---
 async def buscar_en_todas_async():
