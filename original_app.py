@@ -15,7 +15,7 @@ from scrapers.fantasiapersonajes import FantasiaScraper
 from scrapers.frikiverso import FrikiversoScraper
 from scrapers.pixelatoy import PixelatoyScraper
 from scrapers.electropolis import ElectropolisScraper
-from scrapers.dvdstorespain import DVDStoreSpainScraper
+# from scrapers.dvdstorespain import DVDStoreSpainScraper
 
 
 # --- CONFIGURACIÓN DE PÁGINA ---
@@ -137,7 +137,7 @@ async def run_scrapers_parallel(query: str, progress_callback=None):
         FrikiversoScraper,
         PixelatoyScraper,
         ElectropolisScraper,
-        DVDStoreSpainScraper
+        # DVDStoreSpainScraper
     ]
     total_plugins = len(plugins)
     
