@@ -1,41 +1,41 @@
-# ⚔️ MOTU Tracker
+# 🔮 El Oráculo de Eternia
 
-**MOTU Tracker** es una aplicación diseñada para los coleccionistas de *Masters of the Universe*. Esta herramienta permite monitorizar en tiempo real el stock y precios de figuras en diversas tiendas online de España.
+**El Oráculo de Eternia** (anteriormente MOTU Tracker) es una herramienta mística diseñada para los coleccionistas de *Masters of the Universe*. Esta aplicación consulta los hilos del destino (internet) para revelar el stock y precios de figuras en diversas tiendas online de España en tiempo real.
 
 ![MOTU Tracker Screenshot](Masters_buscador.png)
 
-## 🚀 Características
+## 🚀 Poderes y Características
 
-*   **Búsqueda Multi-tienda**: Rastrea automáticamente productos en tiendas como *Kidinn*, *ActionToys*, *Pixelatoy*, y más.
-*   **Interfaz Temática**: Disfruta de una experiencia visual inmersiva con temática de He-Man, incluyendo una barra de progreso personalizada con la Espada de Poder.
-*   **Filtrado Inteligente**: Elimina resultados irrelevantes para mostrarte solo lo que realmente buscas.
-*   **Logs Detallados**: Sistema de registro para monitorizar el proceso de búsqueda y depurar errores.
+*   **Visión Omnisciente**: Rastrea automáticamente productos en tiendas como *Kidinn*, *ActionToys*, *Pixelatoy*, y más.
+*   **Interfaz Arcana**: Disfruta de una experiencia visual inmersiva con temática de los Masters, incluyendo una barra de progreso mística.
+*   **Filtrado Mágico**: Elimina resultados irrelevantes para mostrarte solo lo que tu colección necesita.
+*   **Pergaminos de Registro**: Sistema de logs para monitorizar cada consulta al oráculo.
 
-## 🛠️ Instalación y Uso
+## 🛠️ Invocación (Instalación)
 
 1.  **Clonar el repositorio**:
     ```bash
-    git clone https://github.com/DavidLopezGarci4/motu-tracker.git
-    cd motu-tracker
+    git clone https://github.com/DavidLopezGarci4/el-oraculo-de-eternia.git
+    cd el-oraculo-de-eternia
     ```
 
-2.  **Instalar dependencias**:
+2.  **Preparar los Ingredientes (Dependencias)**:
     Se recomienda usar un entorno virtual.
     ```bash
     pip install -r requirements.txt
     ```
 
-3.  **Ejecutar la aplicación**:
+3.  **Consultar al Oráculo**:
     ```bash
     streamlit run original_app.py
     ```
 
-## 📂 Estructura del Proyecto
+## 📂 Grimorio (Estructura)
 
-*   `original_app.py`: Archivo principal de la aplicación Streamlit.
-*   `scrapers/`: Contiene los módulos de scraping para cada tienda.
-*   `models.py`: Definición de modelos de datos.
-*   `GUIA_DESPLIEGUE.md`: Instrucciones para desplegar la app en Streamlit Cloud.
+*   `original_app.py`: El corazón del ritual (App principal).
+*   `scrapers/`: Los espíritus buscadores (Robots de búsqueda).
+*   `models.py`: La forma de los deseos (Modelos de datos).
+*   `GUIA_DESPLIEGUE.md`: Instrucciones para elevar el oráculo a la nube.
 
 ## ⚠️ Estado del Proyecto
-Este proyecto es una copia de seguridad del estado funcional ("Backup: Preservar estado actual del proyecto").
+Versión estable renacida como "El Oráculo de Eternia".

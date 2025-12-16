@@ -25,7 +25,7 @@ def load_image_as_base64(path):
     return base64.b64encode(data).decode()
 
 # --- CONFIGURACIÓN DE PÁGINA ---
-st.set_page_config(page_title="Buscador Coleccionista", layout="wide", page_icon="⚔️")
+st.set_page_config(page_title="El Oráculo de Eternia", layout="wide", page_icon="🔮")
 
 # --- SECURITY: BASIC AUTH ---
 def check_password():
@@ -195,7 +195,7 @@ with c2:
     try:
         st.image("Masters_buscador.png", use_container_width=True)
     except Exception:
-        st.markdown("<h2 style='text-align: center; color: #d32f2f;'>⚔️ MOTU FINDER ⚔️</h2>", unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align: center; color: #8A2BE2;'>🔮 EL ORÁCULO DE ETERNIA 🔮</h2>", unsafe_allow_html=True)
 
 # --- QUERY & CACHE LOGIC ---
 
@@ -510,7 +510,7 @@ with st.sidebar:
             </div>
         """, unsafe_allow_html=True)
     else:
-        st.header("⚙️ Ajustes")
+        st.header("⚙️ Configuración del Oráculo")
     
     st.markdown("**Tiendas Activas**")
     available_stores = ["ActionToys", "Fantasia Personajes", "Frikiverso", "Pixelatoy", "Electropolis"]
