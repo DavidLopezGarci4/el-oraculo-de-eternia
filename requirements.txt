@@ -1,13 +1,5 @@
-<<<<<<< HEAD
 streamlit
 aiohttp
 beautifulsoup4
 pandas
 requests
-=======
-streamlit
-aiohttp
-beautifulsoup4
-pandas
-requests
->>>>>>> 428b6a59392b9b612f2f50ab5209161893aacbc1
