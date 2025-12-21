@@ -1,0 +1,21 @@
+{
+  "ActionToys": {
+    "items_found": 246,
+    "status": "Success"
+  },
+  "Fantasia Personajes": {
+    "items_found": 383,
+    "status": "Success"
+  },
+  "Frikiverso": {
+    "items_found": 121,
+    "status": "Success"
+  },
+  "Pixelatoy": {
+    "error": "cannot access local variable 'match' where it is not associated with a value"
+  },
+  "DVDStoreSpain": {
+    "items_found": 136,
+    "status": "Success"
+  }
+}

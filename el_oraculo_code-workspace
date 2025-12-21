@@ -1,0 +1,22 @@
+{
+    "folders": [
+        {
+            "path": "."
+        }
+    ],
+    "settings": {
+        "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
+        "python.analysis.extraPaths": [
+            "${workspaceFolder}/src"
+        ],
+        "terminal.integrated.env.windows": {
+            "PYTHONPATH": "${workspaceFolder}/src"
+        }
+    },
+    "extensions": {
+        "recommendations": [
+            "ms-python.python",
+            "ms-toolsai.jupyter"
+        ]
+    }
+}

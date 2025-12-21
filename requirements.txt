@@ -3,3 +3,13 @@ aiohttp
 beautifulsoup4
 pandas
 requests
+sqlalchemy
+tenacity
+playwright
+xlsxwriter
+openpyxl
+fastmcp
+httpx
+rapidfuzz
+bcrypt
+psycopg2-binary

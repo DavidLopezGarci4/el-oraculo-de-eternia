@@ -33,7 +33,7 @@ secrets.toml
 
 # VS Code
 .vscode/
-*.code-workspace
+
 
 # Local Project Data/Logs
 reports/
@@ -42,3 +42,7 @@ backup_legacy_*/
 *.tmp
 debug_*.py
 inspect_*.py
+
+# Database
+*.db
+oraculo.db

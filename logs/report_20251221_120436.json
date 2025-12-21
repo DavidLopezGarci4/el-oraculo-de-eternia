@@ -1,0 +1,26 @@
+{
+  "ActionToys": {
+    "items_found": 0,
+    "status": "Empty"
+  },
+  "Fantasia Personajes": {
+    "items_found": 383,
+    "status": "Success"
+  },
+  "Frikiverso": {
+    "items_found": 0,
+    "status": "Empty"
+  },
+  "Pixelatoy": {
+    "items_found": 112,
+    "status": "Success"
+  },
+  "DVDStoreSpain": {
+    "items_found": 0,
+    "status": "Empty"
+  },
+  "Electropolis": {
+    "items_found": 39,
+    "status": "Success"
+  }
+}
