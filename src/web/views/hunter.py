@@ -61,12 +61,25 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
                 c_act1, c_act2 = st.columns(2)
                 
                 # Add to Collection
-                is_owned = any(i.owner_id == current_user_id for i in product.collection_items)
+                # 1. Check Optimistic State
+                if "optimistic_updates" not in st.session_state:
+                    st.session_state.optimistic_updates = {}
+                
+                # Check Local Override first, then DB
+                is_owned_db = any(i.owner_id == current_user_id for i in product.collection_items)
+                if product.id in st.session_state.optimistic_updates:
+                     is_owned = st.session_state.optimistic_updates[product.id]
+                else:
+                     is_owned = is_owned_db
+
                 if is_owned:
                     c_act1.button("✅ En Colección", key=f"deal_owned_{offer.id}", disabled=True)
                 else:
                     btn_label = "➕ Capturar"
-                    if c_act1.button(btn_label, key=f"hunter_add_{product.id}", use_container_width=True):
+                    if c_act1.button(btn_label, key=f"hunter_add_{product.id}", width="stretch"):
+                        # Optimistic Update
+                        st.session_state.optimistic_updates[product.id] = True
+                        
                         if toggle_ownership(db, product.id, current_user_id):
                             st.rerun()
 

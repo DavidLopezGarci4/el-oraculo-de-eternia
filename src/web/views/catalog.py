@@ -82,14 +82,26 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
     st.divider()
     st.caption(f"Mostrando {start_idx+1}-{min(end_idx, total_items)} de {total_items} figuras.")
 
-    # Optimized Ownership Check (Avoid N+1 and Stale Relationships)
-    # Fetch all product_ids owned by this user
+    # Optimized Ownership Check with Optimistic UI
+    # 1. Fetch DB Truth
     owned_ids_query = db.query(CollectionItemModel.product_id).filter(CollectionItemModel.owner_id == current_user_id).all()
     owned_ids_set = {r[0] for r in owned_ids_query}
+    
+    # 2. Initialize Optimistic State Override if not exists
+    if "optimistic_updates" not in st.session_state:
+        st.session_state.optimistic_updates = {}
 
     # --- Render List ---
     for p in visible_products:
-        is_owned = p.id in owned_ids_set
+        # Determine Status: DB Truth + Local Overrides
+        is_owned_db = p.id in owned_ids_set
+        
+        # Apply override if exists for this product
+        if p.id in st.session_state.optimistic_updates:
+            is_owned = st.session_state.optimistic_updates[p.id]
+        else:
+            is_owned = is_owned_db
+            
         btn_label = "✅ En Colección" if is_owned else "➕ Añadir"
         
         current_best = "---"
@@ -152,6 +164,9 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
             
             with c_action:
                 if st.button(btn_label, key=f"btn_{p.id}", width="stretch"):
+                    # Optimistic Update: Set the OPPOSITE of what is currently displayed
+                    st.session_state.optimistic_updates[p.id] = not is_owned
+                    
                     if toggle_ownership(db, p.id, current_user_id):
                         st.rerun()
             
