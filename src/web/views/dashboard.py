@@ -117,24 +117,7 @@ def render(db: Session, img_dir, user):
         st.divider()
         st.info(f"🔄 **Sistemas Activos:** {len(active_scrapers)} operación(es) en curso.")
 
-    # Live Logs (Admin Only) - No Cache needed (It's text file read)
-    if user.role == "admin":
-        st.divider()
-        with st.expander("📡 Telemetría en Vivo (Admin)", expanded=True):
-            log_file = "logs/oraculo.log"
-            if os.path.exists(log_file):
-                try:
-                    with open(log_file, "r", encoding="utf-8", errors="replace") as f:
-                        lines = f.readlines()[-50:]
-                        log_content = "".join(lines)
-                    st.code(log_content, language="log")
-                except Exception as e:
-                    st.error(f"Error leyendo logs: {e}")
-                
-                if st.button("🔄 Actualizar Logs"):
-                    st.rerun()
-            else:
-                st.warning("No hay logs disponibles aún.")
+
 
     # 3. Audit History
     st.divider() 
