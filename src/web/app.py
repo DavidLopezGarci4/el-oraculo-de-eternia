@@ -83,13 +83,23 @@ st.markdown("""
         color: #ffffff;
         border-radius: 4px;
     }
-    /* Remove gaps between columns in sidebar rows */
-    [data-testid="stSidebar"] div[data-testid="column"] {
-        padding: 0 !important;
-    }
     /* Fix Image Alignment */
     [data-testid="stSidebar"] div[data-testid="stImage"] {
-        margin-top: 5px; /* Micro adjustment to align with button text baseline */
+        margin-top: 5px;
+        display: flex;
+        justify-content: center;
+    }
+    
+    /* MOBILE FIX: Force row layout (No Stacking) */
+    [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] {
+        flex-wrap: nowrap !important;
+        white-space: nowrap !important;
+    }
+    
+    [data-testid="stSidebar"] [data-testid="column"] {
+        min-width: 0px !important; /* Allow columns to shrink on mobile */
+        width: auto !important;
+        flex: 1;
     }
 </style>
 <link rel="manifest" href="manifest.json">
