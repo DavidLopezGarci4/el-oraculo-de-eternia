@@ -82,9 +82,14 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
     st.divider()
     st.caption(f"Mostrando {start_idx+1}-{min(end_idx, total_items)} de {total_items} figuras.")
 
+    # Optimized Ownership Check (Avoid N+1 and Stale Relationships)
+    # Fetch all product_ids owned by this user
+    owned_ids_query = db.query(CollectionItemModel.product_id).filter(CollectionItemModel.owner_id == current_user_id).all()
+    owned_ids_set = {r[0] for r in owned_ids_query}
+
     # --- Render List ---
     for p in visible_products:
-        is_owned = any(i.owner_id == current_user_id for i in p.collection_items)
+        is_owned = p.id in owned_ids_set
         btn_label = "✅ En Colección" if is_owned else "➕ Añadir"
         
         current_best = "---"
