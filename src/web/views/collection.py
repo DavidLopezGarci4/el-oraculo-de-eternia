@@ -10,6 +10,8 @@ def render(db: Session, img_dir, user):
     with c2:
         st.markdown("# Mi Fortaleza (Colección)")
     
+    current_user_id = user.id
+    
     # --- Controls ---
     col_sort, _ = st.columns([1, 1])
     with col_sort:
