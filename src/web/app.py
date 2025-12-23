@@ -83,23 +83,27 @@ st.markdown("""
         color: #ffffff;
         border-radius: 4px;
     }
+    /* Remove gaps between columns in sidebar rows */
+    [data-testid="stSidebar"] div[data-testid="column"] {
+        padding: 0 !important;
+    }
     /* Fix Image Alignment */
     [data-testid="stSidebar"] div[data-testid="stImage"] {
-        margin-top: 5px;
-        display: flex;
-        justify-content: center;
+        margin-top: 5px; /* Micro adjustment to align with button text baseline */
     }
     
-    /* MOBILE FIX: Force row layout (No Stacking) */
+    /* FORCE ROW LAYOUT ON MOBILE (Prevent Stacking) */
     [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        flex-direction: row !important;
         flex-wrap: nowrap !important;
-        white-space: nowrap !important;
+        align-items: center !important;
     }
     
+    /* Allow columns to shrink on mobile */
     [data-testid="stSidebar"] [data-testid="column"] {
-        min-width: 0px !important; /* Allow columns to shrink on mobile */
-        width: auto !important;
-        flex: 1;
+        flex: 1 !important;
+        min-width: 0 !important;
     }
 </style>
 <link rel="manifest" href="manifest.json">
