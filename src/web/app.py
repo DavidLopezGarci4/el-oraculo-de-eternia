@@ -66,7 +66,7 @@ st.markdown("""
         color: #a0a0a0;
     }
     
-    /* Sidebar Links Style */
+    /* Sidebar Links Style - Compact */
     [data-testid="stSidebar"] .stButton button {
         width: 100%;
         border: none;
@@ -75,19 +75,18 @@ st.markdown("""
         display: flex;
         justify-content: flex-start;
         color: #e0e0e0;
+        padding: 0.25rem 0.5rem; /* Reduced padding (Shorter) */
+        font-size: 0.95rem; /* Slightly smaller text */
+        line-height: 1.2;
+        min_height: auto;
     }
     [data-testid="stSidebar"] .stButton button:hover {
         background-color: rgba(41, 128, 185, 0.1);
         color: #ffffff;
+        border-radius: 5px;
     }
-    [data-testid="stSidebar"] .stButton button[kind="primary"] {
-        background-color: rgba(41, 128, 185, 0.15);
-        color: #3498db;
-        border-left: 2px solid #3498db;
-    }
-    [data-testid="stSidebar"] .stButton button:focus {
-        box-shadow: none;
-        outline: none;
+    [data-testid="stSidebar"] div[data-testid="column"] {
+        padding: 0 !important; /* Remove column gaps */
     }
 </style>
 <link rel="manifest" href="manifest.json">
@@ -260,7 +259,14 @@ with st.sidebar:
 
     st.sidebar.markdown("---")
     
-    # --- Cache Refresh (Admin) ---
+    # --- SCROLL TO TOP ON NAV ---
+    # Inject simple JS to force scroll to top when rendering top of sidebar/app
+    components_t = """
+    <script>
+        window.scrollTo(0, 0);
+    </script>
+    """
+    st.components.v1.html(components_t, height=0, width=0)
     if st.session_state.role == "admin":
         if st.sidebar.button("🧹 Limpiar Caché", help="Refrescar memoria del sistema"):
             st.cache_data.clear()
@@ -288,24 +294,36 @@ with st.sidebar:
         ])
     
     for item in menu_items:
-        c_icon, c_btn = st.sidebar.columns([1, 5], vertical_alignment="center")
+        # Use tighter columns: Icon (1) | Button (5) -> Icon (1.5) | Button (5.5) but with CSS adjustment
+        # Actually in Streamlit, columns are flex. [1, 4] is standard.
+        # Let's try [1, 4] to bring text closer to icon.
+        c_icon, c_btn = st.sidebar.columns([1, 4], vertical_alignment="center")
         with c_icon:
-            st.image(str(IMG_DIR / item["icon"]), width=25)
+            # Center icon in its small column
+            st.image(str(IMG_DIR / item["icon"]), width=22) # Slightly smaller icon
         with c_btn:
-            is_active = st.session_state.page == item["id"]
-            if st.button(item["label"], key=f"nav_{item['id']}", type="primary" if is_active else "secondary", width="stretch"):
-                st.session_state.page = item["id"]
-                st.rerun()
+             # Custom CSS class for button alignment if needed, but 'stretch' fills the col.
+             is_active = st.session_state.page == item["id"]
+             if st.button(item["label"], key=f"nav_{item['id']}", type="primary" if is_active else "secondary", width="stretch"):
+                 st.session_state.page = item["id"]
+                 st.rerun()
 
     if not st.session_state.authenticated:
         login_form()
     else:
         st.sidebar.markdown("---")
-        st.sidebar.caption(f"👤 {st.session_state.username}")
-        st.sidebar.button("🔓 Cerrar Sesión", on_click=logout)
+        # User Profile as a row
+        c_usr_icon, c_usr_info = st.sidebar.columns([1, 4], vertical_alignment="center")
+        with c_usr_icon:
+             st.write("👤")
+        with c_usr_info:
+             st.caption(f"{st.session_state.username}")
+             
+        if st.sidebar.button("🔓 Salir", on_click=logout, width="stretch"):
+            pass
     
     st.sidebar.markdown("---")
-    st.sidebar.caption("v2.5 Refactored")
+    st.sidebar.caption("v2.6 Polished UI")
 
 
 # --- ROUTER ---

@@ -10,30 +10,61 @@ def render(db: Session, img_dir, user):
     with c2:
         st.markdown("# Mi Fortaleza (Colección)")
     
-    current_user_id = user.id
-    
-    # Query owned products
-    owned_db = (
-        db.query(ProductModel)
+    # --- Controls ---
+    col_sort, _ = st.columns([1, 1])
+    with col_sort:
+        sort_mode = st.radio(
+            "Ordenar por:", 
+            ["Fecha de Adquisición (Nuevos primero)", "Alfabético (A-Z)"],
+            label_visibility="collapsed",
+            horizontal=True
+        )
+
+    # Base Query
+    query = (
+        db.query(ProductModel, CollectionItemModel.acquired_at)
         .join(CollectionItemModel)
         .filter(CollectionItemModel.owner_id == current_user_id)
-        .all()
     )
+    
+    # Apply Sort to DB Query
+    if "Fecha" in sort_mode:
+        query = query.order_by(CollectionItemModel.acquired_at.desc())
+    else:
+        query = query.order_by(ProductModel.name)
+        
+    owned_db_rows = query.all()
     
     # Apply Optimistic Updates
     if "optimistic_updates" not in st.session_state:
         st.session_state.optimistic_updates = {}
         
     owned = []
-    for p in owned_db:
-        # If explicitly set to False in optimistic state, skip it (virtual delete)
+    # 1. Process DB items (Filter deletions)
+    for p, acquired_at in owned_db_rows:
         if st.session_state.optimistic_updates.get(p.id) is False:
             continue
+        # Attach timestamp for later sorting
+        p.temp_acquired_at = acquired_at 
         owned.append(p)
+        
+    # 2. Process Optimistic Additions
+    # We attribute "now" as time for optimistic adds
+    from datetime import datetime
+    owned_ids = {p.id for p in owned}
+    added_ids = [pid for pid, status in st.session_state.optimistic_updates.items() if status is True and pid not in owned_ids]
     
-    # Also include items optimistically added (if we want to show them immediately in collection view)
-    # However, 'owned_db' is a list of ProductModels. To show new ones, we'd need to fetch them.
-    # For now, let's focus on instant DELETE as that's the primary interaction here.
+    if added_ids:
+        new_products = db.query(ProductModel).filter(ProductModel.id.in_(added_ids)).all()
+        for np in new_products:
+            np.temp_acquired_at = datetime.utcnow() # Assume 'now'
+            owned.append(np)
+            
+    # 3. Final Sort (Merge DB + Optimistic)
+    if "Fecha" in sort_mode:
+        owned.sort(key=lambda x: x.temp_acquired_at or datetime.min, reverse=True)
+    else:
+        owned.sort(key=lambda x: x.name)
     
     if not owned:
         st.warning("Tu fortaleza está vacía. Ve al **Catálogo** y añade tus figuras.")
@@ -41,15 +72,16 @@ def render(db: Session, img_dir, user):
 
     st.success(f"Tienes {len(owned)} reliquias en tu poder.")
     
-    # Grid View
-    cols = st.columns(4)
+    # Grid View: 2 columns for Mobile
+    cols = st.columns(2)
     for idx, p in enumerate(owned):
-        with cols[idx % 4]:
+        with cols[idx % 2]:
+            st.markdown(f"**{p.name}**") 
             if p.image_url:
                 st.image(p.image_url, width="stretch")
-            st.caption(p.name)
-            if st.button("❌", key=f"del_col_{p.id}"):
-                # Optimistic Update: Mark as removed immediately
+            
+            if st.button("❌ Eliminar", key=f"del_col_{p.id}", width="stretch"):
+                # Optimistic Update
                 st.session_state.optimistic_updates[p.id] = False
                 
                 if toggle_ownership(db, p.id, current_user_id):
