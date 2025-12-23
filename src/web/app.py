@@ -92,18 +92,14 @@ st.markdown("""
         margin-top: 5px; /* Micro adjustment to align with button text baseline */
     }
     
-    /* MOBILE FIX: Force Columns to stay side-by-side */
-    /* Streamlit usually stacks columns on mobile. This overrides it for the sidebar. */
+    /* Force Row on Mobile (Candado CSS) */
     [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] {
-        display: flex !important;
-        flex-direction: row !important; 
         flex-wrap: nowrap !important;
-        align-items: center !important;
+        white-space: nowrap !important;
     }
-    /* Ensure Icon Column doesn't shrink to zero */
-    [data-testid="stSidebar"] [data-testid="column"]:first-child {
-        min-width: 40px !important; /* Provide stable width for icon column */
-        flex: 0 0 auto !important;
+    [data-testid="stSidebar"] [data-testid="column"] {
+        min-width: 0px !important; /* Allow shrinking */
+        flex: 1 1 auto !important;
     }
 </style>
 <link rel="manifest" href="manifest.json">
