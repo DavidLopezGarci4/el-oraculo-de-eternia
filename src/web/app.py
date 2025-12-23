@@ -61,12 +61,7 @@ st.markdown("""
         color: #00ff88;
         text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
     }
-    .metric-label {
-        font-size: 0.9rem;
-        color: #a0a0a0;
-    }
-    
-    /* Sidebar Links Style - Compact */
+    /* Sidebar Links Style - Ultra Compact */
     [data-testid="stSidebar"] .stButton button {
         width: 100%;
         border: none;
@@ -74,19 +69,27 @@ st.markdown("""
         text-align: left !important;
         display: flex;
         justify-content: flex-start;
+        align-items: center; /* Ensure vertical center */
         color: #e0e0e0;
-        padding: 0.25rem 0.5rem; /* Reduced padding (Shorter) */
-        font-size: 0.95rem; /* Slightly smaller text */
-        line-height: 1.2;
-        min_height: auto;
+        padding: 0px 8px !important; /* Minimal padding */
+        font-size: 0.9rem;
+        line-height: 1.5;
+        min_height: 0px !important; /* Force removal of default height */
+        height: 38px !important; /* Fixed thin height matching icon */
+        margin: 0px !important;
     }
     [data-testid="stSidebar"] .stButton button:hover {
         background-color: rgba(41, 128, 185, 0.1);
         color: #ffffff;
-        border-radius: 5px;
+        border-radius: 4px;
     }
+    /* Remove gaps between columns in sidebar rows */
     [data-testid="stSidebar"] div[data-testid="column"] {
-        padding: 0 !important; /* Remove column gaps */
+        padding: 0 !important;
+    }
+    /* Fix Image Alignment */
+    [data-testid="stSidebar"] div[data-testid="stImage"] {
+        margin-top: 5px; /* Micro adjustment to align with button text baseline */
     }
 </style>
 <link rel="manifest" href="manifest.json">
@@ -294,13 +297,10 @@ with st.sidebar:
         ])
     
     for item in menu_items:
-        # Use tighter columns: Icon (1) | Button (5) -> Icon (1.5) | Button (5.5) but with CSS adjustment
-        # Actually in Streamlit, columns are flex. [1, 4] is standard.
-        # Let's try [1, 4] to bring text closer to icon.
-        c_icon, c_btn = st.sidebar.columns([1, 4], vertical_alignment="center")
+        # Tighter layout: Icon (1) | Button (5) with small gap
+        c_icon, c_btn = st.sidebar.columns([1, 5], gap="small", vertical_alignment="center")
         with c_icon:
-            # Center icon in its small column
-            st.image(str(IMG_DIR / item["icon"]), width=22) # Slightly smaller icon
+            st.image(str(IMG_DIR / item["icon"]), width=20) # 20px matches text height better
         with c_btn:
              # Custom CSS class for button alignment if needed, but 'stretch' fills the col.
              is_active = st.session_state.page == item["id"]
