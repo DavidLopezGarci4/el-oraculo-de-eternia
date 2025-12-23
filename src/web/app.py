@@ -91,6 +91,20 @@ st.markdown("""
     [data-testid="stSidebar"] div[data-testid="stImage"] {
         margin-top: 5px; /* Micro adjustment to align with button text baseline */
     }
+    
+    /* MOBILE FIX: Force Columns to stay side-by-side */
+    /* Streamlit usually stacks columns on mobile. This overrides it for the sidebar. */
+    [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        flex-direction: row !important; 
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+    }
+    /* Ensure Icon Column doesn't shrink to zero */
+    [data-testid="stSidebar"] [data-testid="column"]:first-child {
+        min-width: 40px !important; /* Provide stable width for icon column */
+        flex: 0 0 auto !important;
+    }
 </style>
 <link rel="manifest" href="manifest.json">
 <script>
@@ -286,7 +300,7 @@ with st.sidebar:
     menu_items = [
         {"id": "Tablero", "label": "Tablero", "icon": "mini_tablero.png"},
         {"id": "Catalogo", "label": "Catálogo", "icon": "Catalogo.png"},
-        {"id": "Cazador", "label": "🔥 Cazador", "icon": "mini_cazador_ofertas.png"},
+        {"id": "Cazador", "label": "Cazador", "icon": "mini_cazador_ofertas.png"},
         {"id": "Coleccion", "label": "Mi Colección", "icon": "Mi_Coleccion.png"}
     ]
     
