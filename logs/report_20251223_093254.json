@@ -1,0 +1,22 @@
+{
+  "ActionToys": {
+    "items_found": 20,
+    "status": "Success"
+  },
+  "Fantasia": {
+    "items_found": 0,
+    "status": "Empty"
+  },
+  "Frikiverso": {
+    "items_found": 0,
+    "status": "Empty"
+  },
+  "Pixelatoy": {
+    "items_found": 0,
+    "status": "Empty"
+  },
+  "Electropolis": {
+    "items_found": 285,
+    "status": "Success"
+  }
+}

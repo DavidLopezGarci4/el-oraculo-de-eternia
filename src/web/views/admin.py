@@ -254,8 +254,6 @@ def render_purgatory(db: Session, img_dir):
     
     st.info("Aquí yacen las ofertas que no encontraron su camino...")
     
-    st.info("Aquí yacen las ofertas que no encontraron su camino...")
-    
     # --- Pagination Logic ---
     PAGE_SIZE = 50
     if "purgatory_page" not in st.session_state:

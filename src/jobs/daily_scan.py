@@ -5,6 +5,7 @@ import sys
 import os
 from pathlib import Path
 from datetime import datetime
+from playwright.async_api import async_playwright
 
 # Add project root to Python path
 root_path = Path(__file__).resolve().parent.parent.parent
@@ -13,25 +14,23 @@ sys.path.append(str(root_path))
 from src.core.logger import setup_logging
 from src.scrapers.pipeline import ScrapingPipeline
 
-# Spiders
-from src.scrapers.spiders.actiontoys import ActionToysSpider
-from src.scrapers.spiders.fantasia import FantasiaSpider
-from src.scrapers.spiders.frikiverso import FrikiversoSpider
-from src.scrapers.spiders.pixelatoy import PixelatoySpider
-from src.scrapers.spiders.dvdstorespain import DVDStoreSpainSpider
-from src.scrapers.spiders.electropolis import ElectropolisSpider
+# New Refactored Scrapers
+from src.infrastructure.scrapers.action_toys_scraper import ActionToysScraper
+from src.infrastructure.scrapers.fantasia_scraper import FantasiaScraper
+from src.infrastructure.scrapers.frikiverso_scraper import FrikiversoScraper
+from src.infrastructure.scrapers.pixelatoy_scraper import PixelatoyScraper
+from src.infrastructure.scrapers.electropolis_scraper import ElectropolisScraper
 
 async def run_daily_scan(progress_callback=None):
     # Ensure logging is set up
     setup_logging()
     logger = logging.getLogger("daily_scan")
-    logger.info("🚀 Starting Daily Oracle Scan...")
+    logger.info("🚀 Starting Daily Oracle Scan (Refactored Loop)...")
     
     # --- AUTOMATIC BACKUP ---
     try:
         import shutil
         import os
-        from datetime import datetime, timedelta
         
         backup_dir = "backups"
         db_file = "oraculo.db"
@@ -46,8 +45,7 @@ async def run_daily_scan(progress_callback=None):
             shutil.copy2(db_file, backup_path)
             logger.info(f"🛡️ Backup created: {backup_path}")
             
-            # Rotation: Keep last 7 days (or just last 7 files)
-            # Simple approach: List all files in backups/, sort by time, delete old ones
+            # Rotation: Keep last 7 items
             files = [os.path.join(backup_dir, f) for f in os.listdir(backup_dir) if f.endswith(".db")]
             files.sort(key=os.path.getmtime)
             
@@ -59,22 +57,48 @@ async def run_daily_scan(progress_callback=None):
         logger.error(f"⚠️ Backup failed: {e}")
     # ------------------------
     
-    # Pass empty list to pipeline init as we are orchestrating manually
-    pipeline = ScrapingPipeline([])
+    # --- ARGUMENT PARSING ---
+    import argparse
+    parser = argparse.ArgumentParser(description="Oracle Scraper Runner")
+    parser.add_argument("--shops", nargs="+", help="Specific shops to scrape (e.g. electropolis fantasia)")
+    args, unknown = parser.parse_known_args()
     
-    # List of Active Spiders
-    spiders = [
-        ActionToysSpider(),
-        FantasiaSpider(),
-        FrikiversoSpider(),
-        PixelatoySpider(),
-        DVDStoreSpainSpider(),
-        ElectropolisSpider()
-    ]
+    # --- PID MANAGEMENT ---
+    pid = os.getpid()
+    pid_file = ".scan_pid"
+    with open(pid_file, "w") as f:
+        f.write(str(pid))
+        
+    try:
+        # Initialize Pipeline
+        pipeline = ScrapingPipeline([])
+        
+        # List of Scrapers
+        all_scrapers = [
+            ActionToysScraper(),
+            FantasiaScraper(),
+            FrikiversoScraper(),
+            PixelatoyScraper(),
+            ElectropolisScraper()
+        ]
+        
+        # Filter Scrapers
+        scrapers = []
+        if args.shops:
+            target_shops = [s.lower() for s in args.shops]
+            logger.info(f"🎯 Target Execution: {target_shops}")
+            for s in all_scrapers:
+                if any(t in s.spider_name.lower() for t in target_shops):
+                    scrapers.append(s)
+        else:
+            scrapers = all_scrapers
+            
+    except Exception as e:
+        logger.error(f"Failed to initialize scrapers: {e}")
+        scrapers = []
     
     results = {}
     total_stats = {"found": 0, "new": 0, "errors": 0}
-    
     start_time = datetime.now()
     
     # DB Session for Status Updates
@@ -82,66 +106,99 @@ async def run_daily_scan(progress_callback=None):
     from src.domain.models import ScraperStatusModel
     db = SessionLocal()
 
-    total_spiders = len(spiders)
+    total_scrapers = len(scrapers)
     
-    for idx, spider in enumerate(spiders):
-        logger.info(f"🕸️ Engaging {spider.shop_name}...")
-        
-        # UI Progress Update (if callback provided)
-        progress_val = int((idx / total_spiders) * 100)
-        if progress_callback:
-            progress_callback(spider.shop_name, progress_val)
-            
-        # DB Status Update (Running)
-        try:
-            status_row = db.query(ScraperStatusModel).filter(ScraperStatusModel.spider_name == spider.shop_name).first()
-            if not status_row:
-                status_row = ScraperStatusModel(spider_name=spider.shop_name)
-                db.add(status_row)
-            status_row.status = "running"
-            status_row.last_update = datetime.now()
-            db.commit()
-        except Exception:
-            db.rollback()
+    # User-Agent List for Rotation
+    user_agents = [
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0"
+    ]
+    import random
 
-        try:
-            # 1. Scrape
-            offers = await spider.search("auto")
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=True)
+        
+        for idx, scraper in enumerate(scrapers):
+            # Check for Stop Signal
+            if os.path.exists(".stop_scan"):
+                logger.warning("🛑 Stop Signal Detected. Aborting scan sequence.")
+                try:
+                    os.remove(".stop_scan")
+                except:
+                    pass
+                break
+                
+            logger.info(f"🕸️ Engaging {scraper.spider_name}...")
             
-            # 2. Persist
-            if offers:
-                pipeline.update_database(offers)
-                stats = {
-                    "items_found": len(offers),
-                    "status": "Success"
-                }
-                total_stats["found"] += len(offers)
-            else:
-                stats = {"items_found": 0, "status": "Empty"}
+            # Select Random User-Agent
+            current_ua = random.choice(user_agents)
+            logger.info(f"🎭 Using User-Agent: {current_ua[:50]}...")
             
-            # DB Status Update (Completed)
+            # Create Isolated Context
+            context = await browser.new_context(user_agent=current_ua)
+
+            # UI Progress Update
+            progress_val = int((idx / total_scrapers) * 100)
+            if progress_callback:
+                progress_callback(scraper.spider_name, progress_val)
+                
+            # DB Status Update (Running)
             try:
-                status_row.status = "completed"
-                status_row.items_scraped = len(offers) if offers else 0
+                status_row = db.query(ScraperStatusModel).filter(ScraperStatusModel.spider_name == scraper.spider_name).first()
+                if not status_row:
+                    status_row = ScraperStatusModel(spider_name=scraper.spider_name)
+                    db.add(status_row)
+                status_row.status = "running"
                 status_row.last_update = datetime.now()
                 db.commit()
             except Exception:
                 db.rollback()
 
-            results[spider.shop_name] = stats
-            logger.info(f"✅ {spider.shop_name} Complete: {stats}")
-            
-        except Exception as e:
-            logger.error(f"❌ Failed {spider.shop_name}: {e}")
-            results[spider.shop_name] = {"error": str(e)}
-            total_stats["errors"] += 1
-            
-            # DB Status Update (Error)
             try:
-                status_row.status = "error"
-                db.commit()
-            except Exception:
-                db.rollback()
+                # 1. Scrape
+                offers = await scraper.run(context)
+                
+                # 2. Persist
+                if offers:
+                    pipeline.update_database(offers)
+                    stats = {
+                        "items_found": len(offers),
+                        "status": "Success"
+                    }
+                    total_stats["found"] += len(offers)
+                else:
+                    stats = {"items_found": 0, "status": "Empty"}
+                
+                # DB Status Update (Completed)
+                try:
+                    status_row.status = "completed"
+                    status_row.items_scraped = len(offers) if offers else 0
+                    status_row.last_update = datetime.now()
+                    db.commit()
+                except Exception:
+                    db.rollback()
+
+                results[scraper.spider_name] = stats
+                logger.info(f"✅ {scraper.spider_name} Complete: {stats}")
+                
+            except Exception as e:
+                logger.error(f"❌ Failed {scraper.spider_name}: {e}")
+                results[scraper.spider_name] = {"error": str(e)}
+                total_stats["errors"] += 1
+                
+                # DB Status Update (Error)
+                try:
+                    status_row.status = "error"
+                    db.commit()
+                except Exception:
+                    db.rollback()
+            finally:
+                await context.close()
+        
+        await browser.close()
     
     # Final Callback
     if progress_callback:
@@ -149,18 +206,31 @@ async def run_daily_scan(progress_callback=None):
     
     db.close()
 
-
     duration = datetime.now() - start_time
     logger.info(f"🏁 Daily Scan Complete in {duration}. Total: {total_stats}")
     
-    # Optional: Dump report to file
+    # Dump report to file
     report_file = f"logs/report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
     try:
+        os.makedirs("logs", exist_ok=True)
         with open(report_file, "w", encoding="utf-8") as f:
             json.dump(results, f, indent=2)
         logger.info(f"📄 Report saved to {report_file}")
     except Exception as e:
         logger.warning(f"Could not save report json: {e}")
+        
+    # Cleanup PID
+    if os.path.exists(pid_file):
+        os.remove(pid_file)
 
 if __name__ == "__main__":
-    asyncio.run(run_daily_scan())
+    try:
+        # if sys.platform == "win32":
+        #    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+        
+        asyncio.run(run_daily_scan())
+    except Exception as e:
+        print(f"CRITICAL ERROR: {e}")
+        import traceback
+        traceback.print_exc()
+        input("Press Enter to exit (Debug Mode)...")

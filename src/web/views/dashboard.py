@@ -81,25 +81,111 @@ def render(db: Session, img_dir, user):
     st.divider()
     st.markdown("### 🚀 Control de Misión")
     
+    # Mission Control
+    
     active_scrapers = db.query(ScraperStatusModel).filter(ScraperStatusModel.status == "running").all()
     
-    col_ctrl1, col_ctrl2 = st.columns([1, 3])
+    # 1. Target Selector
+    import os
+    selected_shops = st.multiselect(
+        "Objetivos de Escaneo",
+        options=["ActionToys", "Fantasia", "Frikiverso", "Pixelatoy", "Electropolis"],
+        default=[],
+        placeholder="Todos los objetivos (Por defecto)",
+        disabled=bool(active_scrapers)
+    )
+    
+    col_ctrl1, col_ctrl2 = st.columns([1, 1])
     with col_ctrl1:
         if active_scrapers:
             st.warning("⚠️ Escaneo en curso...")
+            st.caption(f"Operativo: {[s.spider_name for s in active_scrapers]}")
         else:
             if st.button("🔴 INICIAR ESCANEO", type="primary", use_container_width=True):
                 import subprocess
-                # Run detached process
-                subprocess.Popen(["python", "-m", "src.jobs.daily_scan"], 
-                                 cwd=str(img_dir.parent.parent.parent.parent), # Go up to root? dashboard->views->web->src->ROOT
-                                 # Actually app.py sets CWD usually. Let's rely on standard 'python -m' from root.
-                                 creationflags=subprocess.CREATE_NEW_CONSOLE)
-                st.toast("🚀 Robots desplegados. Monitorizando...")
+                import sys
+                # Use 'cmd /k' to KEEP THE WINDOW OPEN after execution/crash
+                # structure: cmd.exe /k "python -m src.jobs.daily_scan args..."
+                full_cmd = [sys.executable, "-m", "src.jobs.daily_scan"]
+                if selected_shops:
+                    full_cmd.append("--shops")
+                    full_cmd.extend([s.lower() for s in selected_shops])
+                
+                # We need to pass the arguments correctly to cmd /c start "Title" cmd /k ...
+                # Or simpler: just run cmd /k python ... directly in the new console
+                final_flags = subprocess.CREATE_NEW_CONSOLE
+                
+                # Construct command list for cmd.exe
+                # Note: We pass the separate arguments to avoid shell injection, 
+                # but cmd /k expects the subsequent command. 
+                # Ideally: ["cmd.exe", "/k", sys.executable, "-m", ...]
+                cmd_wrapper = ["cmd.exe", "/k"] + full_cmd
+                
+                subprocess.Popen(cmd_wrapper, 
+                                 cwd=str(img_dir.parent.parent.parent.parent),
+                                 creationflags=final_flags)
+                st.toast("🚀 Robots desplegados.")
                 st.rerun()
 
     with col_ctrl2:
         if active_scrapers:
-            st.info("Monitoriza el progreso en la barra lateral.")
+            # STOP BUTTON (Graceful)
+            if st.button("🛑 DETENER (Suave)", type="secondary", key="stop_scan_btn", use_container_width=True):
+                with open(".stop_scan", "w") as f:
+                    f.write("STOP")
+                st.toast("⛔ Señal enviada. Esperando al finalizar scraper actual...")
+
+            # KILL SWITCH (Nuclear) or ZOMBIE CLEANUP
+            if os.path.exists(".scan_pid"):
+                if st.button("☢️ FORZAR CIERRE (Emergencia)", type="secondary", key="kill_scan_btn", use_container_width=True):
+                    try:
+                        with open(".scan_pid", "r") as f:
+                            pid = int(f.read().strip())
+                        import signal
+                        os.kill(pid, signal.SIGTERM) # Try SIGTERM first
+                        # On Windows os.kill only supports SIGTERM which acts as forceful kill
+                        st.error(f"💀 Proceso {pid} eliminado.")
+                        
+                        # Cleanup DB status manually so UI unlocks
+                        for s in active_scrapers:
+                            s.status = "killed"
+                        db.commit()
+                        
+                        # Cleanup files
+                        if os.path.exists(".scan_pid"): os.remove(".scan_pid")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Fallo al eliminar: {e}")
+            else:
+                 # ZOMBIE STATE: DB says running, but no PID file.
+                 st.warning("⚠️ Estado Fantasma detectado (PID perdido).")
+                 if st.button("🛠️ LIMPIEZA DE SISTEMA", help="Resetea el estado de la base de datos si el escáner murió inesperadamente."):
+                     for s in active_scrapers:
+                            s.status = "system_reset"
+                     db.commit()
+                     st.success("✅ Estado reseteado.")
+                     st.rerun()
+
         else:
-            st.caption("Pulsa para iniciar una secuencia de escaneo manual con las nuevas estrategias de sigilo.")
+            st.info("Sistemas listos. Selecciona objetivos o lanza secuencia completa.")
+
+    # 2. Live Logs (Admin Only)
+    if user.role == "admin":
+        st.divider()
+        with st.expander("📡 Telemetría en Vivo (Admin)", expanded=True):
+            log_file = "logs/oraculo.log"
+            if os.path.exists(log_file):
+                try:
+                    with open(log_file, "r", encoding="utf-8", errors="replace") as f:
+                        # Tail last 50 lines
+                        lines = f.readlines()[-50:]
+                        log_content = "".join(lines)
+                    st.code(log_content, language="log")
+                except Exception as e:
+                    st.error(f"Error leyendo logs: {e}")
+                
+                # Auto-refresh button (poor man's websocket)
+                if st.button("🔄 Actualizar Logs"):
+                    st.rerun()
+            else:
+                st.warning("No hay logs disponibles aún.")

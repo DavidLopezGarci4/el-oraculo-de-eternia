@@ -27,14 +27,14 @@
 
 3.  **Consultar al Oráculo**:
     ```bash
-    streamlit run original_app.py
+    streamlit run src/web/app.py
     ```
 
 ## 📂 Grimorio (Estructura)
 
-*   `original_app.py`: El corazón del ritual (App principal).
-*   `scrapers/`: Los espíritus buscadores (Robots de búsqueda).
-*   `models.py`: La forma de los deseos (Modelos de datos).
+*   `src/web/app.py`: El corazón del ritual (App principal).
+*   `src/scrapers/spiders/`: Los espíritus buscadores (Robots de búsqueda).
+*   `src/domain/models.py`: La forma de los deseos (Modelos de datos).
 *   `GUIA_DESPLIEGUE.md`: Instrucciones para elevar el oráculo a la nube.
 
 ## ⚠️ Estado del Proyecto
