@@ -91,16 +91,6 @@ st.markdown("""
     [data-testid="stSidebar"] div[data-testid="stImage"] {
         margin-top: 5px; /* Micro adjustment to align with button text baseline */
     }
-    
-    /* Force Row on Mobile (Candado CSS) */
-    [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] {
-        flex-wrap: nowrap !important;
-        white-space: nowrap !important;
-    }
-    [data-testid="stSidebar"] [data-testid="column"] {
-        min-width: 0px !important; /* Allow shrinking */
-        flex: 1 1 auto !important;
-    }
 </style>
 <link rel="manifest" href="manifest.json">
 <script>
@@ -293,6 +283,7 @@ with st.sidebar:
         
     st.sidebar.markdown("### Navegación")
     
+    # Reverted to Image Icons as requested (No CSS Lock, relying on Ratio)
     menu_items = [
         {"id": "Tablero", "label": "Tablero", "icon": "mini_tablero.png"},
         {"id": "Catalogo", "label": "Catálogo", "icon": "Catalogo.png"},
@@ -307,12 +298,11 @@ with st.sidebar:
         ])
     
     for item in menu_items:
-        # Tighter layout: Icon (1) | Button (5) with small gap
-        c_icon, c_btn = st.sidebar.columns([1, 5], gap="small", vertical_alignment="center")
+        # Columns ratio [1, 3.5] -> Gives more width to icon col vs [1, 5], preventing stack on some mobiles
+        c_icon, c_btn = st.sidebar.columns([1, 3.5], gap="small", vertical_alignment="center")
         with c_icon:
-            st.image(str(IMG_DIR / item["icon"]), width=20) # 20px matches text height better
+            st.image(str(IMG_DIR / item["icon"]), width=20)
         with c_btn:
-             # Custom CSS class for button alignment if needed, but 'stretch' fills the col.
              is_active = st.session_state.page == item["id"]
              if st.button(item["label"], key=f"nav_{item['id']}", type="primary" if is_active else "secondary", width="stretch"):
                  st.session_state.page = item["id"]
@@ -322,8 +312,8 @@ with st.sidebar:
         login_form()
     else:
         st.sidebar.markdown("---")
-        # User Profile as a row
-        c_usr_icon, c_usr_info = st.sidebar.columns([1, 4], vertical_alignment="center")
+        # User Profile using Columns
+        c_usr_icon, c_usr_info = st.sidebar.columns([1, 3.5], gap="small", vertical_alignment="center")
         with c_usr_icon:
              st.write("👤")
         with c_usr_info:
@@ -333,7 +323,7 @@ with st.sidebar:
             pass
     
     st.sidebar.markdown("---")
-    st.sidebar.caption("v2.6 Polished UI")
+    st.sidebar.caption("v3.0 Mobile Native")
 
 
 # --- ROUTER ---
