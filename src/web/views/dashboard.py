@@ -12,8 +12,8 @@ def render(db: Session, img_dir, user):
     with c2:
         st.markdown("# Tablero de Mando")
     
-    # Optimized Data Fetching with Caching
-    @st.cache_data(ttl=300)
+    # Optimized Data Fetching
+    # Metrics are fast (COUNT queries), so we don't cache them to ensure immediate updates after adding items.
     def get_main_metrics(_user_id):
         # Note: _user_id is underscore to avoid hashing issues if object, but int is fine.
         from src.infrastructure.database import SessionLocal

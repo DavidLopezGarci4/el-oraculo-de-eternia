@@ -28,6 +28,9 @@ def toggle_ownership(db, product_id: int, user_id: int):
                 st.toast(f"✅ {product.name} añadido a tu colección")
             
             db.commit()
+            # Cache clear removed to preserve performance. 
+            # We will rely on non-cached user metrics instead.
+            
     except Exception as e:
         db.rollback()
         st.error(f"Error actualizando colección: {e}")
