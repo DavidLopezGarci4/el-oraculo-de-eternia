@@ -8,7 +8,8 @@ IMG_DIR = root_path / "src" / "web" / "static" / "images"
 sys.path.append(str(root_path))
 
 import streamlit as st
-from src.infrastructure.database import SessionLocal
+from sqlalchemy import text
+from src.infrastructure.database import SessionLocal, init_db, engine
 from src.infrastructure.repositories.product import ProductRepository
 from src.domain.models import UserModel, ScraperStatusModel
 from src.core.security import verify_password, hash_password
@@ -23,6 +24,19 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# Initialize DB (Create tables if new models added)
+init_db()
+
+# --- AUTO-MIGRATION (Hotfix) ---
+try:
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE scraper_status ADD COLUMN progress INTEGER DEFAULT 0"))
+        conn.commit()
+except Exception:
+    # Column likely exists
+    pass
+# -------------------------------
 
 # Custom CSS for Glassmorphism
 st.markdown("""
@@ -150,19 +164,101 @@ with st.sidebar:
         
     # --- Sidebar: Robot Status ---
     st.sidebar.markdown("---")
-    st.sidebar.markdown("### 🪞 Espejo de los Espíritus")
+    st.sidebar.markdown("---")
+    # Header with Icon
+    c_mirror_icon, c_mirror_lbl = st.sidebar.columns([1.2, 3.8], vertical_alignment="center")
+    with c_mirror_icon:
+        st.image(str(IMG_DIR / "mini_espejo.png"), width=63)
+    with c_mirror_lbl:
+        st.markdown("**Espejo de los Espíritus**")
+        
     active_scrapers = db.query(ScraperStatusModel).filter(ScraperStatusModel.status == "running").all()
     
     if active_scrapers:
-        for s in active_scrapers:
-            st.sidebar.info(f"🔄 {s.spider_name}: Ejecutando...")
-            st.sidebar.progress(50)
+        # Calculate Total Progress (Average of all running)
+        total_p = sum([s.progress for s in active_scrapers]) / len(active_scrapers) if active_scrapers else 0
+        total_p = int(total_p)
+        
+        # Radioactive Sword SVG Implementation
+        import base64
+        sword_path = IMG_DIR / "espada_limpia.svg"
+        if sword_path.exists():
+            with open(sword_path, "r", encoding="utf-8") as f:
+                svg_content = f.read()
+            # Encode for background use if needed, or simplified approach
+            # Using a CSS clip-path or absolute overlay is easiest for "filling"
+            
+            # Simple "Filling" Effect:
+            # 1. Base Sword (Dim)
+            # 2. Overlay Sword (Bright/Radioactive) clipped by height
+            
+            b64_sword = base64.b64encode(svg_content.encode('utf-8')).decode("utf-8")
+            sword_url = f"data:image/svg+xml;base64,{b64_sword}"
+            
+            st.sidebar.markdown(f"""
+            <div style="position: relative; width: 100%; height: 300px; display: flex; justify-content: center; align-items: center; margin-bottom: 20px;">
+                <!-- Base Ghost Sword -->
+                <div style="
+                    position: absolute;
+                    width: 100%;
+                    height: 100%;
+                    background-image: url('{sword_url}');
+                    background-size: contain;
+                    background-repeat: no-repeat;
+                    background-position: center;
+                    opacity: 0.1;
+                    filter: grayscale(100%);
+                "></div>
+                
+                <!-- Radioactive Filler Sword -->
+                <div style="
+                    position: absolute;
+                    width: 100%;
+                    height: 100%;
+                    background-image: url('{sword_url}');
+                    background-size: contain;
+                    background-repeat: no-repeat;
+                    background-position: center;
+                    clip-path: inset({100 - total_p}% 0 0 0);
+                    transition: clip-path 0.5s ease-in-out;
+                    filter: drop-shadow(0 0 15px #00ffff) drop-shadow(0 0 30px #00aaff) brightness(1.5);
+                "></div>
+                
+                <!-- Percentage Text -->
+                 <div style="
+                    position: absolute;
+                    bottom: 0;
+                    width: 100%;
+                    text-align: center;
+                    font-family: 'Arial', sans-serif;
+                    font-weight: bold;
+                    font-size: 24px;
+                    color: #fff;
+                    text-shadow: 0 0 10px #00ffff;
+                ">
+                    {total_p}%
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            for s in active_scrapers:
+                 st.sidebar.caption(f"⚡ Cargando: {s.spider_name}...")
+        else:
+             st.sidebar.warning("Espada rota (SVG no encontrado)")
     else:
         last_run = db.query(ScraperStatusModel).order_by(ScraperStatusModel.last_update.desc()).first()
         if last_run:
              st.sidebar.caption(f"Última: {last_run.spider_name} ({last_run.status})")
-             
+
     st.sidebar.markdown("---")
+    
+    # --- Cache Refresh (Admin) ---
+    if st.session_state.role == "admin":
+        if st.sidebar.button("🧹 Limpiar Caché", help="Refrescar memoria del sistema"):
+            st.cache_data.clear()
+            st.cache_resource.clear()
+            st.toast("✨ Caché purgada. El sistema está fresco.")
+            st.rerun()
 
     # --- Navigation ---
     if "page" not in st.session_state:
@@ -171,9 +267,9 @@ with st.sidebar:
     st.sidebar.markdown("### Navegación")
     
     menu_items = [
-        {"id": "Tablero", "label": "Tablero", "icon": "Tablero.png"},
+        {"id": "Tablero", "label": "Tablero", "icon": "mini_tablero.png"},
         {"id": "Catalogo", "label": "Catálogo", "icon": "Catalogo.png"},
-        {"id": "Cazador", "label": "🔥 Cazador", "icon": "Catalogo.png"},
+        {"id": "Cazador", "label": "🔥 Cazador", "icon": "mini_cazador_ofertas.png"},
         {"id": "Coleccion", "label": "Mi Colección", "icon": "Mi_Coleccion.png"}
     ]
     

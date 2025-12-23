@@ -81,7 +81,8 @@ ProductModel.collection_item = relationship(
     "CollectionItemModel", 
     uselist=False, 
     back_populates="product",
-    cascade="all, delete-orphan"
+    cascade="all, delete-orphan",
+    overlaps="collection_items"
 )
 
 class PendingMatchModel(Base):
@@ -130,6 +131,7 @@ class ScraperStatusModel(Base):
     spider_name: Mapped[str] = mapped_column(String)
     status: Mapped[str] = mapped_column(String) # running, completed, error
     items_scraped: Mapped[int] = mapped_column(Integer, default=0)
+    progress: Mapped[int] = mapped_column(Integer, default=0) # 0-100
     total_items_estimated: Mapped[int] = mapped_column(Integer, default=0)
     start_time: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     end_time: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
@@ -155,4 +157,25 @@ class PriceHistoryModel(Base):
     recorded_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     
     offer: Mapped["OfferModel"] = relationship("OfferModel", back_populates="price_history")
+
+class ScraperExecutionLogModel(Base):
+    """
+    Immutable log of every scraper execution run.
+    Provides forensic history and audit trail.
+    """
+    __tablename__ = "scraper_execution_logs"
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    spider_name: Mapped[str] = mapped_column(String, index=True)
+    status: Mapped[str] = mapped_column(String) # success, error, interrupted
+    items_found: Mapped[int] = mapped_column(Integer, default=0)
+    new_items: Mapped[int] = mapped_column(Integer, default=0)
+    errors: Mapped[int] = mapped_column(Integer, default=0)
+    
+    start_time: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    end_time: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    
+    # Context
+    trigger_type: Mapped[str] = mapped_column(String, default="manual") # manual, scheduled
+    error_message: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 

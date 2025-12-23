@@ -152,9 +152,25 @@ async def run_daily_scan(progress_callback=None):
                     status_row = ScraperStatusModel(spider_name=scraper.spider_name)
                     db.add(status_row)
                 status_row.status = "running"
+                status_row.progress = progress_val
                 status_row.last_update = datetime.now()
                 db.commit()
             except Exception:
+                db.rollback()
+
+            # Create Execution Log Entry
+            from src.domain.models import ScraperExecutionLogModel
+            log_entry = ScraperExecutionLogModel(
+                spider_name=scraper.spider_name,
+                status="running",
+                start_time=datetime.now(),
+                trigger_type="manual" if args.shops else "scheduled" # infer based on args
+            )
+            try:
+                db.add(log_entry)
+                db.commit()
+            except Exception as e:
+                logger.error(f"Failed to create execution log: {e}")
                 db.rollback()
 
             try:
@@ -169,14 +185,22 @@ async def run_daily_scan(progress_callback=None):
                         "status": "Success"
                     }
                     total_stats["found"] += len(offers)
+                    
+                    # Log Update Success
+                    log_entry.items_found = len(offers)
+                    log_entry.status = "success"
                 else:
                     stats = {"items_found": 0, "status": "Empty"}
+                    log_entry.status = "success_empty"
                 
                 # DB Status Update (Completed)
                 try:
                     status_row.status = "completed"
                     status_row.items_scraped = len(offers) if offers else 0
                     status_row.last_update = datetime.now()
+                    
+                    # Finalize Log
+                    log_entry.end_time = datetime.now()
                     db.commit()
                 except Exception:
                     db.rollback()
@@ -192,6 +216,12 @@ async def run_daily_scan(progress_callback=None):
                 # DB Status Update (Error)
                 try:
                     status_row.status = "error"
+                    
+                    # Finalize Log Error
+                    log_entry.status = "error"
+                    log_entry.error_message = str(e)[:500]
+                    log_entry.end_time = datetime.now()
+                    
                     db.commit()
                 except Exception:
                     db.rollback()

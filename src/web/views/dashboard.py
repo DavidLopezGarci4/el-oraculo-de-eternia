@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
 from sqlalchemy.orm import Session
-from src.domain.models import ProductModel, CollectionItemModel, OfferModel, ScraperStatusModel
+from src.domain.models import ProductModel, CollectionItemModel, OfferModel, ScraperStatusModel, ScraperExecutionLogModel
+from datetime import datetime, timedelta
 
 def render(db: Session, img_dir, user):
     # Header
@@ -94,6 +95,24 @@ def render(db: Session, img_dir, user):
         placeholder="Todos los objetivos (Por defecto)",
         disabled=bool(active_scrapers)
     )
+    
+    # Cooldown Check
+    hot_targets = []
+    if selected_shops:
+        cutoff = datetime.utcnow() - timedelta(hours=20)
+        recent_logs = db.query(ScraperExecutionLogModel).filter(
+            ScraperExecutionLogModel.start_time > cutoff
+        ).all()
+        
+        for log in recent_logs:
+            # Map log spider_name to selection (fuzzy or exact)
+            # Log spider_name usually "Electropolis", selection "Electropolis"
+            for shop in selected_shops:
+                if shop.lower() in log.spider_name.lower():
+                    hot_targets.append((shop, log.end_time))
+                    
+    if hot_targets:
+        st.warning(f"⚠️ ¡Precaución! Objetivos calientes (escaneados < 24h): {', '.join([t[0] for t in hot_targets])}. Riesgo de baneo.")
     
     col_ctrl1, col_ctrl2 = st.columns([1, 1])
     with col_ctrl1:
@@ -189,3 +208,33 @@ def render(db: Session, img_dir, user):
                     st.rerun()
             else:
                 st.warning("No hay logs disponibles aún.")
+
+    # 3. Audit History
+    st.divider() 
+    st.markdown("### 📜 Auditoría de Ejecuciones")
+    
+    history_logs = db.query(ScraperExecutionLogModel).order_by(ScraperExecutionLogModel.start_time.desc()).limit(20).all()
+    
+    if history_logs:
+        history_data = []
+        for h in history_logs:
+            duration = "En curso"
+            if h.end_time and h.start_time:
+                duration = str(h.end_time - h.start_time).split('.')[0]
+                
+            history_data.append({
+                "Fecha": h.start_time.strftime("%d/%m %H:%M"),
+                "Objetivo": h.spider_name,
+                "Estado": "✅" if h.status in ["success", "completed"] else ("⚠️" if h.status == "success_empty" else "❌"),
+                "Items": h.items_found,
+                "Duración": duration,
+                "Tipo": h.trigger_type
+            })
+            
+        st.dataframe(
+            pd.DataFrame(history_data),
+            use_container_width=True,
+            hide_index=True
+        )
+    else:
+        st.caption("No existen registros históricos aún.")

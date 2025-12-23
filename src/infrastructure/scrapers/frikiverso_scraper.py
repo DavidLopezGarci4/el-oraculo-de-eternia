@@ -16,7 +16,7 @@ class FrikiversoScraper(BaseScraper):
     Parsing requires robust text cleaning as <span class="price"> text is often messy.
     """
     def __init__(self):
-        super().__init__(name="Frikiverso", base_url="https://frikiverso.es/es/217-masters-del-universo-origins")
+        super().__init__(name="Frikiverso", base_url="https://frikiverso.es/es/buscar?controller=search&s=masters+del+universo")
 
     async def run(self, context: BrowserContext) -> List[ScrapedOffer]:
         products: List[ScrapedOffer] = []
@@ -73,7 +73,8 @@ class FrikiversoScraper(BaseScraper):
     def _parse_html_item(self, item) -> Optional[ScrapedOffer]:
         try:
             # 1. Link & Name
-            a_tag = item.select_one('h3.product-title a') or item.select_one('h2.product-title a')
+            # Frikiverso: h3.s_title_block a
+            a_tag = item.select_one('h3.s_title_block a') or item.select_one('h3.product-title a')
             if not a_tag: return None
             
             link = a_tag.get('href')
