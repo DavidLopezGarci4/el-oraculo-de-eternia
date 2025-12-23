@@ -89,19 +89,7 @@ st.markdown("""
     }
     /* Fix Image Alignment */
     [data-testid="stSidebar"] div[data-testid="stImage"] {
-        margin-top: 5px;
-    }
-    
-    /* RESPONSIVE DESIGN: "Web = Image+Button", "Mobile = Only Button" */
-    @media (max-width: 640px) {
-        /* Hide the first column (The Icon) inside the Sidebar on small screens */
-        [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-of-type(1) {
-            display: none !important;
-        }
-        /* Make the button look full width and standard on mobile */
-        [data-testid="stSidebar"] .stButton button {
-            padding-left: 0px !important;
-        }
+        margin-top: 5px; /* Micro adjustment to align with button text baseline */
     }
 </style>
 <link rel="manifest" href="manifest.json">
@@ -295,44 +283,34 @@ with st.sidebar:
         
     st.sidebar.markdown("### Navegación")
     
-    # Reverted to Image Icons as requested (No CSS Lock, relying on Ratio)
+    # Simple Menu - Text Only with Power CSS applied above
     menu_items = [
-        {"id": "Tablero", "label": "Tablero", "icon": "mini_tablero.png"},
-        {"id": "Catalogo", "label": "Catálogo", "icon": "Catalogo.png"},
-        {"id": "Cazador", "label": "Cazador", "icon": "mini_cazador_ofertas.png"},
-        {"id": "Coleccion", "label": "Mi Colección", "icon": "Mi_Coleccion.png"}
+        {"id": "Tablero", "label": "Tablero"},
+        {"id": "Catalogo", "label": "Catálogo"},
+        {"id": "Cazador", "label": "Cazador"},
+        {"id": "Coleccion", "label": "Mi Colección"}
     ]
     
     if st.session_state.role == "admin":
         menu_items.extend([
-            {"id": "Purgatorio", "label": "Purgatorio", "icon": "Purgatorio.png"},
-            {"id": "Configuracion", "label": "Configuración", "icon": "Configuracion.png"}
+            {"id": "Purgatorio", "label": "Purgatorio"},
+            {"id": "Configuracion", "label": "Configuración"}
         ])
     
     for item in menu_items:
-        # Columns ratio [1, 3.5] -> Gives more width to icon col vs [1, 5], preventing stack on some mobiles
-        c_icon, c_btn = st.sidebar.columns([1, 3.5], gap="small", vertical_alignment="center")
-        with c_icon:
-            st.image(str(IMG_DIR / item["icon"]), width=20)
-        with c_btn:
-             is_active = st.session_state.page == item["id"]
-             if st.button(item["label"], key=f"nav_{item['id']}", type="primary" if is_active else "secondary", width="stretch"):
-                 st.session_state.page = item["id"]
-                 st.rerun()
+         is_active = st.session_state.page == item["id"]
+         # No columns, just button. CSS handles the look.
+         if st.sidebar.button(item["label"], key=f"nav_{item['id']}", type="primary" if is_active else "secondary", width="stretch"):
+             st.session_state.page = item["id"]
+             st.rerun()
 
     if not st.session_state.authenticated:
         login_form()
     else:
         st.sidebar.markdown("---")
-        # User Profile using Columns
-        c_usr_icon, c_usr_info = st.sidebar.columns([1, 3.5], gap="small", vertical_alignment="center")
-        with c_usr_icon:
-             st.write("👤")
-        with c_usr_info:
-             st.caption(f"{st.session_state.username}")
-             
-        if st.sidebar.button("🔓 Salir", on_click=logout, width="stretch"):
-            pass
+        # User Profile
+        if st.sidebar.button(f"👤 {st.session_state.username} | 🔓 Salir", key="logout_btn", width="stretch"):
+            logout()
     
     st.sidebar.markdown("---")
     st.sidebar.caption("v3.0 Mobile Native")
