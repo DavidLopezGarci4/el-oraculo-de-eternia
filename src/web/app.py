@@ -91,20 +91,6 @@ st.markdown("""
     [data-testid="stSidebar"] div[data-testid="stImage"] {
         margin-top: 5px; /* Micro adjustment to align with button text baseline */
     }
-    
-    /* FORCE ROW LAYOUT ON MOBILE (Prevent Stacking) */
-    [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        align-items: center !important;
-    }
-    
-    /* Allow columns to shrink on mobile */
-    [data-testid="stSidebar"] [data-testid="column"] {
-        flex: 1 !important;
-        min-width: 0 !important;
-    }
 </style>
 <link rel="manifest" href="manifest.json">
 <script>
