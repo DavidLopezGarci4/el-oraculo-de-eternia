@@ -13,4 +13,4 @@ httpx
 rapidfuzz
 bcrypt
 psycopg2-binary
-pytest
+loguru
