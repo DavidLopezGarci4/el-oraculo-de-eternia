@@ -152,8 +152,8 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
             
             with c_action:
                 if st.button(btn_label, key=f"btn_{p.id}", width="stretch"):
-                    toggle_ownership(db, p.id, current_user_id)
-                    st.rerun()
+                    if toggle_ownership(db, p.id, current_user_id):
+                        st.rerun()
             
             st.markdown("---")
 

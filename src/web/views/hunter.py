@@ -65,9 +65,10 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
                 if is_owned:
                     c_act1.button("✅ En Colección", key=f"deal_owned_{offer.id}", disabled=True)
                 else:
-                    if c_act1.button("➕ Capturar", key=f"deal_add_{offer.id}"):
-                        toggle_ownership(db, product.id, current_user_id)
-                        st.rerun()
+                    btn_label = "➕ Capturar"
+                    if c_act1.button(btn_label, key=f"hunter_add_{product.id}", use_container_width=True):
+                        if toggle_ownership(db, product.id, current_user_id):
+                            st.rerun()
 
                 # Cleanup Actions (Popover for safety/cleanliness)
                 with c_act2.popover("🗑️ Opciones"):

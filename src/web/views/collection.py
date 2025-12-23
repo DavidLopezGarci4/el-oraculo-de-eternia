@@ -34,5 +34,5 @@ def render(db: Session, img_dir, user):
                 st.image(p.image_url, width="stretch")
             st.caption(p.name)
             if st.button("❌", key=f"del_col_{p.id}"):
-                toggle_ownership(db, p.id, current_user_id)
-                st.rerun()
+                if toggle_ownership(db, p.id, current_user_id):
+                    st.rerun()
