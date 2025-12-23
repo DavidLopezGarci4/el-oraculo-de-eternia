@@ -1,6 +1,11 @@
 import streamlit as st
+import os
+import sys
+import subprocess
+import signal
+from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
-from src.domain.models import ProductModel, OfferModel, PendingMatchModel, BlackcludedItemModel, CollectionItemModel
+from src.domain.models import ProductModel, OfferModel, PendingMatchModel, BlackcludedItemModel, CollectionItemModel, UserModel, ScraperStatusModel, ScraperExecutionLogModel
 
 def render_inline_product_admin(db: Session, p: ProductModel, current_user_id: int):
     """
@@ -246,19 +251,136 @@ def render_inline_product_admin(db: Session, p: ProductModel, current_user_id: i
                         db.rollback()
 
 def render_purgatory(db: Session, img_dir):
+    # This view now serves as the main Consola de Administración
     c1, c2 = st.columns([1, 8])
     with c1:
         st.image(str(img_dir / "Purgatorio.png"), width="stretch")
     with c2:
-        st.markdown("# Purgatorio (Conexión Manual)")
+        st.markdown("# Consola de Administración")
     
+    st.markdown("---")
+    
+    # TABS structure
+    tab_purg, tab_mission = st.tabs(["👻 Purgatorio (Ofertas)", "🚀 Control de Misión (Robots)"])
+    
+    with tab_purg:
+        _render_purgatory_content(db)
+
+    with tab_mission:
+        _render_mission_control(db, img_dir)
+
+def _render_mission_control(db, img_dir):
+    st.subheader("📡 Centro de Operaciones")
+    
+    active_scrapers = db.query(ScraperStatusModel).filter(ScraperStatusModel.status == "running").all()
+    
+    # Target Selector
+    import os
+    selected_shops = st.multiselect(
+        "Objetivos de Escaneo",
+        options=["ActionToys", "Fantasia", "Frikiverso", "Pixelatoy", "Electropolis"],
+        default=[],
+        placeholder="Todos los objetivos (Por defecto)",
+        disabled=bool(active_scrapers)
+    )
+    
+    # Cooldown Check
+    hot_targets = []
+    if selected_shops:
+        cutoff = datetime.utcnow() - timedelta(hours=20)
+        recent_logs = db.query(ScraperExecutionLogModel).filter(
+            ScraperExecutionLogModel.start_time > cutoff
+        ).all()
+        
+        for log in recent_logs:
+            # Map log spider_name to selection (fuzzy or exact)
+            for shop in selected_shops:
+                if shop.lower() in log.spider_name.lower():
+                    hot_targets.append((shop, log.end_time))
+                    
+    if hot_targets:
+        st.warning(f"⚠️ ¡Precaución! Objetivos calientes (escaneados < 24h): {', '.join([t[0] for t in hot_targets])}. Riesgo de baneo.")
+    
+    col_ctrl1, col_ctrl2 = st.columns([1, 1])
+    with col_ctrl1:
+        if active_scrapers:
+            st.warning("⚠️ Escaneo en curso...")
+            st.caption(f"Operativo: {[s.spider_name for s in active_scrapers]}")
+        else:
+            if st.button("🔴 INICIAR ESCANEO", type="primary", width="stretch", key="scan_go_admin"):
+                import subprocess
+                import sys
+                full_cmd = [sys.executable, "-m", "src.jobs.daily_scan"]
+                if selected_shops:
+                    full_cmd.append("--shops")
+                    full_cmd.extend([s.lower() for s in selected_shops])
+                
+                final_flags = subprocess.CREATE_NEW_CONSOLE
+                cmd_wrapper = ["cmd.exe", "/k"] + full_cmd
+                
+                # Navigate up to root from web/static/images
+                # C:\Users\dace8\OneDrive\Documentos\Antigravity\el-oraculo-de-eternia\src\web\static\images -> parents[3] is root
+                root_cwd = img_dir.parent.parent.parent.parent
+                
+                subprocess.Popen(cmd_wrapper, 
+                                 cwd=str(root_cwd),
+                                 creationflags=final_flags)
+                st.toast("🚀 Robots desplegados.")
+                st.rerun()
+
+    with col_ctrl2:
+        if active_scrapers:
+            if st.button("🛑 DETENER (Suave)", type="secondary", key="stop_scan_admin", width="stretch"):
+                with open(".stop_scan", "w") as f:
+                    f.write("STOP")
+                st.toast("⛔ Señal enviada.")
+
+            if os.path.exists(".scan_pid"):
+                if st.button("☢️ FORZAR CIERRE (Emergencia)", type="secondary", key="kill_scan_admin", width="stretch"):
+                    try:
+                        with open(".scan_pid", "r") as f:
+                            pid = int(f.read().strip())
+                        import signal
+                        os.kill(pid, signal.SIGTERM) 
+                        st.error(f"💀 Proceso {pid} eliminado.")
+                        
+                        for s in active_scrapers:
+                            s.status = "killed"
+                        db.commit()
+                        if os.path.exists(".scan_pid"): os.remove(".scan_pid")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Fallo al eliminar: {e}")
+            else:
+                 st.warning("⚠️ Estado Fantasma.")
+                 if st.button("🛠️ LIMPIEZA DE SISTEMA", help="Resetea el estado de la base de datos si el escáner murió inesperadamente.", key="sys_reset_admin"):
+                     for s in active_scrapers:
+                            s.status = "system_reset"
+                     db.commit()
+                     st.success("✅ Estado reseteado.")
+                     st.rerun()
+
+        else:
+            st.info("Sistemas listos.")
+
+    # Live Logs
+    st.divider()
+    with st.expander("📝 Logs del Sistema", expanded=True):
+        log_file = "logs/oraculo.log"
+        if os.path.exists(log_file):
+             if st.button("Actualizar Logs", key="refresh_logs_admin"): st.rerun()
+             with open(log_file, "r", encoding="utf-8", errors="replace") as f:
+                 log_content = "".join(f.readlines()[-30:])
+             st.code(log_content, language="log")
+
+def _render_purgatory_content(db):
     st.info("Aquí yacen las ofertas que no encontraron su camino...")
     
     # --- Pagination Logic ---
     PAGE_SIZE = 50
     if "purgatory_page" not in st.session_state:
         st.session_state.purgatory_page = 0
-
+    
     total_items = db.query(PendingMatchModel).count()
     if total_items == 0:
         st.success("El Purgatorio está vacío. ¡Alabado sea!")
@@ -287,7 +409,7 @@ def render_purgatory(db: Session, img_dir):
         with st.expander(f"{item.scraped_name} - {item.shop_name} ({item.price}€)", expanded=True):
             if item.image_url:
                 st.image(item.image_url, width=100)
-            # st.code(item.url)
+            
             from src.web.shared import render_external_link
             render_external_link(item.url, "Abrir Enlace", key_suffix=f"purg_{item.id}")
             
@@ -296,9 +418,6 @@ def render_purgatory(db: Session, img_dir):
             # Match
             from src.infrastructure.repositories.product import ProductRepository
             repo = ProductRepository(db) # We need repo for searching? Or just DB query.
-            # Simple match by name logic?
-            # User types ID or selects product.
-            
             # Simple Selection
             all_products = db.query(ProductModel).order_by(ProductModel.name).all()
             target_p = c1.selectbox("Vincular a:", all_products, format_func=lambda x: x.name, key=f"purg_sel_{item.id}")
