@@ -110,96 +110,102 @@ def render(db: Session, img_dir, user):
     else:
         st.info("No hay datos de scrapers aún.")
 
-    # Mission Control (Real-time checks, no cache for active status)
-    st.divider()
-    st.markdown("### 🚀 Control de Misión")
-    
+    # Mission Control (Real-time checks) - ADMIN ONLY
     active_scrapers = db.query(ScraperStatusModel).filter(ScraperStatusModel.status == "running").all()
-    
-    # Target Selector
-    import os
-    selected_shops = st.multiselect(
-        "Objetivos de Escaneo",
-        options=["ActionToys", "Fantasia", "Frikiverso", "Pixelatoy", "Electropolis"],
-        default=[],
-        placeholder="Todos los objetivos (Por defecto)",
-        disabled=bool(active_scrapers)
-    )
-    
-    # Cooldown Check
-    hot_targets = []
-    if selected_shops:
-        cutoff = datetime.utcnow() - timedelta(hours=20)
-        recent_logs = db.query(ScraperExecutionLogModel).filter(
-            ScraperExecutionLogModel.start_time > cutoff
-        ).all()
+
+    if user.role == "admin":
+        st.divider()
+        st.markdown("### 🚀 Control de Misión (Admin)")
         
-        for log in recent_logs:
-            # Map log spider_name to selection (fuzzy or exact)
-            for shop in selected_shops:
-                if shop.lower() in log.spider_name.lower():
-                    hot_targets.append((shop, log.end_time))
-                    
-    if hot_targets:
-        st.warning(f"⚠️ ¡Precaución! Objetivos calientes (escaneados < 24h): {', '.join([t[0] for t in hot_targets])}. Riesgo de baneo.")
-    
-    col_ctrl1, col_ctrl2 = st.columns([1, 1])
-    with col_ctrl1:
-        if active_scrapers:
-            st.warning("⚠️ Escaneo en curso...")
-            st.caption(f"Operativo: {[s.spider_name for s in active_scrapers]}")
-        else:
-            if st.button("🔴 INICIAR ESCANEO", type="primary", width="stretch"):
-                import subprocess
-                import sys
-                full_cmd = [sys.executable, "-m", "src.jobs.daily_scan"]
-                if selected_shops:
-                    full_cmd.append("--shops")
-                    full_cmd.extend([s.lower() for s in selected_shops])
-                
-                final_flags = subprocess.CREATE_NEW_CONSOLE
-                cmd_wrapper = ["cmd.exe", "/k"] + full_cmd
-                
-                subprocess.Popen(cmd_wrapper, 
-                                 cwd=str(img_dir.parent.parent.parent.parent),
-                                 creationflags=final_flags)
-                st.toast("🚀 Robots desplegados.")
-                st.rerun()
-
-    with col_ctrl2:
-        if active_scrapers:
-            if st.button("🛑 DETENER (Suave)", type="secondary", key="stop_scan_btn", width="stretch"):
-                with open(".stop_scan", "w") as f:
-                    f.write("STOP")
-                st.toast("⛔ Señal enviada. Esperando al finalizar scraper actual...")
-
-            if os.path.exists(".scan_pid"):
-                if st.button("☢️ FORZAR CIERRE (Emergencia)", type="secondary", key="kill_scan_btn", width="stretch"):
-                    try:
-                        with open(".scan_pid", "r") as f:
-                            pid = int(f.read().strip())
-                        import signal
-                        os.kill(pid, signal.SIGTERM) 
-                        st.error(f"💀 Proceso {pid} eliminado.")
+        # Target Selector
+        import os
+        selected_shops = st.multiselect(
+            "Objetivos de Escaneo",
+            options=["ActionToys", "Fantasia", "Frikiverso", "Pixelatoy", "Electropolis"],
+            default=[],
+            placeholder="Todos los objetivos (Por defecto)",
+            disabled=bool(active_scrapers)
+        )
+        
+        # Cooldown Check
+        hot_targets = []
+        if selected_shops:
+            cutoff = datetime.utcnow() - timedelta(hours=20)
+            recent_logs = db.query(ScraperExecutionLogModel).filter(
+                ScraperExecutionLogModel.start_time > cutoff
+            ).all()
+            
+            for log in recent_logs:
+                # Map log spider_name to selection (fuzzy or exact)
+                for shop in selected_shops:
+                    if shop.lower() in log.spider_name.lower():
+                        hot_targets.append((shop, log.end_time))
                         
-                        for s in active_scrapers:
-                            s.status = "killed"
-                        db.commit()
-                        if os.path.exists(".scan_pid"): os.remove(".scan_pid")
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"Fallo al eliminar: {e}")
+        if hot_targets:
+            st.warning(f"⚠️ ¡Precaución! Objetivos calientes (escaneados < 24h): {', '.join([t[0] for t in hot_targets])}. Riesgo de baneo.")
+        
+        col_ctrl1, col_ctrl2 = st.columns([1, 1])
+        with col_ctrl1:
+            if active_scrapers:
+                st.warning("⚠️ Escaneo en curso...")
+                st.caption(f"Operativo: {[s.spider_name for s in active_scrapers]}")
             else:
-                 st.warning("⚠️ Estado Fantasma detectado (PID perdido).")
-                 if st.button("🛠️ LIMPIEZA DE SISTEMA", help="Resetea el estado de la base de datos si el escáner murió inesperadamente."):
-                     for s in active_scrapers:
-                            s.status = "system_reset"
-                     db.commit()
-                     st.success("✅ Estado reseteado.")
-                     st.rerun()
+                if st.button("🔴 INICIAR ESCANEO", type="primary", width="stretch"):
+                    import subprocess
+                    import sys
+                    full_cmd = [sys.executable, "-m", "src.jobs.daily_scan"]
+                    if selected_shops:
+                        full_cmd.append("--shops")
+                        full_cmd.extend([s.lower() for s in selected_shops])
+                    
+                    final_flags = subprocess.CREATE_NEW_CONSOLE
+                    cmd_wrapper = ["cmd.exe", "/k"] + full_cmd
+                    
+                    subprocess.Popen(cmd_wrapper, 
+                                     cwd=str(img_dir.parent.parent.parent.parent),
+                                     creationflags=final_flags)
+                    st.toast("🚀 Robots desplegados.")
+                    st.rerun()
 
-        else:
-            st.info("Sistemas listos. Selecciona objetivos o lanza secuencia completa.")
+        with col_ctrl2:
+            if active_scrapers:
+                if st.button("🛑 DETENER (Suave)", type="secondary", key="stop_scan_btn", width="stretch"):
+                    with open(".stop_scan", "w") as f:
+                        f.write("STOP")
+                    st.toast("⛔ Señal enviada. Esperando al finalizar scraper actual...")
+
+                if os.path.exists(".scan_pid"):
+                    if st.button("☢️ FORZAR CIERRE (Emergencia)", type="secondary", key="kill_scan_btn", width="stretch"):
+                        try:
+                            with open(".scan_pid", "r") as f:
+                                pid = int(f.read().strip())
+                            import signal
+                            os.kill(pid, signal.SIGTERM) 
+                            st.error(f"💀 Proceso {pid} eliminado.")
+                            
+                            for s in active_scrapers:
+                                s.status = "killed"
+                            db.commit()
+                            if os.path.exists(".scan_pid"): os.remove(".scan_pid")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Fallo al eliminar: {e}")
+                else:
+                     st.warning("⚠️ Estado Fantasma detectado (PID perdido).")
+                     if st.button("🛠️ LIMPIEZA DE SISTEMA", help="Resetea el estado de la base de datos si el escáner murió inesperadamente."):
+                         for s in active_scrapers:
+                                s.status = "system_reset"
+                         db.commit()
+                         st.success("✅ Estado reseteado.")
+                         st.rerun()
+
+            else:
+                st.info("Sistemas listos. Selecciona objetivos o lanza secuencia completa.")
+    
+    # If not admin, we skip the entire control section but might show active status
+    elif active_scrapers:
+         st.divider()
+         st.info(f"🔄 **Escaneo en Curso:** {len(active_scrapers)} robots trabajando...")
 
     # Live Logs (Admin Only) - No Cache needed (It's text file read)
     if user.role == "admin":
