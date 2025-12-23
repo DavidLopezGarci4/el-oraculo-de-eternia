@@ -172,11 +172,26 @@ with st.sidebar:
     with c_mirror_lbl:
         st.markdown("**Espejo de los Espíritus**")
         
-    active_scrapers = db.query(ScraperStatusModel).filter(ScraperStatusModel.status == "running").all()
+    # Optimized Sidebar Status with Caching
+    @st.cache_data(ttl=60)
+    def get_sidebar_status():
+        # Use a new session for thread safety in cache
+        from src.infrastructure.database import SessionLocal
+        with SessionLocal() as session:
+            active = session.query(ScraperStatusModel).filter(ScraperStatusModel.status == "running").all()
+            # Convert to dict to be picklable/cacheable if needed, or just return objects (detached)
+            # returning simple data structures is safer for st.cache_data
+            active_data = [{"spider_name": s.spider_name, "progress": s.progress} for s in active]
+            
+            last = session.query(ScraperStatusModel).order_by(ScraperStatusModel.last_update.desc()).first()
+            last_data = {"spider_name": last.spider_name, "status": last.status} if last else None
+            return active_data, last_data
+
+    active_scrapers_data, last_run_data = get_sidebar_status()
     
-    if active_scrapers:
+    if active_scrapers_data:
         # Calculate Total Progress (Average of all running)
-        total_p = sum([s.progress for s in active_scrapers]) / len(active_scrapers) if active_scrapers else 0
+        total_p = sum([s["progress"] for s in active_scrapers_data]) / len(active_scrapers_data) if active_scrapers_data else 0
         total_p = int(total_p)
         
         # Radioactive Sword SVG Implementation
@@ -185,12 +200,6 @@ with st.sidebar:
         if sword_path.exists():
             with open(sword_path, "r", encoding="utf-8") as f:
                 svg_content = f.read()
-            # Encode for background use if needed, or simplified approach
-            # Using a CSS clip-path or absolute overlay is easiest for "filling"
-            
-            # Simple "Filling" Effect:
-            # 1. Base Sword (Dim)
-            # 2. Overlay Sword (Bright/Radioactive) clipped by height
             
             b64_sword = base64.b64encode(svg_content.encode('utf-8')).decode("utf-8")
             sword_url = f"data:image/svg+xml;base64,{b64_sword}"
@@ -241,14 +250,13 @@ with st.sidebar:
             </div>
             """, unsafe_allow_html=True)
             
-            for s in active_scrapers:
-                 st.sidebar.caption(f"⚡ Cargando: {s.spider_name}...")
+            for s in active_scrapers_data:
+                 st.sidebar.caption(f"⚡ Cargando: {s['spider_name']}...")
         else:
              st.sidebar.warning("Espada rota (SVG no encontrado)")
     else:
-        last_run = db.query(ScraperStatusModel).order_by(ScraperStatusModel.last_update.desc()).first()
-        if last_run:
-             st.sidebar.caption(f"Última: {last_run.spider_name} ({last_run.status})")
+        if last_run_data:
+             st.sidebar.caption(f"Última: {last_run_data['spider_name']} ({last_run_data['status']})")
 
     st.sidebar.markdown("---")
     
