@@ -89,7 +89,19 @@ st.markdown("""
     }
     /* Fix Image Alignment */
     [data-testid="stSidebar"] div[data-testid="stImage"] {
-        margin-top: 5px; /* Micro adjustment to align with button text baseline */
+        margin-top: 5px;
+    }
+    
+    /* RESPONSIVE DESIGN: "Web = Image+Button", "Mobile = Only Button" */
+    @media (max-width: 640px) {
+        /* Hide the first column (The Icon) inside the Sidebar on small screens */
+        [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-of-type(1) {
+            display: none !important;
+        }
+        /* Make the button look full width and standard on mobile */
+        [data-testid="stSidebar"] .stButton button {
+            padding-left: 0px !important;
+        }
     }
 </style>
 <link rel="manifest" href="manifest.json">
