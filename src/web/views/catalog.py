@@ -11,7 +11,7 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
     # Header
     c1, c2 = st.columns([1, 8])
     with c1:
-        st.image(str(img_dir / "Catalogo.png"), use_container_width=True)
+        st.image(str(img_dir / "Catalogo.png"), width="stretch")
     with c2:
         st.markdown("# Catálogo de Eternia")
     st.caption(f"Explorando {total_products} reliquias en el multiverso...")
@@ -146,7 +146,7 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
                 st.metric("Mín. Histórico", historic_low)
             
             with c_action:
-                if st.button(btn_label, key=f"btn_{p.id}", use_container_width=True):
+                if st.button(btn_label, key=f"btn_{p.id}", width="stretch"):
                     toggle_ownership(db, p.id, current_user_id)
                     st.rerun()
             
@@ -157,7 +157,7 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
     
     with c_prev:
         if st.session_state.catalog_page > 0:
-            if st.button("⬅️ Anterior", use_container_width=True):
+            if st.button("⬅️ Anterior", width="stretch"):
                 st.session_state.catalog_page -= 1
                 st.rerun()
                 
@@ -166,6 +166,6 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
         
     with c_next:
         if st.session_state.catalog_page < total_pages - 1:
-            if st.button("Siguiente ➡️", use_container_width=True):
+            if st.button("Siguiente ➡️", width="stretch"):
                 st.session_state.catalog_page += 1
                 st.rerun()

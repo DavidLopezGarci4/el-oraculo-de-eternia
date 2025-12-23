@@ -38,27 +38,27 @@ def render_external_link(url: str, text: str = "Ver Oferta", key_suffix: str = "
     Solves issues with embedded browsers blocking navigation.
     """
     # Consolidated Popover (User Requested)
-    with st.popover(f"🔗 {text}", use_container_width=True, help="Elige cómo abrir el enlace"):
+    with st.popover(f"🔗 {text}", width="stretch", help="Elige cómo abrir el enlace"):
         st.write("**Abrir oferta en:**")
         
         c1, c2 = st.columns(2)
         import subprocess
         
         with c1:
-            if st.button("🔵 Edge", key=f"open_edge_{key_suffix}_{url[-10:]}", use_container_width=True):
+            if st.button("🔵 Edge", key=f"open_edge_{key_suffix}_{url[-10:]}", width="stretch"):
                 try:
                     subprocess.run(f'start msedge "{url}"', shell=True)
                 except Exception as e:
                     st.error(f"Error: {e}")
         
         with c2:
-            if st.button("🟢 Chrome", key=f"open_chrome_{key_suffix}_{url[-10:]}", use_container_width=True):
+            if st.button("🟢 Chrome", key=f"open_chrome_{key_suffix}_{url[-10:]}", width="stretch"):
                 try:
                     subprocess.run(f'start chrome "{url}"', shell=True)
                 except Exception as e:
                     st.error(f"Error: {e}")
         
-        if st.button("🌐 Predeterminado", key=f"open_def_{key_suffix}_{url[-10:]}", use_container_width=True):
+        if st.button("🌐 Predeterminado", key=f"open_def_{key_suffix}_{url[-10:]}", width="stretch"):
              import webbrowser
              webbrowser.open_new_tab(url)
 

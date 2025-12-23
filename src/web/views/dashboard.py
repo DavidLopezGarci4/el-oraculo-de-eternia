@@ -8,7 +8,7 @@ def render(db: Session, img_dir, user):
     # Header
     c1, c2 = st.columns([1, 8])
     with c1:
-        st.image(str(img_dir / "Tablero.png"), use_container_width=True)
+        st.image(str(img_dir / "Tablero.png"), width="stretch")
     with c2:
         st.markdown("# Tablero de Mando")
     
@@ -71,7 +71,7 @@ def render(db: Session, img_dir, user):
                 st.dataframe(
                     counts, 
                     column_config={"shop_name": "Tienda", "count": "Figuras"},
-                    use_container_width=True
+                    width="stretch"
                 )
         else:
             st.info("No hay datos de scrapers aún.")
@@ -120,7 +120,7 @@ def render(db: Session, img_dir, user):
             st.warning("⚠️ Escaneo en curso...")
             st.caption(f"Operativo: {[s.spider_name for s in active_scrapers]}")
         else:
-            if st.button("🔴 INICIAR ESCANEO", type="primary", use_container_width=True):
+            if st.button("🔴 INICIAR ESCANEO", type="primary", width="stretch"):
                 import subprocess
                 import sys
                 # Use 'cmd /k' to KEEP THE WINDOW OPEN after execution/crash
@@ -149,14 +149,14 @@ def render(db: Session, img_dir, user):
     with col_ctrl2:
         if active_scrapers:
             # STOP BUTTON (Graceful)
-            if st.button("🛑 DETENER (Suave)", type="secondary", key="stop_scan_btn", use_container_width=True):
+            if st.button("🛑 DETENER (Suave)", type="secondary", key="stop_scan_btn", width="stretch"):
                 with open(".stop_scan", "w") as f:
                     f.write("STOP")
                 st.toast("⛔ Señal enviada. Esperando al finalizar scraper actual...")
 
             # KILL SWITCH (Nuclear) or ZOMBIE CLEANUP
             if os.path.exists(".scan_pid"):
-                if st.button("☢️ FORZAR CIERRE (Emergencia)", type="secondary", key="kill_scan_btn", use_container_width=True):
+                if st.button("☢️ FORZAR CIERRE (Emergencia)", type="secondary", key="kill_scan_btn", width="stretch"):
                     try:
                         with open(".scan_pid", "r") as f:
                             pid = int(f.read().strip())
@@ -233,7 +233,7 @@ def render(db: Session, img_dir, user):
             
         st.dataframe(
             pd.DataFrame(history_data),
-            use_container_width=True,
+            width="stretch",
             hide_index=True
         )
     else:

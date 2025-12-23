@@ -8,7 +8,7 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
     # Header
     c1, c2 = st.columns([1, 8])
     with c1:
-        st.image(str(img_dir / "cazador_ofertas.png"), use_container_width=True) 
+        st.image(str(img_dir / "cazador_ofertas.png"), width="stretch") 
     with c2:
         st.markdown("# Cazador de Ofertas 🔥")
     
@@ -47,7 +47,7 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
             with st.container(border=True):
                 # Image
                 if product.image_url:
-                    st.image(product.image_url, use_container_width=True)
+                    st.image(product.image_url, width="stretch")
                 
                 st.subheader(product.name)
                 

@@ -114,7 +114,7 @@ with st.sidebar:
     # Center Image using columns
     col_l, col_c, col_r = st.columns([1, 4, 1])
     with col_c:
-        st.image(logo_path, use_container_width=True)
+        st.image(logo_path, width="stretch")
     
     # --- Auth & Session ---
     if "role" not in st.session_state:
@@ -285,7 +285,7 @@ with st.sidebar:
             st.image(str(IMG_DIR / item["icon"]), width=25)
         with c_btn:
             is_active = st.session_state.page == item["id"]
-            if st.button(item["label"], key=f"nav_{item['id']}", type="primary" if is_active else "secondary", use_container_width=True):
+            if st.button(item["label"], key=f"nav_{item['id']}", type="primary" if is_active else "secondary", width="stretch"):
                 st.session_state.page = item["id"]
                 st.rerun()
 
@@ -341,7 +341,7 @@ else:
     # Center Landing Image
     c1, c2, c3 = st.columns([1, 2, 1])
     with c2:
-        st.image(str(IMG_DIR / "Oraculo_Eternia.png"), use_container_width=True)
+        st.image(str(IMG_DIR / "Oraculo_Eternia.png"), width="stretch")
 
 # Close DB
 db.close()

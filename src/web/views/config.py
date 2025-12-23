@@ -7,7 +7,7 @@ from src.core.security import verify_password, hash_password
 def render(db: Session, user: UserModel, img_dir):
     c1, c2 = st.columns([1, 8])
     with c1:
-        st.image(str(img_dir / "Configuracion.png"), use_container_width=True)
+        st.image(str(img_dir / "Configuracion.png"), width="stretch")
     with c2:
         st.markdown("# Configuración del Sistema")
     

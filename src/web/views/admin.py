@@ -248,7 +248,7 @@ def render_inline_product_admin(db: Session, p: ProductModel, current_user_id: i
 def render_purgatory(db: Session, img_dir):
     c1, c2 = st.columns([1, 8])
     with c1:
-        st.image(str(img_dir / "Purgatorio.png"), use_container_width=True)
+        st.image(str(img_dir / "Purgatorio.png"), width="stretch")
     with c2:
         st.markdown("# Purgatorio (Conexión Manual)")
     

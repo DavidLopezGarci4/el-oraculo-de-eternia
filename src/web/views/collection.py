@@ -6,7 +6,7 @@ from src.web.shared import toggle_ownership
 def render(db: Session, img_dir, user):
     c1, c2 = st.columns([1, 8])
     with c1:
-         st.image(str(img_dir / "Mi_Coleccion.png"), use_container_width=True)
+         st.image(str(img_dir / "Mi_Coleccion.png"), width="stretch")
     with c2:
         st.markdown("# Mi Fortaleza (Colección)")
     
@@ -31,7 +31,7 @@ def render(db: Session, img_dir, user):
     for idx, p in enumerate(owned):
         with cols[idx % 4]:
             if p.image_url:
-                st.image(p.image_url, use_container_width=True)
+                st.image(p.image_url, width="stretch")
             st.caption(p.name)
             if st.button("❌", key=f"del_col_{p.id}"):
                 toggle_ownership(db, p.id, current_user_id)
