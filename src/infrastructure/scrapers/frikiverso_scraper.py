@@ -106,3 +106,18 @@ class FrikiversoScraper(BaseScraper):
         except Exception as e:
             logger.warning(f"[{self.spider_name}] Item parsing error: {e}")
             return None
+
+    async def _handle_popups(self, page: Page):
+        """
+        Frikiverso specific: Close the newsletter newsletter popup that appears on load.
+        """
+        try:
+            # Common selectors for their close buttons or overlays
+            # Based on audit, it's often a .newsletter-popup or similar
+            close_btn = page.locator(".newsletter-popup button.close, .newsletter-close, button[aria-label='Close']")
+            if await close_btn.is_visible(timeout=2000):
+                logger.info(f"[{self.spider_name}] 🤫 Closing newsletter popup...")
+                await close_btn.click()
+                await asyncio.sleep(1.0)
+        except Exception:
+            pass

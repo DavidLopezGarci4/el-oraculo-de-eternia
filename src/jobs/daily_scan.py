@@ -61,7 +61,15 @@ async def run_daily_scan(progress_callback=None):
     import argparse
     parser = argparse.ArgumentParser(description="Oracle Scraper Runner")
     parser.add_argument("--shops", nargs="+", help="Specific shops to scrape (e.g. electropolis fantasia)")
+    parser.add_argument("--random-delay", type=int, default=0, help="Wait up to X minutes before starting (jitter)")
     args, unknown = parser.parse_known_args()
+    
+    # --- STAGGERED START (KAIZEN) ---
+    if args.random_delay > 0:
+        import random
+        wait_mins = random.uniform(0, args.random_delay)
+        logger.info(f"⏳ Kaizen: Staggered start active. Waiting {wait_mins:.2f} minutes before engaging robots...")
+        await asyncio.sleep(wait_mins * 60)
     
     # --- PID MANAGEMENT ---
     pid = os.getpid()

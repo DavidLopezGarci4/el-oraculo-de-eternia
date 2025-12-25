@@ -118,3 +118,17 @@ class ElectropolisScraper(BaseScraper):
         except Exception as e:
             logger.warning(f"[{self.spider_name}] Item parsing error: {e}")
             return None
+
+    async def _handle_popups(self, page: Page):
+        """
+        Electropolis specific: Accept cookies to clear the overlay.
+        """
+        try:
+            # Selector derived from audit
+            accept_btn = page.locator("button:has-text('ACEPTAR COOKIES')")
+            if await accept_btn.is_visible(timeout=3000):
+                logger.info(f"[{self.spider_name}] 🍪 Accepting cookies...")
+                await accept_btn.click()
+                await asyncio.sleep(1.0)
+        except Exception:
+            pass

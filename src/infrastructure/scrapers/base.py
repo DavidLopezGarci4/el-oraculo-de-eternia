@@ -40,11 +40,19 @@ class BaseScraper(ABC):
         
         try:
             await page.goto(url, timeout=60000, wait_until="domcontentloaded")
+            await self._handle_popups(page)
             return True
         except Exception as e:
             logger.error(f"[{self.spider_name}] Error navigating to {url}: {e}")
             self.errors += 1
             return False
+
+    async def _handle_popups(self, page: Page):
+        """
+        Hook for closing newsletters, cookie banners, etc.
+        To be overridden by child classes if needed.
+        """
+        pass
 
     def _normalize_price(self, price_raw: float | str) -> float:
         """

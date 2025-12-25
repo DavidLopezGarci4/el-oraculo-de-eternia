@@ -202,3 +202,25 @@ class FantasiaScraper(BaseScraper):
             )
         except Exception:
             return None
+
+    async def _handle_popups(self, page: Page):
+        """
+        Fantasia specific: Close the 'LOGÍSTICA REYES' modal and accept cookies.
+        """
+        try:
+            # 1. Logistics Modal
+            # Based on audit, it has a "CERRAR AVISO" button.
+            close_modal = page.locator("button:has-text('CERRAR AVISO'), .modal-header .close")
+            if await close_modal.is_visible(timeout=3000):
+                logger.info(f"[{self.spider_name}] 📦 Closing Logistics modal...")
+                await close_modal.click()
+                await asyncio.sleep(0.5)
+
+            # 2. Cookie Banner
+            accept_cookies = page.locator("button:has-text('ACEPTO')")
+            if await accept_cookies.is_visible(timeout=2000):
+                logger.info(f"[{self.spider_name}] 🍪 Accepting cookies...")
+                await accept_cookies.click()
+                await asyncio.sleep(0.5)
+        except Exception:
+            pass
