@@ -263,4 +263,4 @@ if __name__ == "__main__":
         print(f"CRITICAL ERROR: {e}")
         import traceback
         traceback.print_exc()
-        input("Press Enter to exit (Debug Mode)...")
+        # input("Press Enter to exit (Debug Mode)...")
