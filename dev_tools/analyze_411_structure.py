@@ -25,29 +25,24 @@ def debug_structure():
     
     found_sections = 0
     
+    print(f"Found {len(h2s)} H2 tags.")
+    
     for i, h2 in enumerate(h2s):
-        # Logic from existing script
-        strong_tag = h2.find("strong")
-        if not strong_tag:
-            print(f"[H2 #{i}] SKIPPED (No <strong>): '{h2.get_text(strip=True)}'")
-            continue
-            
-        title = strong_tag.get_text(strip=True)
-        print(f"\n[H2 #{i}] MATCHED Title: '{title}'")
+        text = h2.get_text(strip=True)
+        print(f"[H2 #{i}] Text: '{text}'")
         
-        # Check table
+        strong = h2.find("strong")
+        if strong:
+            print(f"   Has Strong: Yes ('{strong.get_text(strip=True)}')")
+        else:
+            print("   Has Strong: No")
+            
         next_table = h2.find_next("table")
         if next_table:
             rows = next_table.find_all("tr")
-            print(f"  -> Linked Table Rows: {len(rows)}")
-            if rows:
-                cols = rows[0].find_all(["th", "td"])
-                print(f"  -> First Row Headers: {[c.get_text(strip=True) for c in cols]}")
-            found_sections += 1
+            print(f"   Next Table Rows: {len(rows)}")
         else:
-            print("  -> Table NOT FOUND via find_next('table')")
-
-    print(f"\nTotal Sections Found by Logic: {found_sections}")
+            print("   Next Table: None")
 
 if __name__ == "__main__":
     debug_structure()

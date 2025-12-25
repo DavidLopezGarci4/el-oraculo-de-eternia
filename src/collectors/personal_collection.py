@@ -146,17 +146,81 @@ def urljoin(base: str, href: str) -> str:
 def find_sections(soup: BeautifulSoup) -> List[Tuple[str, BeautifulSoup]]:
     """
     Encuentra secciones: (título, tabla) en la página índice.
-    Selector tolerante: busca h2 con <strong> y toma la tabla siguiente.
+    Selector robusto: busca h2, con o sin strong, y valida keywords.
+    Soporta MÚLTIPLES tablas por sección (si están divididas).
+    Retorna una lista plana de (titulo, tabla) donde el título se repite si hay varias tablas.
     """
     sections: List[Tuple[str, BeautifulSoup]] = []
-    for h2 in soup.find_all("h2"):
-        strong_tag = h2.find("strong")
-        if not strong_tag:
-            continue
-        title = strong_tag.get_text(strip=True)
-        next_table = h2.find_next("table")
-        if next_table:
-            sections.append((title, next_table))
+    
+    # Palabras clave para validar si un H2 es una sección válida de muñecos
+    VALID_KEYWORDS = ["checklist", "origins", "masterverse", "wwe", "turtles", "crossover"]
+    
+    all_h2s = list(soup.find_all("h2"))
+    
+    def _is_valid_header(tag) -> Tuple[bool, str]:
+        """Devuelve (True, Titulo) si es un header principal, o (False, None)."""
+        txt = tag.get_text(strip=True)
+        # 1. Strong tag
+        s_tag = tag.find("strong")
+        if s_tag:
+            return True, s_tag.get_text(strip=True)
+        # 2. Keywords
+        if any(k in txt.lower() for k in VALID_KEYWORDS):
+            return True, txt
+        return False, None
+    
+    # Identificar indices de headers válidos
+    valid_indices = []
+    for i, h2 in enumerate(all_h2s):
+        is_valid, title = _is_valid_header(h2)
+        if is_valid:
+            valid_indices.append((i, h2, title))
+            
+    # Procesar intervalos
+    for idx_in_valid, (h2_idx, h2_node, title) in enumerate(valid_indices):
+        # Determinar el nodo límite (el siguiente header válido)
+        limit_node = None
+        if idx_in_valid + 1 < len(valid_indices):
+            limit_node = valid_indices[idx_in_valid + 1][1]
+            
+        # Buscar TODAS las tablas siguientes que estén antes del límite
+        # find_all_next devuelve en orden de aparición en el documento
+        candidate_tables = h2_node.find_all_next("table")
+        
+        tables_found_for_section = 0
+        for tbl in candidate_tables:
+            # Check si nos pasamos del límite
+            if limit_node:
+                # Comprobar posición: si tbl aparece DESPUÉS de limit_node en el source.
+                # sourceline es aproximado, mejor usar lógica de 'sourceline' o comparar orden.
+                # Una forma robusta en BS4 es ver si limit_node está en los 'previous_elements' de tbl? Lento.
+                # Mejor: si limit_node aparece ANTES que tbl en el árbol parseado.
+                # BS4 no da comparación directa > < de nodos fácilmente sin indexar.
+                # Truco: usar .index(limit_node) es lento globalmente.
+                pass
+                
+                # Check simplificado: string parsing index (hacky pero rápido)
+                # O mejor: stop when we see a table that is inside or after the limit section.
+                # Si 'tbl' está después de 'limit_node', paramos.
+                # Asumimos que find_all_next itera en orden del documento.
+                # Si encontramos limit_node en los parents de tbl? No.
+                
+                # Vamos a usar una heurística de posición basada en el orden de 'all_next'.
+                # Iterar generator con cuidado.
+                pass 
+        
+        # Estrategia de iteración manual (más segura que find_all_next masivo)
+        curr = h2_node.next_element
+        while curr:
+            if curr == limit_node:
+                break
+            
+            if curr.name == "table":
+                sections.append((title, curr))
+                tables_found_for_section += 1
+                
+            curr = curr.next_element
+            
     return sections
 
 def clean_headers(table: BeautifulSoup) -> List[str]:
@@ -217,14 +281,21 @@ def download_image(session: requests.Session, url: str, dest_path: Path) -> bool
 def process_table(
     table: BeautifulSoup,
     session: requests.Session,
-    images_dir: Path
+    images_dir: Path,
+    fast_mode: bool = False,
+    existing_keys: Set[str] = None
 ) -> pd.DataFrame:
     """
-    Procesa una tabla HTML y retorna un DataFrame con columnas:
-    Adquirido, columnas originales, Detail Link, Image URL, Image Path, Imagen
+    Procesa una tabla HTML y retorna un DataFrame.
+    fast_mode: Si es True, salta la descarga de detalles e imágenes.
+    existing_keys: Conjunto de claves (Name|Year) que ya existen. Si está, se salta el detalle.
     """
+    if existing_keys is None:
+        existing_keys = set()
+        
     headers = clean_headers(table)
-    out_cols = ["Adquirido"] + headers + ["Detail Link", "Image URL", "Image Path", "Imagen"]
+    # AÑADIDO: 'Figure ID' para futuro uso robusto
+    out_cols = ["Adquirido"] + headers + ["Detail Link", "Image URL", "Image Path", "Imagen", "Figure ID"]
     rows = []
 
     for tr in table.find_all("tr"):
@@ -233,11 +304,35 @@ def process_table(
             continue
 
         # Normaliza nº de celdas
-        cells = [(td.get_text() or "").strip() for td in tds]
+        # Sanitizar smart quotes y espacios
+        cells = []
+        for td in tds:
+            txt = (td.get_text() or "").strip()
+            # Replace smart quotes
+            txt = txt.replace("’", "'").replace("‘", "'").replace("“", '"').replace("”", '"')
+            cells.append(txt)
+            
         if len(cells) < len(headers):
             cells += [""] * (len(headers) - len(cells))
         else:
             cells = cells[:len(headers)]
+
+        # --- Extracción de Figure ID (Análisis Robustez) ---
+        figure_id = ""
+        input_box = tr.find("input", {"type": "checkbox"})
+        if input_box and input_box.has_attr("figureid"):
+            figure_id = input_box["figureid"]
+
+        # Construir clave actual para check incremental
+        name_val = cells[0] if len(cells) > 0 else ""
+        year_val = ""
+        if len(cells) > 2:
+            year_val = cells[2]
+        
+        current_key = f"{name_val}|{year_val}"
+        
+        is_existing = current_key in existing_keys
+        should_skip_detail = fast_mode or is_existing
 
         row_data = ["No"] + cells
 
@@ -247,7 +342,8 @@ def process_table(
         image_url = None
         image_path_str = None
 
-        if detail_link:
+        # Solo procesar detalles si NO debemos saltar
+        if detail_link and not should_skip_detail:
             detail_url = urljoin(CHECKLIST_URL, detail_link)
             dresp = safe_get(session, detail_url)
             if dresp is not None:
@@ -259,8 +355,11 @@ def process_table(
                     if download_image(session, img_url, image_path):
                         image_path_str = str(image_path)
                 polite_pause()
+        elif is_existing and not fast_mode:
+             # Si existe, NO descargamos
+             pass
 
-        row_data += [detail_link, image_url, image_path_str, ""]
+        row_data += [detail_link, image_url, image_path_str, "", figure_id]
         rows.append(row_data)
 
     df = pd.DataFrame(rows, columns=out_cols)
@@ -296,13 +395,7 @@ def sanitize_sheet_base(title: str) -> str:
     return t[:31]  # base inicial (luego puede acortarse para sufijos)
 
 def unique_sheet_name(title: str, used: Set[str]) -> str:
-    """
-    Genera un nombre de hoja único (case-insensitive) de <=31 caracteres.
-    - Usa una base saneada del título.
-    - Si existe, añade sufijos _2, _3, ... recortando base si es necesario.
-    - Evita colisiones case-insensitive.
-    - Como último recurso añade un hash corto.
-    """
+    """Genera un nombre de hoja único (case-insensitive) de <=31 caracteres."""
     base = sanitize_sheet_base(title)
     name = base
     norm = name.lower()
@@ -321,20 +414,15 @@ def unique_sheet_name(title: str, used: Set[str]) -> str:
             used.add(norm_c)
             return candidate
         counter += 1
-        # Seguridad: si crecemos demasiado, añadimos hash
+        # Seguridad
         if counter > 99:
             h = hashlib.sha1(title.encode("utf-8")).hexdigest()[:4]
-            base2 = (base[:31 - 5]) + "_" + h  # deja espacio para _2/_3
+            base2 = (base[:31 - 5]) + "_" + h
             base = base2
-            counter = 2  # reintenta con base hasheada
+            counter = 2
 
 def read_existing_excel(file_path: Path) -> List[Tuple[str, pd.DataFrame]]:
-    """
-    Lee el Excel existente, cada hoja con:
-      A1 => título completo,
-      fila 2 => cabeceras,
-      filas >=3 => datos.
-    """
+    """Lee el Excel existente."""
     if not file_path.exists():
         logging.info("No existe Excel previo, se creará uno nuevo.")
         return []
@@ -373,11 +461,7 @@ def read_existing_excel(file_path: Path) -> List[Tuple[str, pd.DataFrame]]:
     return sections_data_old
 
 def make_key(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Crea una clave compuesta estable para el merge.
-    Usa columnas disponibles entre ["Name", "Wave", "Year"].
-    Versión robusta: usa .apply(..., axis=1) para garantizar una Serie.
-    """
+    """Crea una clave compuesta estable para el merge."""
     df = df.copy()
     candidates = [c for c in ["Name", "Wave", "Year"] if c in df.columns]
     if not candidates:
@@ -394,18 +478,11 @@ def combine_sections(
     sections_new: List[Tuple[str, pd.DataFrame]],
     sections_old: List[Tuple[str, pd.DataFrame]]
 ) -> List[Tuple[str, pd.DataFrame]]:
-    """
-    Combina datos nuevos y antiguos por sección.
-    - Alinea columnas.
-    - Merge por clave compuesta (__key__) preservando orden web.
-    - Mantiene filas antiguas no presentes en la web.
-    - Respeta "Adquirido = Sí" (prioriza fila antigua completa).
-    """
+    """Combina datos manteniendo estado 'Adquirido'."""
     old_map = {t: df for t, df in sections_old}
     result: List[Tuple[str, pd.DataFrame]] = []
 
     def _dedupe_index(dfk: pd.DataFrame) -> pd.DataFrame:
-        """Desambiguación de claves duplicadas en el índice."""
         if not dfk.index.has_duplicates:
             return dfk
         counts = {}
@@ -421,7 +498,7 @@ def combine_sections(
     for title, df_new in sections_new:
         df_old = old_map.get(title, pd.DataFrame())
 
-        # Alinea columnas (mantener todas)
+        # Alinea columnas
         new_cols = df_new.columns.tolist()
         old_cols = df_old.columns.tolist()
         missing_in_new = [c for c in old_cols if c not in new_cols]
@@ -430,39 +507,46 @@ def combine_sections(
         df_new = df_new.reindex(columns=final_cols, fill_value="")
         df_old = df_old.reindex(columns=final_cols, fill_value="")
 
-        # Merge por clave compuesta
         df_new_k = make_key(df_new).set_index("__key__", drop=False)
         df_old_k = make_key(df_old).set_index("__key__", drop=False)
 
-        # Desambiguar si hubiera claves duplicadas
         df_new_k = _dedupe_index(df_new_k)
         df_old_k = _dedupe_index(df_old_k)
 
         final_rows = []
 
-        # Primero, filas en orden web (nuevas)
+        # Filas nuevas (Web)
         for k in df_new_k.index:
             if k in df_old_k.index:
                 old_row = df_old_k.loc[k].copy()
-                if str(old_row.get("Adquirido", "No")) == "Sí":
-                    final_rows.append(old_row)
-                else:
-                    new_row = df_new_k.loc[k].copy()
-                    new_row["Adquirido"] = old_row.get("Adquirido", "No")
-                    final_rows.append(new_row)
+                
+                # INYECCIÓN DE FIGURE ID ROBUSTA
+                # Si tenemos un ID nuevo (de la web), lo forzamos en la fila vieja
+                # para ir migrando gradualmente a IDs sin perder datos viejos (imágenes, notas).
+                if "Figure ID" in df_new_k.columns:
+                     new_id = df_new_k.loc[k].get("Figure ID", "")
+                     if new_id:
+                         old_row["Figure ID"] = new_id
+                
+                # En modo incremental, df_new puede venir sin imágenes (saltado).
+                # Por tanto, si existe en old, casi siempre preferimos old_row (con sus imágenes ya bajadas).
+                # Solo actualizamos el status Adquirido si fuera logicamente posible, pero
+                # aqui simplemente mantenemos el estado del excel previo.
+                # Si el usuario quiere refrescar metadatos completos, debería borrar el Excel o filas especificas.
+                final_rows.append(old_row)
             else:
                 new_row = df_new_k.loc[k].copy()
+                # Correct logic for NEW item: Adquirido = No
                 new_row["Adquirido"] = "No"
                 final_rows.append(new_row)
 
-        # Luego, filas antiguas que ya no aparecen en la web
+        # Filas viejas perdidas (que ya no están en la web?)
         for k in df_old_k.index:
             if k not in df_new_k.index:
                 final_rows.append(df_old_k.loc[k].copy())
 
         df_final = pd.DataFrame(final_rows, columns=final_cols)
 
-        # Reordenar columnas según DESIRED_ORDER
         existing_in_desired = [c for c in DESIRED_ORDER if c in df_final.columns]
         remaining_cols = [c for c in df_final.columns if c not in existing_in_desired]
         df_final = df_final.reindex(columns=existing_in_desired + remaining_cols)
@@ -472,43 +556,36 @@ def combine_sections(
     return result
 
 # =========================
-# Excel: escritura (una pasada, con hipervínculos)
+# Excel: escritura
 # =========================
 
 def write_excel_with_links(
     excel_path: Path,
     sections: List[Tuple[str, pd.DataFrame]]
 ) -> None:
-    """
-    Escribe cada sección en una hoja, con título en A1 y validación/formatos.
-    Inserta hipervínculos a las imágenes (si existe el fichero en disco).
-    Todo en una sola pasada. Garantiza nombres de hoja únicos.
-    """
+    """Escribe Excel final."""
     with pd.ExcelWriter(excel_path, engine="xlsxwriter") as writer:
         wb = writer.book
         title_fmt = wb.add_format({"bg_color": "#ADD8E6", "bold": True})
         fmt_green = wb.add_format({"bg_color": "#C6EFCE", "font_color": "#006100"})
         fmt_red = wb.add_format({"bg_color": "#FFC7CE", "font_color": "#9C0006"})
 
-        used_names: Set[str] = set()  # nombres (lowercase) ya usados
+        used_names: Set[str] = set()
 
         for title, df in sections:
             sheet_name = unique_sheet_name(title, used_names)
             ws = wb.add_worksheet(sheet_name)
-            writer.sheets[sheet_name] = ws  # evita colisión con to_excel
+            writer.sheets[sheet_name] = ws
 
-            # Título en A1 (fila 0)
             num_cols = max(1, df.shape[1])
             ws.merge_range(0, 0, 0, num_cols - 1, title, title_fmt)
 
-            # DataFrame desde fila 2 (índice 1)
             df.to_excel(writer, sheet_name=sheet_name, startrow=1, startcol=0, index=False)
 
             df_rows = df.shape[0]
             if df_rows == 0:
                 continue
 
-            # Validación/formatos en "Adquirido"
             if "Adquirido" in df.columns:
                 col_idx = df.columns.get_loc("Adquirido")
                 data_start = 2
@@ -529,7 +606,6 @@ def write_excel_with_links(
                     "type": "cell", "criteria": "==", "value": '"No"', "format": fmt_red
                 })
 
-            # Hipervínculos a imágenes
             if "Imagen" in df.columns and "Image Path" in df.columns:
                 imagen_col = df.columns.get_loc("Imagen")
                 path_col = df.columns.get_loc("Image Path")
@@ -543,18 +619,61 @@ def write_excel_with_links(
                             ws.write_url(data_start + i, imagen_col, link, string="Ver Imagen")
 
 # =========================
+# Reporting
+# =========================
+
+def generate_text_report(sections: List[Tuple[str, pd.DataFrame]], path: Path):
+    """Genera un reporte de auditoría en texto."""
+    total_items = 0
+    with path.open("w", encoding="utf-8") as f:
+        f.write("=== ACTIONFIGURE411 SCRAPING AUDIT REPORT ===\n")
+        f.write(f"Generated at: {time.strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+        
+        for title, df in sections:
+            count = len(df)
+            total_items += count
+            f.write(f"SECTION: {title}\n")
+            f.write(f"  Rows Found: {count}\n")
+            if count > 0 and "Name" in df.columns:
+                names = df["Name"].tolist()
+                ids = df["Figure ID"].tolist() if "Figure ID" in df.columns else ["?"] * len(names)
+                for n, fid in zip(names, ids):
+                    f.write(f"    - [{fid}] {n}\n")
+            f.write("-" * 40 + "\n")
+            
+        f.write(f"\nTOTAL ITEMS FOUND: {total_items}\n")
+        
+    logging.info(f"Audit report written to {path}")
+
+# =========================
 # Pipeline principal
 # =========================
 
 def main() -> None:
+    import argparse
+    parser = argparse.ArgumentParser(description="ActionFigures411 Scraper & Updater")
+    parser.add_argument("--report", action="store_true", help="Run in audit mode (no downloads, generates report)")
+    args = parser.parse_args()
+
     start_time = time.time()
-
     project_root, excel_path, images_dir = get_project_paths()
-    logging.info("Raíz del proyecto: %s", project_root)
-    logging.info("Excel de salida:   %s", excel_path)
-    logging.info("Carpeta imágenes:  %s", images_dir)
-
+    
     session = build_session()
+    
+    # 1. Leer Excel PREVIO para incrementalidad
+    existing_keys = set()
+    if not args.report:
+        logging.info("Leyendo Excel existente para modo incremental...")
+        sections_old_preload = read_existing_excel(excel_path)
+        for _, df_old in sections_old_preload:
+            if "Name" in df_old.columns:
+                 has_year = "Year" in df_old.columns
+                 for _, row in df_old.iterrows():
+                     n = str(row["Name"]).strip()
+                     y = str(row["Year"]).strip() if has_year else ""
+                     k = f"{n}|{y}"
+                     existing_keys.add(k)
+        logging.info("Se encontraron %d figuras existentes. Se omitirá su descarga.", len(existing_keys))
 
     logging.info("Descargando página índice...")
     resp = safe_get(session, CHECKLIST_URL)
@@ -570,18 +689,25 @@ def main() -> None:
     # Procesar tablas
     sections_new: List[Tuple[str, pd.DataFrame]] = []
     for title, tbl in sections_html:
-        logging.info("Procesando sección: %s", title)
-        df = process_table(tbl, session, images_dir)
+        logging.info("Procesando sección: %s (FastMode=%s, Incremental=%s)", title, args.report, not args.report)
+        # Pasamos existing_keys
+        df = process_table(tbl, session, images_dir, fast_mode=args.report, existing_keys=existing_keys)
         sections_new.append((title, df))
-        polite_pause()
+        if not args.report:
+            polite_pause()
 
-    # Leer Excel previo (si existe)
+    if args.report:
+        # Generate Report Only
+        report_path = project_root.parent / "logs" / "scraping_report.txt"
+        report_path.parent.mkdir(exist_ok=True)
+        generate_text_report(sections_new, report_path)
+        print(f"Report generated at: {report_path.absolute()}")
+        return
+
+    # Normal Flow: Merge and Write Excel
+    # Re-leemos el Excel para merge robusto
     sections_old = read_existing_excel(excel_path)
-
-    # Combinar
     sections_final = combine_sections(sections_new, sections_old)
-
-    # Escribir Excel con hipervínculos (una sola pasada) con nombres únicos
     write_excel_with_links(excel_path, sections_final)
 
     elapsed = time.time() - start_time
@@ -589,31 +715,23 @@ def main() -> None:
     logging.info("Resultado guardado en: %s", excel_path)
 
 def get_scraped_data() -> List[Tuple[str, pd.DataFrame]]:
-    """
-    Función expuesta para la Clean Architecture.
-    Devuelve los datos scrapeados sin interactuar con el Excel.
-    """
+    """Clean Architecture Entrypoint"""
     project_root, excel_path, images_dir = get_project_paths()
     session = build_session()
     
-    logging.info("Clean Arch: Descargando Checklist...")
     resp = safe_get(session, CHECKLIST_URL)
-    if resp is None:
-        return []
+    if resp is None: return []
         
     soup = BeautifulSoup(resp.text, "html.parser")
     sections_html = find_sections(soup)
     
     sections_data = []
     for title, tbl in sections_html:
-        # Para la importación no necesitamos descargar todas las imágenes obligatoriamente,
-        # pero mantenemos la lógica si ya está ahí.
-        df = process_table(tbl, session, images_dir)
+        df = process_table(tbl, session, images_dir, fast_mode=False)
         sections_data.append((title, df))
         polite_pause()
         
     return sections_data
-
 
 if __name__ == "__main__":
     main()

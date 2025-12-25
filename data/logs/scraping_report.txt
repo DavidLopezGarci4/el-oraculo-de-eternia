@@ -1,0 +1,332 @@
+=== ACTIONFIGURE411 SCRAPING AUDIT REPORT ===
+Generated at: 2025-12-25 12:24:47
+
+SECTION: Origins Action Figures Checklist
+  Rows Found: 117
+    - [2394] Beast Man
+    - [2395] Evil-Lyn
+    - [2393] He-Man
+    - [2396] Man-at-arms
+    - [2397] Skeletor
+    - [2398] Teela
+    - [2399] Man-E-Faces
+    - [2400] Orko
+    - [2401] Scare Glow
+    - [2402] Trap Jaw
+    - [2403] Mer-Man
+    - [2404] Roboto
+    - [2405] She-Ra
+    - [2406] Zodac
+    - [2407] Hordak
+    - [2408] Ninjor
+    - [2409] Stratos
+    - [2410] Tri-Klops
+    - [2462] He-Man (Vintage Sculpt)
+    - [2463] Skeletor (Vintage Sculpt)
+    - [2453] Evil-Lyn (Version 2)
+    - [2455] Faker
+    - [2456] Fisto
+    - [2454] Mer-Man (Lords of Power)
+    - [2458] Beast Man (Lords of Power)
+    - [2457] Eternian Goddess
+    - [2459] Stinkor
+    - [2460] Webstor
+    - [3339] Buzz-Off
+    - [3340] Jitsu
+    - [3338] Sorceress
+    - [3341] Stratos (Mini Comic)
+    - [3712] He-Man (Anti-Eternia)
+    - [3710] Clawful
+    - [3711] Horde Trooper
+    - [3713] Sun-Man
+    - [4215] He-Man (200x)
+    - [4218] Mantenna
+    - [4217] Pig-Head
+    - [4216] Skeletor (200x)
+    - [4943] Digitino
+    - [4941] King Randor
+    - [4944] Trap Jaw (Mini Comic)
+    - [4942] Whiplash
+    - [4936] Bolt Man
+    - [4938] Kobra Khan
+    - [4939] Rattlor
+    - [4937] Snake Armor He-Man
+    - [5835] Duplico
+    - [5565] Hypno
+    - [5564] Roboto (Mini Comic)
+    - [5290] Snake Armor Skeletor
+    - [5563] Tung Lashor
+    - [5837] Slamurai
+    - [5840] Snake Teela
+    - [5839] Snake Trooper
+    - [5838] Young King Randor (200x)
+    - [6216] Eternian Guard Infiltrator
+    - [6212] Serpent Claw Man-At-Arms
+    - [6214] Spikor
+    - [6215] Sssqueeze
+    - [8020] Lord Gr'Asp
+    - [8019] Terroar
+    - [7312] Beast Man (Cartoon Collection)
+    - [7310] He-Man (Cartoon Collection)
+    - [7790] King Randor (Fan Favorite)
+    - [7318] Mer-Man (Fan Favorite)
+    - [7789] Ninjor (Fan Favorite)
+    - [7316] She-Ra (Fan Favorite)
+    - [8569] Tri-Klops (Fan Favorite)
+    - [7792] Webstor (Fan Favorite)
+    - [7317] Zodac (Fan Favorite)
+    - [7313] Man-At-Arms (Cartoon Collection)
+    - [7311] Skeletor (Cartoon Collection)
+    - [7791] Trap Jaw (Fan Favorite)
+    - [7314] Teela (Cartoon Collection)
+    - [7315] Trap Jaw (Cartoon Collection)
+    - [8408] Mer-Man (Cartoon Collection)
+    - [8405] Reptilax
+    - [8404] Stratos (Cartoon Collection)
+    - [8407] Evil-Lyn (Cartoon Collection)
+    - [8763] Orko (Fan Favorite)
+    - [8406] Webstor (Cartoon Collection)
+    - [8759] Clawful (Cartoon Collection)
+    - [8760] Spikor (Cartoon Collection)
+    - [8762] Trap Jaw (Black Armor - Fan Favorite)
+    - [8474] Vypor
+    - [8943] Mantenna (Cartoon Collection)
+    - [8942] Ram Man (Cartoon Collection)
+    - [8944] She-Ra (Cartoon Collection)
+    - [9088] Hordak (Cartoon Collection)
+    - [9089] Man-E-Faces (Cartoon Collection)
+    - [9090] Tri-Klops (Cartoon Collection)
+    - [12143] Samurai He-Man (Cartoon Collection)
+    - [11413] Spikor (Sketchbook)
+    - [12267] Sting-Or
+    - [9389] Catra (Cartoon Collection)
+    - [9387] Faker (Cartoon Collection)
+    - [9388] Leech (Cartoon Collection)
+    - [10690] Buzz-Off (Cartoon Collection)
+    - [10688] Frosta (Cartoon Collection)
+    - [10689] Invisible Skeletor (Cartoon Collection)
+    - [10558] Fang Man (Cartoon Collection)
+    - [10559] Grizzlor (Cartoon Collection)
+    - [10560] Orko (Cartoon Collection)
+    - [11292] Bow (Cartoon Collection)
+    - [11293] Shadow Weaver (Cartoon Collection)
+    - [11291] Whiplash (Cartoon Collection)
+    - [12459] King Randor (Cartoon Collection)
+    - [12505] Ram Man (200x - Cartoon Collection - Deluxe)
+    - [12169] Beast Man (200x - Cartoon Collection)
+    - [12170] He-Man (200x - Cartoon Collection)
+    - [12171] Stratos (200x - Cartoon Collection)
+    - [12172] Tri-Klops (200x - Cartoon Collection)
+    - [12503] Evil-Lyn (200x - Cartoon Collection)
+    - [12504] Man-At-Arms (200x - Cartoon Collection)
+    - [12502] Moss Man (200x - Cartoon Collection)
+----------------------------------------
+SECTION: Origins Deluxe Checklist
+  Rows Found: 17
+    - [2416] Clamp Champ (Deluxe)
+    - [2478] Eternian Palace Guard (Deluxe)
+    - [2419] He-Man - Battle Armor (Deluxe)
+    - [2421] Hordak Buzz Saw (Deluxe)
+    - [2461] Mosquitor (Deluxe)
+    - [2417] Ram Man (Deluxe)
+    - [2418] Skeletor - Battle Armor (Deluxe)
+    - [3342] Flying Fist He-Man (Deluxe)
+    - [4191] Leech (Deluxe)
+    - [4192] Snout Spout (Deluxe)
+    - [3343] Terror Claw Skeletor (Deluxe)
+    - [6217] Dragon Blaster Skeletor (Deluxe)
+    - [5294] King Hiss (Deluxe)
+    - [5337] Moss Man (Flocked - Deluxe)
+    - [6213] Snake Face (Deluxe)
+    - [5295] Thunder Punch He-Man (Deluxe)
+    - [12232] Multi-Bot (Deluxe)
+----------------------------------------
+SECTION: Origins Exclusives Checklist
+  Rows Found: 56
+    - [2424] Prince Adam and He-Man 2 Pack
+    - [2422] Lords of Power 5 Pack
+    - [2423] She-Ra (35th Anniversary)
+    - [2445] Faker and Dupli-Cat
+    - [2444] Evil Horde Multi-Pack
+    - [2420] Keldor and Kronis (Rise of Evil)
+    - [2446] Secrets of Grayskull Accessory Pack
+    - [3247] Shogun Masters Skeletor
+    - [3245] Shogun Masters Skeletor (Dark Malice Edition)
+    - [3246] Shogun Masters Skeletor (Golden Havoc Edition)
+    - [2426] Skeletor (Art of Engineering)
+    - [3244] Sun-Man (Creations)
+    - [3243] Tri-Klops (Mini Comic)
+    - [5540] Camo Khan (Deluxe)
+    - [5054] Grizzlor
+    - [5058] He-Man 40th Anniversary 4 pack
+    - [4263] Kol-Darr
+    - [4935] Space Sumo
+    - [4544] Sun-Man and the Rulers of the Sun Action Figure 3 pack
+    - [4325] Wun-Dar
+    - [6222] Diabolical Snake Invasion 4 Pack
+    - [7078] Fang-Or
+    - [5334] Frog Monger
+    - [5335] He-Skeletor
+    - [7223] Lady Slither
+    - [6218] Man-E-Faces (Mini Comic)
+    - [6221] Rulers of the Sun 3 Pack
+    - [6220] Skeleton Warrior 2 Pack
+    - [8472] Crimson Horde Trooper Prime
+    - [8910] Demo-Man
+    - [5229] Eternia Playset
+    - [8555] Extendar
+    - [9041] Geldor
+    - [7976] King Grayskull
+    - [8471] Necro-Conda
+    - [7977] Rokkon
+    - [7346] Skeletor x VeeFriends Skilled Skeleton 2 Pack
+    - [8462] Sy-Klone (Collector's Edition)
+    - [10687] Flying Fists He-Man & Terror Claws Skeletor
+    - [8698] Two-Bad Multipack (Cartoon Collection)
+    - [10371] Battle of Eternia Multipack
+    - [10965] Despara
+    - [12512] Dragstor (Collector's Edition)
+    - [12473] He-Man (Sketchbook)
+    - [10370] He-Ro (Club Grayskull)
+    - [7906] Hordak & She-Ra
+    - [9423] Hordak & Grizzlor (Sketchbook)
+    - [10693] Hurricane Hordak (Collector's Edition)
+    - [9046] Modulok (Cartoon Collection)
+    - [12470] Red Shadow
+    - [10566] Retro Punching He-Man and Skeletor (80th Anniversary)
+    - [9429] Rio Blast
+    - [11246] Sharella
+    - [12110] She-Ra and Swift Wind
+    - [10565] Sy-Klone (Sketchbook)
+    - [10404] Vultak
+----------------------------------------
+SECTION: Origins Beasts, Vehicles and Playsets Checklist
+  Rows Found: 22
+    - [2732] Battle Armor He-Man and Battle Cat (Battlefield Warriors)
+    - [2415] Battle Cat
+    - [2411] Castle Grayskull
+    - [2412] Land Shark
+    - [2414] Panthor (Standard)
+    - [2425] Panthor (Flocked)
+    - [2413] Prince Adam Sky Sled
+    - [2443] Wind Raider
+    - [4288] Roton
+    - [3276] Stridor
+    - [4089] Teela and Zoar
+    - [5291] Ground Ripper & Mekaneck
+    - [6219] Skeletor & Screeech
+    - [6446] Snake Mountain Playset
+    - [6223] Talon Fighter & Point Dread
+    - [8409] The Collector (Cartoon Collection)
+    - [7975] Moat Monster
+    - [8697] Night Stalker
+    - [8410] Prince Adam & Cringer (Cartoon Collection)
+    - [11294] Fright Zone Playset
+    - [11375] Castle Grayskull (Mark Taylor)
+    - [11542] Snake Lair Playset
+----------------------------------------
+SECTION: Stranger Things Crossover Checklist
+  Rows Found: 3
+    - [8473] He-Man & Vecna (Stranger Things)
+    - [8470] Skeletor & Demogorgon (Stranger Things)
+    - [12113] Hordak & Hellfire-Man (Stranger Things)
+----------------------------------------
+SECTION: Turtles of Grayskull Checklist
+  Rows Found: 36
+    - [7901] Krang
+    - [8914] Leatherhead
+    - [11640] Metal-Boto (BAF)
+    - [7900] Mouse-Jaw
+    - [8968] Mutated King Hiss as Foot Soldier
+    - [7903] Mutated Moss Man
+    - [7902] Sla'Ker
+    - [8510] Splinter Skull
+    - [7895] Donatello
+    - [7892] Leonardo
+    - [7894] Man-At-Arms
+    - [7893] Mutated He-Man
+    - [7898] Beast Man
+    - [7899] Ram Man
+    - [7897] Raphael
+    - [7896] Shredder
+    - [8403] Casey Jones
+    - [8400] Michelangelo
+    - [8402] Skeletor
+    - [8401] Teela
+    - [8567] 2-BopSteady
+    - [8563] April O'Neil
+    - [8565] Hordak
+    - [8568] Mer-Man
+    - [8564] Stealth Ninja He-Man
+    - [8566] Stealth Ninja Leonardo
+    - [8945] Donatello (v2)
+    - [8948] Mekaneck
+    - [8946] Raphael (Reptile Wars)
+    - [8947] Rattlor
+    - [9095] Clamp Champ
+    - [9093] Leonardo (Reptile Wars)
+    - [9092] Michaelangelo
+    - [9094] Ninjor
+    - [11264] Skele-Shredder
+    - [9428] Super Shredder (Deluxe)
+----------------------------------------
+SECTION: Thundercats Crossover Checklist
+  Rows Found: 8
+    - [10553] Battle Cat Man
+    - [10554] Cheetara
+    - [10552] Lion-O
+    - [10555] Skell-Ra (Skeletor & Mumm-Ra)
+    - [11290] He-Man
+    - [11289] Panthro
+    - [11288] Tygra
+    - [12460] Panthor Man
+----------------------------------------
+SECTION: Transformers Collaboration Checklist
+  Rows Found: 4
+    - [11411] Bumblebee Armor Man At Arms
+    - [11412] Megatron Armor Skeletor
+    - [12114] Optimus Prime Armor He-Man
+    - [12134] Starscream Armor Scare Glow
+----------------------------------------
+SECTION: Masters of the WWE Universe Action Figures Checklist
+  Rows Found: 31
+    - [12003] Finn Balor
+    - [12005] Sting
+    - [12004] Triple H
+    - [12006] Ultimate Warrior
+    - [12007] Faker John Cena
+    - [12008] "Macho Man" Randy Savage
+    - [12009] Rey Mysterio
+    - [12010] Roman Reigns
+    - [12011] Braun Strowman
+    - [12012] The New Day
+    - [12013] The Rock
+    - [12014] Undertaker
+    - [12016] Jake "The Snake" Roberts
+    - [12017] Mr. T
+    - [12018] Seth Rollins
+    - [12015] "The Fiend" Bray Wyatt
+    - [12019] Becky Lynch
+    - [12020] "Macho Man" Randy Savage (hWo)
+    - [12021] Ricky "The Dragon" Steamboat
+    - [12022] "Rowdy" Roddy Piper
+    - [12023] Goldberg
+    - [12024] Kane
+    - [12025] Stephanie McMahon
+    - [12026] Ultimate Warrior (Grey)
+    - [12027] Andre The Giant
+    - [12029] Bret "Hit Man" Hart
+    - [12028] Junkyard Dog
+    - [12030] Sgt. Slaughter
+    - [12031] Chyna
+    - [12032] Rey Mysterio (Grey)
+    - [12033] "Stone Cold" Steve Austin
+----------------------------------------
+SECTION: Masters of the WWE Universe Rings Checklist
+  Rows Found: 3
+    - [12034] Grayskull Ring
+    - [12035] Grayskull Mania
+    - [12036] Rattlesnake Mountain Ring
+----------------------------------------
+
+TOTAL ITEMS FOUND: 297
