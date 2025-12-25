@@ -19,6 +19,7 @@ class BaseScraper(ABC):
         self.base_url = base_url
         self.items_scraped = 0
         self.errors = 0
+        self.audit_logger = None # Will be injected by the runner
 
     @abstractmethod
     async def run(self, context: BrowserContext) -> List[ScrapedOffer]:
@@ -53,6 +54,14 @@ class BaseScraper(ABC):
         To be overridden by child classes if needed.
         """
         pass
+
+    async def _scrape_detail(self, page: Page, url: str) -> dict:
+        """
+        PRECISION KAIZEN: Navigates to a single product page to extract 
+        deep metadata (EAN, GTIN, detailed status, specific images).
+        To be implemented by specific scrapers.
+        """
+        return {}
 
     def _normalize_price(self, price_raw: float | str) -> float:
         """

@@ -343,6 +343,12 @@ if st.session_state.authenticated and user:
                 admin.render_purgatory(db, IMG_DIR)
             else:
                 st.error("Zona restringida.")
+        elif page == "Laboratorio":
+            if user.role == "admin":
+                from src.web.views import kaizen_lab
+                kaizen_lab.render(db)
+            else:
+                st.error("Zona restringida.")
         elif page == "Configuracion":
             if user.role == "admin":
                 from src.web.views import config

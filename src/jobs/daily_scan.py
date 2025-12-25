@@ -112,7 +112,10 @@ async def run_daily_scan(progress_callback=None):
     # DB Session for Status Updates
     from src.infrastructure.database import SessionLocal
     from src.domain.models import ScraperStatusModel
+    from src.core.audit_logger import AuditLogger
+    
     db = SessionLocal()
+    audit = AuditLogger(db)
 
     total_scrapers = len(scrapers)
     
@@ -147,6 +150,9 @@ async def run_daily_scan(progress_callback=None):
             
             # Create Isolated Context
             context = await browser.new_context(user_agent=current_ua)
+            
+            # Inject Audit Logger
+            scraper.audit_logger = audit
 
             # UI Progress Update
             progress_val = int((idx / total_scrapers) * 100)
