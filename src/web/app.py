@@ -15,7 +15,7 @@ from src.domain.models import UserModel, ScraperStatusModel
 from src.core.security import verify_password, hash_password
 
 # --- Views ---
-from src.web.views import dashboard, catalog, hunter, collection, admin, config
+# from src.web.views import dashboard, catalog, hunter, collection, admin, config
 
 # --- Configuration & Theme ---
 st.set_page_config(
@@ -325,25 +325,32 @@ if st.session_state.authenticated and user:
         page = st.session_state.page
         
         if page == "Tablero":
+            from src.web.views import dashboard
             dashboard.render(db, IMG_DIR, user)
         elif page == "Catalogo":
+            from src.web.views import catalog
             catalog.render(db, IMG_DIR, user, repo)
         elif page == "Cazador":
+            from src.web.views import hunter
             hunter.render(db, IMG_DIR, user, repo)
         elif page == "Coleccion":
+            from src.web.views import collection
             collection.render(db, IMG_DIR, user)
         elif page == "Purgatorio":
             # Admin check
             if user.role == "admin":
+                from src.web.views import admin
                 admin.render_purgatory(db, IMG_DIR)
             else:
                 st.error("Zona restringida.")
         elif page == "Configuracion":
             if user.role == "admin":
+                from src.web.views import config
                 config.render(db, user, IMG_DIR)
             else:
                 st.error("Zona restringida.")
         else:
+            from src.web.views import dashboard
             dashboard.render(db, IMG_DIR, user)
             
     except Exception as e:

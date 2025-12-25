@@ -27,7 +27,22 @@ class Settings(BaseSettings):
         extra="ignore"
     )
 
+# Streamlit Secrets Support (Priority)
 try:
+    import streamlit as st
+    if st.secrets:
+        # Override default env loading if secrets found in st.secrets
+        # We can pass them to Settings as init arguments
+        secrets_dict = {}
+        for key in Settings.__annotations__.keys():
+            if key in st.secrets:
+                secrets_dict[key] = st.secrets[key]
+        
+        settings = Settings(**secrets_dict)
+    else:
+        settings = Settings()
+except Exception:
+    # Fallback to standard .env if not in streamlit context
     settings = Settings()
 except ValidationError as e:
     logger.error(f"Configuration Error: {e}")

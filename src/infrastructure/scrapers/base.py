@@ -30,8 +30,14 @@ class BaseScraper(ABC):
 
     async def _safe_navigate(self, page: Page, url: str) -> bool:
         """
-        Helper for robust navigation with error handling.
+        Helper for robust navigation with error handling and human-like delays.
         """
+        import random
+        import asyncio
+        delay = random.uniform(2.0, 5.0)
+        logger.info(f"[{self.spider_name}] Humanized delay: {delay:.2f}s before navigating...")
+        await asyncio.sleep(delay)
+        
         try:
             await page.goto(url, timeout=60000, wait_until="domcontentloaded")
             return True
