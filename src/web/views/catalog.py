@@ -33,33 +33,59 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
         with col_sort:
             sort_opt = st.selectbox("Orden", ["Nombre (A-Z)", "Nombre (Z-A)", "Precio (Menor a Mayor)", "Precio (Mayor a Menor)"])
 
-    # --- Query Building ---
-    query = db.query(ProductModel)
     
-    if search:
-        query = query.filter(ProductModel.name.ilike(f"%{search}%"))
-    if sel_cat != "Todas":
-        query = query.filter(ProductModel.category == sel_cat)
-    if filter_opt == "Adquiridos":
-        query = query.join(CollectionItemModel).filter(CollectionItemModel.owner_id == current_user_id)
-    elif filter_opt == "Faltantes":
-        subq = db.query(CollectionItemModel.product_id).filter(CollectionItemModel.owner_id == current_user_id)
-        query = query.filter(~ProductModel.id.in_(subq))
-    
-    # Exec & Sort (In-Memory for simplicity regarding prices)
-    products = query.all()
-    
-    if sort_opt == "Nombre (A-Z)":
-        products.sort(key=lambda x: x.name.lower())
-    elif sort_opt == "Nombre (Z-A)":
-        products.sort(key=lambda x: x.name.lower(), reverse=True)
-    elif "Precio" in sort_opt:
-        def get_price(p):
-            if not p.offers: return 999999.0
-            valid = [o.price for o in p.offers if o.price > 0]
-            return min(valid) if valid else 999999.0
-        reverse = "Mayor" in sort_opt
-        products.sort(key=get_price, reverse=reverse)
+    # --- Performance Cache ---
+    @st.cache_data(ttl=300) # Cache for 5 minutes
+    def get_catalog_products(_db_session, _search, _cat, _filter_mode, _current_uid, _sort_opt): 
+        # Note: _db_session is underscored to prevent hashing (it's not pickle-safe), but we need a fresh session inside if caching.
+        # Actually, for st.cache_data, we should return Pydantic models or plain dicts, not ORM objects attached to session.
+        # However, eager loading (joinedload) can work if we detach them.
+        
+        # Re-create session inside cache to avoid Thread errors with Streamlit
+        from src.infrastructure.database import SessionLocal
+        with SessionLocal() as session:
+            q = session.query(ProductModel)
+            
+            # Apply filters
+            if _search:
+                q = q.filter(ProductModel.name.ilike(f"%{_search}%"))
+            if _cat != "Todas":
+                q = q.filter(ProductModel.category == _cat)
+                
+            if _filter_mode == "Adquiridos":
+                q = q.join(CollectionItemModel).filter(CollectionItemModel.owner_id == _current_uid)
+            elif _filter_mode == "Faltantes":
+                subq = session.query(CollectionItemModel.product_id).filter(CollectionItemModel.owner_id == _current_uid)
+                q = q.filter(~ProductModel.id.in_(subq))
+            
+            # Eager load offers for price sorting/display to avoid N+1 queries later
+            from sqlalchemy.orm import joinedload
+            q = q.options(joinedload(ProductModel.offers))
+            
+            results = q.all()
+            
+            # Sort in Python (since we need computed price logic not easy in SQL for this schema)
+            if _sort_opt == "Nombre (A-Z)":
+                results.sort(key=lambda x: x.name.lower())
+            elif _sort_opt == "Nombre (Z-A)":
+                results.sort(key=lambda x: x.name.lower(), reverse=True)
+            elif "Precio" in _sort_opt:
+                def get_price(p):
+                    if not p.offers: return 999999.0
+                    valid = [o.price for o in p.offers if o.price > 0]
+                    return min(valid) if valid else 999999.0
+                results.sort(key=get_price, reverse="Mayor" in _sort_opt)
+                
+            # Serialize to prevent session detach issues
+            # We return a list of detached instances or a specialized DTO if needed. 
+            # SQLAlchemy objs can be cached if they are fully loaded and we use expunge_all.
+            session.expunge_all()
+            return results
+
+    # Execute Cached Query
+    # We pass 'str(db.bind.url)' as a hash key if we wanted to invalidate on DB change, but TTL is fine.
+    # We pass user.id (int) not the object to be safe.
+    products = get_catalog_products(None, search, sel_cat, filter_opt, current_user_id, sort_opt)
 
     # --- Pagination ---
     PAGE_SIZE = 50
@@ -168,6 +194,7 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
                     st.session_state.optimistic_updates[p.id] = not is_owned
                     
                     if toggle_ownership(db, p.id, current_user_id):
+                        st.cache_data.clear() # Force refresh data
                         st.rerun()
             
             st.markdown("---")

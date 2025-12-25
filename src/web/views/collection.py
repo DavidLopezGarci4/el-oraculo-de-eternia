@@ -22,20 +22,30 @@ def render(db: Session, img_dir, user):
             horizontal=True
         )
 
-    # Base Query
-    query = (
-        db.query(ProductModel, CollectionItemModel.acquired_at)
-        .join(CollectionItemModel)
-        .filter(CollectionItemModel.owner_id == current_user_id)
-    )
     
-    # Apply Sort to DB Query
-    if "Fecha" in sort_mode:
-        query = query.order_by(CollectionItemModel.acquired_at.desc())
-    else:
-        query = query.order_by(ProductModel.name)
-        
-    owned_db_rows = query.all()
+    # --- Performance Cache ---
+    @st.cache_data(ttl=300)
+    def get_user_collection(_user_id, _sort_mode):
+        from src.infrastructure.database import SessionLocal
+        with SessionLocal() as session:
+            q = (
+                session.query(ProductModel, CollectionItemModel.acquired_at)
+                .join(CollectionItemModel)
+                .filter(CollectionItemModel.owner_id == _user_id)
+            )
+            
+            if "Fecha" in _sort_mode:
+                q = q.order_by(CollectionItemModel.acquired_at.desc())
+            else:
+                q = q.order_by(ProductModel.name)
+            
+            results = q.all()
+            session.expunge_all() # Detach
+            return results
+
+    # Optimize: Only fetch from DB if not optimistically modified
+    # Actually we fetch base truth then patch it.
+    owned_db_rows = get_user_collection(current_user_id, sort_mode)
     
     # Apply Optimistic Updates
     if "optimistic_updates" not in st.session_state:
@@ -87,4 +97,5 @@ def render(db: Session, img_dir, user):
                 st.session_state.optimistic_updates[p.id] = False
                 
                 if toggle_ownership(db, p.id, current_user_id):
+                    st.cache_data.clear() # Force refresh
                     st.rerun()

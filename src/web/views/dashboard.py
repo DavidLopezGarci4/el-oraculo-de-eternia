@@ -14,8 +14,10 @@ def render(db: Session, img_dir, user):
     
     # Optimized Data Fetching
     # Metrics are fast (COUNT queries), so we don't cache them to ensure immediate updates after adding items.
+    @st.cache_data(ttl=60)
     def get_main_metrics(_user_id):
-        # Note: _user_id is underscore to avoid hashing issues if object, but int is fine.
+        # Note: _user_id is underscored to prevent hashing issues but int is safe.
+        # We re-instantiate session to be thread-safe inside the cache
         from src.infrastructure.database import SessionLocal
         with SessionLocal() as session:
             total = session.query(ProductModel).count()
