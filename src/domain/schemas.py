@@ -12,6 +12,7 @@ class OfferBase(BaseModel):
 
 class ProductBase(BaseModel):
     name: str = Field(min_length=1)
+    ean: Optional[str] = None
     image_url: Optional[str] = None
     category: Optional[str] = "Masters of the Universe"
 

@@ -119,6 +119,40 @@ class ElectropolisScraper(BaseScraper):
             logger.warning(f"[{self.spider_name}] Item parsing error: {e}")
             return None
 
+    async def _scrape_detail(self, page: Page, url: str) -> dict:
+        """
+        Electropolis specific: Extract EAN from JSON-LD or More info tab.
+        """
+        if not await self._safe_navigate(page, url):
+            return {}
+        
+        try:
+            # Strategy A: JSON-LD (Fastest)
+            # From audit: gtin13 exists in Product schema
+            gtin = await page.evaluate("""() => {
+                const scripts = Array.from(document.querySelectorAll('script[type="application/ld+json"]'));
+                for (let s of scripts) {
+                    try {
+                        const data = JSON.parse(s.textContent);
+                        if (data['@type'] === 'Product' && data.gtin13) return data.gtin13;
+                    } catch (e) {}
+                }
+                return null;
+            }""")
+            if gtin: return {"ean": str(gtin)}
+
+            # Strategy B: Technical Specs table
+            # Audit note: Needs click on #tab-label-additional
+            tab = page.locator("#tab-label-additional")
+            if await tab.is_visible(timeout=2000):
+                await tab.click()
+                ean_val = page.locator('#product-attribute-specs-table tr td[data-th="Código EAN"]')
+                if await ean_val.is_visible(timeout=2000):
+                    return {"ean": await ean_val.inner_text()}
+        except Exception:
+            pass
+        return {}
+
     async def _handle_popups(self, page: Page):
         """
         Electropolis specific: Accept cookies to clear the overlay.

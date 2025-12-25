@@ -62,6 +62,7 @@ async def run_daily_scan(progress_callback=None):
     parser = argparse.ArgumentParser(description="Oracle Scraper Runner")
     parser.add_argument("--shops", nargs="+", help="Specific shops to scrape (e.g. electropolis fantasia)")
     parser.add_argument("--random-delay", type=int, default=0, help="Wait up to X minutes before starting (jitter)")
+    parser.add_argument("--deep-harvest", action="store_true", help="Visit individual product pages for EAN/GTIN extraction")
     args, unknown = parser.parse_known_args()
     
     # --- STAGGERED START (KAIZEN) ---
@@ -193,6 +194,23 @@ async def run_daily_scan(progress_callback=None):
                 
                 # 2. Persist
                 if offers:
+                    # PHASE 10: Deep Harvest (Precision)
+                    if args.deep_harvest and offers:
+                        logger.info(f"🔍 [{scraper.spider_name}] Deep Harvest active. Refining {len(offers)} items...")
+                        for item in offers:
+                            # Visit detail page if EAN is missing and we want precision
+                            if not getattr(item, 'ean', None):
+                                # Ensure the scraper has a _scrape_detail method
+                                if hasattr(scraper, '_scrape_detail') and callable(getattr(scraper, '_scrape_detail')):
+                                    detail_data = await scraper._scrape_detail(context, item.url) # Pass context, not context.pages[-1]
+                                    if detail_data and detail_data.get('ean'):
+                                        item.ean = detail_data['ean']
+                                        logger.info(f"   🎯 Fingerprint found for '{item.product_name}': {item.ean}")
+                                    await asyncio.sleep(random.uniform(1.0, 3.0)) # Jitter between detail pages
+                                else:
+                                    logger.warning(f"⚠️ Scraper {scraper.spider_name} does not implement _scrape_detail for deep harvest.")
+
+                    # Update Database
                     pipeline.update_database(offers)
                     stats = {
                         "items_found": len(offers),

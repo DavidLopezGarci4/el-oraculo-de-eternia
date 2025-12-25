@@ -22,6 +22,11 @@ class ProductRepository(BaseRepository[ProductModel]):
         current_price = float(offer_data["price"])
         alert_discount = None
         
+        # --- EAN KAIZEN: Update product EAN if missing ---
+        if not product.ean and offer_data.get("ean"):
+             product.ean = offer_data["ean"]
+             self.db.add(product)
+        
         if existing_offer:
             # Check for Price Changes
             if abs(existing_offer.price - current_price) > 0.01:
@@ -35,6 +40,11 @@ class ProductRepository(BaseRepository[ProductModel]):
                      discount = 1.0 - (current_price / existing_offer.max_price)
                      if discount >= 0.20:
                          alert_discount = discount
+                         # --- KAIZEN: Nuclear Anomaly Detection (Phase 8) ---
+                         if discount >= 0.50:
+                             logger.critical(f"🚀 NUCLEAR DEAL DETECTED: {product.name} at {current_price}€ (-{discount*100:.0f}%)")
+                             # We'll mark this for special handling in the notifier
+                             offer_data["is_nuclear"] = True 
 
             # Update Stats
             if existing_offer.min_price == 0 or current_price < existing_offer.min_price:

@@ -114,6 +114,21 @@ class PixelatoyScraper(BaseScraper):
                 is_available=is_avl,
                 image_url=img_url
             )
-        except Exception as e:
-            logger.warning(f"[{self.spider_name}] Item parsing error: {e}")
-            return None
+    async def _scrape_detail(self, page: Page, url: str) -> dict:
+        """
+        Pixelatoy specific: Extract EAN/Referencia.
+        """
+        if not await self._safe_navigate(page, url):
+            return {}
+        
+        try:
+            # Selector from audit: .product-reference span[itemprop="sku"]
+            ean_tag = page.locator(".product-reference span[itemprop='sku']")
+            if await ean_tag.is_visible(timeout=3000):
+                ean = await ean_tag.inner_text()
+                return {"ean": ean.strip()}
+        except Exception:
+            pass
+        return {}
+
+    async def _handle_popups(self, page: Page):

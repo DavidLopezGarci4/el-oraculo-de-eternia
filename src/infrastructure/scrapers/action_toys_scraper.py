@@ -115,9 +115,24 @@ class ActionToysScraper(BaseScraper):
                 shop_name=self.spider_name,
                 is_available=is_avl
             )
-        except Exception as e:
-            logger.warning(f"[{self.spider_name}] Item parsing error: {e}")
-            return None
+    async def _scrape_detail(self, page: Page, url: str) -> dict:
+        """
+        ActionToys specific: Extract GTIN/EAN.
+        """
+        if not await self._safe_navigate(page, url):
+            return {}
+        
+        try:
+            # Selector from audit: .product_meta .hwp-gtin span
+            gtin_tag = page.locator(".product_meta .hwp-gtin span")
+            if await gtin_tag.is_visible(timeout=3000):
+                ean = await gtin_tag.inner_text()
+                return {"ean": ean.strip()}
+        except Exception:
+            pass
+        return {}
+
+    async def _handle_popups(self, page: Page):
 
     def _extract_price_text(self, tag) -> float:
         """Helper to extract float from bdi/span tag"""

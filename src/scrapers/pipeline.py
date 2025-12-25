@@ -91,7 +91,13 @@ class ScrapingPipeline:
                 
                 # Iterate all DB products to find best
                 for p in all_products:
-                    is_match, score, reason = matcher.match(p.name, offer.product_name, str(offer.url))
+                    is_match, score, reason = matcher.match(
+                        p.name, 
+                        offer.product_name, 
+                        str(offer.url),
+                        db_ean=p.ean,
+                        scraped_ean=getattr(offer, 'ean', None)
+                    )
                     
                     if is_match and score > best_match_score:
                         best_match_score = score
@@ -129,6 +135,7 @@ class ScrapingPipeline:
                     if not existing:
                         pending = PendingMatchModel(
                             scraped_name=offer.product_name,
+                            ean=getattr(offer, 'ean', None),
                             price=offer.price,
                             currency=offer.currency,
                             url=str(offer.url),

@@ -11,6 +11,7 @@ class ScrapedOffer(BaseModel):
     shop_name: str
     is_available: bool = True
     image_url: Optional[str] = None
+    ean: Optional[str] = None
     scraped_at: datetime = datetime.utcnow()
 
 class BaseSpider(ABC):

@@ -11,6 +11,7 @@ class ProductModel(Base):
     
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String, index=True, unique=True)
+    ean: Mapped[Optional[str]] = mapped_column(String, index=True, nullable=True)
     image_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     category: Mapped[str] = mapped_column(String, default="Masters of the Universe")
     
