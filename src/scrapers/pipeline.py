@@ -116,7 +116,7 @@ class ScrapingPipeline:
                         notifier = NotifierService()
                         notifier.send_deal_alert_sync(best_match_product, saved_offer, alert_discount)
                 else:
-                    logger.info(f"⏳ Pending SmartMatch: {offer.product_name} (Top Score: {best_match_score:.2f})")
+                    logger.info(f"⏳ No Match Found: '{offer.product_name}' (Top Score: {best_match_score:.2f}) -> Routing to Purgatory")
                     
                     # Check blacklist
                     is_blacklisted = db.query(BlackcludedItemModel).filter(BlackcludedItemModel.url == str(offer.url)).first()

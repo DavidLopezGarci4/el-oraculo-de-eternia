@@ -57,7 +57,10 @@ def import_excel_to_db():
                 "turtles": "(TMNT)",
                 "tmnt": "(TMNT)",
                 "street fighter": "(Street Fighter)",
-                "stranger": "(Stranger Things)"
+                "stranger": "(Stranger Things)",
+                "wwe": "(WWE)",
+                "collaboration": "(Collab)",
+                "transformers": "(Transformers)"
             }
             
             # Names that are likely to be repeated across lines

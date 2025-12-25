@@ -49,7 +49,9 @@ class BaseScraper(ABC):
         if isinstance(price_raw, str):
             try:
                 # Basic cleaning: remove currency, replace comma with dot
-                clean = price_raw.lower().replace("€", "").replace("eur", "").strip()
+                # Remove spaces (including non-breaking) to avoid float conversion errors
+                clean = price_raw.lower().replace("€", "").replace("eur", "").replace("\xa0", "").strip()
+                clean = clean.replace(" ", "")
                 clean = clean.replace(".", "").replace(",", ".") # European format: 1.000,00 -> 1000.00
                 return float(clean)
             except ValueError:
