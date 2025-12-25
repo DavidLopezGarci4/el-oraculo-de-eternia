@@ -373,6 +373,27 @@ def _render_mission_control(db, img_dir):
                  log_content = "".join(f.readlines()[-30:])
              st.code(log_content, language="log")
 
+    # Execution History with Error Details
+    st.divider()
+    st.subheader("📚 Historial de Ejecuciones")
+    
+    from src.domain.models import ScraperExecutionLogModel
+    history = db.query(ScraperExecutionLogModel).order_by(ScraperExecutionLogModel.start_time.desc()).limit(20).all()
+    
+    if history:
+        for h in history:
+            status_icon = "✅" if h.status in ["success", "completed"] else ("⚠️" if h.status == "success_empty" else "❌")
+            with st.expander(f"{status_icon} {h.spider_name} - {h.start_time.strftime('%Y-%m-%d %H:%M')}"):
+                c_h1, c_h2 = st.columns(2)
+                c_h1.write(f"**Items:** {h.items_found}")
+                c_h2.write(f"**Tipo:** {h.trigger_type}")
+                
+                if h.error_message:
+                    st.error("Error Registrado:")
+                    st.code(h.error_message, language="text")
+    else:
+        st.info("No hay historial disponible.")
+
 def _render_purgatory_content(db):
     st.info("Aquí yacen las ofertas que no encontraron su camino...")
     

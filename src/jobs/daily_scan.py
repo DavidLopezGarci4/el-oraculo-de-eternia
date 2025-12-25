@@ -263,4 +263,28 @@ if __name__ == "__main__":
         print(f"CRITICAL ERROR: {e}")
         import traceback
         traceback.print_exc()
+        
+        # --- EMERGENCY DB LOGGING ---
+        try:
+            from src.infrastructure.database import SessionLocal
+            from src.domain.models import ScraperExecutionLogModel
+            from datetime import datetime
+            
+            db_err = SessionLocal()
+            log_err = ScraperExecutionLogModel(
+                spider_name="Global_System", # Special name for script-wide errors
+                status="critical_failure",
+                start_time=datetime.now(),
+                end_time=datetime.now(),
+                trigger_type="scheduled", # Assume scheduled if crashing
+                error_message=f"CRITICAL SCRIPT FAILURE: {str(e)}\n\n{traceback.format_exc()}"[:2000] # Truncate for safety
+            )
+            db_err.add(log_err)
+            db_err.commit()
+            db_err.close()
+            print(">> CRITICAL ERROR LOGGED TO DB")
+        except Exception as db_ex:
+            print(f">> FAILED TO LOG TO DB: {db_ex}")
+        # ----------------------------
+        
         # input("Press Enter to exit (Debug Mode)...")
