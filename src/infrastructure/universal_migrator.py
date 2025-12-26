@@ -30,30 +30,10 @@ def migrate():
         if "ean" not in columns_products:
             logger.info("Adding 'ean' to products table...")
             try:
-                conn.execute(text("ALTER TABLE products ADD COLUMN ean VARCHAR(50)"))
+                conn.execute(text("ALTER TABLE products ADD COLUMN ean VARCHAR(50) UNIQUE"))
                 conn.commit()
             except Exception as e:
                 logger.warning(f"Could not add ean: {e}")
-
-        if "figure_id" not in columns_products:
-            logger.info("Adding 'figure_id' to products table...")
-            try:
-                conn.execute(text("ALTER TABLE products ADD COLUMN figure_id INTEGER"))
-                conn.commit()
-            except Exception as e:
-                logger.warning(f"Could not add figure_id: {e}")
-
-        if "line" not in columns_products:
-            logger.info("Adding 'line' to products table...")
-            try:
-                conn.execute(text("ALTER TABLE products ADD COLUMN line VARCHAR(50)"))
-                conn.commit()
-            except Exception as e:
-                logger.warning(f"Could not add line: {e}")
-                
-        # Handle unique constraint removal (SQLite specific approach if needed, but standard SQL usually allows just altering)
-        # Note: Removing UNIQUE in SQLite typically requires table reconstruction, but since we are adding columns,
-        # we can just ensure new ones don't have it.
 
         # --- Table: offers ---
         columns_offers = [c['name'] for c in inspector.get_columns("offers")]

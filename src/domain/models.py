@@ -13,10 +13,8 @@ class ProductModel(Base):
     __tablename__ = "products"
     
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    name: Mapped[str] = mapped_column(String, index=True) # Removed unique=True to allow variants with suffixes
+    name: Mapped[str] = mapped_column(String, index=True, unique=True)
     ean: Mapped[Optional[str]] = mapped_column(String, index=True, nullable=True)
-    figure_id: Mapped[Optional[int]] = mapped_column(Integer, index=True, nullable=True) # ActionFigure411 ID
-    line: Mapped[Optional[str]] = mapped_column(String, index=True, nullable=True) # Collection Line (Origins, TMNT, etc.)
     image_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     category: Mapped[str] = mapped_column(String, default="Masters of the Universe")
     

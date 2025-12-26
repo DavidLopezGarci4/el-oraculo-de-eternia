@@ -66,40 +66,27 @@ def render_inline_product_admin(db: Session, p, current_user_id: int):
                             target_p = db.query(ProductModel).filter(ProductModel.id == target_id).first()
                             current_p = db.query(ProductModel).filter(ProductModel.id == p.id).first()
                             
-                                if target_p and current_p:
-                                    st.info(f"Iniciando fusión: {current_p.name} -> {target_p.name}")
-                                    
-                                    # Move Offers
-                                    offer_count = 0
-                                    for o in current_p.offers:
-                                        o.product_id = target_id
-                                        offer_count += 1
-                                    
-                                    # Move Collection Items
-                                    coll_count = 0
-                                    c_items = db.query(CollectionItemModel).filter(CollectionItemModel.product_id == current_p.id).all()
-                                    for ci in c_items:
-                                        # Evitar duplicados si el usuario ya tiene el destino
-                                        exists = db.query(CollectionItemModel).filter(
-                                            CollectionItemModel.owner_id == ci.owner_id, 
-                                            CollectionItemModel.product_id == target_id
-                                        ).first()
-                                        if not exists:
-                                            ci.product_id = target_id
-                                            coll_count += 1
-                                        else:
-                                            db.delete(ci)
-                                    
-                                    # Transfer EAN or Figure ID if missing in target
-                                    if not target_p.ean and current_p.ean:
-                                        target_p.ean = current_p.ean
-                                    if not target_p.figure_id and current_p.figure_id:
-                                        target_p.figure_id = current_p.figure_id
-                                    
-                                    db.delete(current_p)
-                                    db.commit()
-                                    st.success(f"Fusión completada: {offer_count} ofertas y {coll_count} registros de colección transferidos.")
-                                    st.rerun()
+                            if target_p and current_p:
+                                # Move Offers
+                                for o in current_p.offers:
+                                    o.product_id = target_id
+                                
+                                # Move Collection Items
+                                c_items = db.query(CollectionItemModel).filter(CollectionItemModel.product_id == current_p.id).all()
+                                for ci in c_items:
+                                    exists = db.query(CollectionItemModel).filter(
+                                        CollectionItemModel.owner_id == ci.owner_id, 
+                                        CollectionItemModel.product_id == target_id
+                                    ).first()
+                                    if not exists:
+                                        ci.product_id = target_id
+                                    else:
+                                        db.delete(ci)
+                                
+                                db.delete(current_p)
+                                db.commit()
+                                st.success(f"Fusionado con éxito en {target_p.name}.")
+                                st.rerun()
                         except Exception as e:
                             db.rollback()
                             st.error(f"Error en fusión: {e}")

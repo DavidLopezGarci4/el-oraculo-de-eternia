@@ -1,0 +1,21 @@
+{
+  "ActionToys": {
+    "items_found": 0,
+    "status": "Empty"
+  },
+  "Fantasia": {
+    "items_found": 0,
+    "status": "Empty"
+  },
+  "Frikiverso": {
+    "items_found": 0,
+    "status": "Empty"
+  },
+  "Pixelatoy": {
+    "items_found": 0,
+    "status": "Empty"
+  },
+  "Electropolis": {
+    "error": "cannot access local variable 'PendingMatchModel' where it is not associated with a value"
+  }
+}
