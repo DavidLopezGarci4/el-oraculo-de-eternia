@@ -251,17 +251,17 @@ def render_inline_product_admin(db: Session, p: ProductModel, current_user_id: i
                         db.rollback()
 
 def render_purgatory(db: Session, img_dir):
-    # This view now serves as the main Consola de Administración
+    # This view now serves as the main El Espejo de los Espíritus (Purgatorio)
     c1, c2 = st.columns([1, 8])
     with c1:
         st.image(str(img_dir / "Purgatorio.png"), width="stretch")
     with c2:
-        st.markdown("# Consola de Administración")
+        st.markdown("# El Espejo de los Espíritus (Purgatorio)")
     
     st.markdown("---")
     
     # TABS structure
-    tab_purg, tab_mission = st.tabs(["👻 Purgatorio (Ofertas)", "🚀 Control de Misión (Robots)"])
+    tab_purg, tab_mission = st.tabs(["Purgatorio (Ofertas)", "Control de Misión (Robots)"])
     
     with tab_purg:
         _render_purgatory_content(db)
