@@ -9,6 +9,7 @@ sys.path.append(str(root_path))
 
 import streamlit as st
 from sqlalchemy import text
+from src.core.config import settings
 from src.infrastructure.database import SessionLocal, init_db, engine
 from src.infrastructure.repositories.product import ProductRepository
 from src.domain.models import UserModel, ScraperStatusModel
