@@ -528,16 +528,16 @@ def _render_purgatory_content(db):
 
         with col_expander:
             with st.expander(f"{item.scraped_name} - {item.shop_name} ({item.price}€)", expanded=(best_score > 0.8)):
-            if item.image_url:
-                st.image(item.image_url, width=100)
-            
-            if best_match:
-                st.info(f"🎯 **Sugerencia del Oráculo:** {best_match.name} (Confianza: {best_score:.2%})")
-            
-            from src.web.shared import render_external_link
-            render_external_link(item.url, "Abrir Enlace", key_suffix=f"purg_{item.id}")
-            
-            c1, c2, c3 = st.columns([2, 1, 1])
+                if item.image_url:
+                    st.image(item.image_url, width=100)
+                
+                if best_match:
+                    st.info(f"🎯 **Sugerencia del Oráculo:** {best_match.name} (Confianza: {best_score:.2%})")
+                
+                from src.web.shared import render_external_link
+                render_external_link(item.url, "Abrir Enlace", key_suffix=f"purg_{item.id}")
+                
+                c1, c2, c3 = st.columns([2, 1, 1])
             
             # Match
             from src.infrastructure.repositories.product import ProductRepository
