@@ -447,6 +447,63 @@ def _render_purgatory_content(db):
     offset = st.session_state.purgatory_page * PAGE_SIZE
     pending_items = db.query(PendingMatchModel).offset(offset).limit(PAGE_SIZE).all()
 
+    # --- Barra de Acciones en Bloque ---
+    if "purgatory_selection" not in st.session_state:
+        st.session_state.purgatory_selection = set()
+
+    c_bulk1, c_bulk2, c_bulk3 = st.columns([1, 1, 1])
+    with c_bulk1:
+        if st.button("🔥 Descartar Seleccionados", type="secondary", use_container_width=True, disabled=not st.session_state.purgatory_selection):
+            count = 0
+            for item_id in list(st.session_state.purgatory_selection):
+                item = db.query(PendingMatchModel).get(item_id)
+                if item:
+                    bl = BlackcludedItemModel(url=item.url, scraped_name=item.scraped_name, reason="bulk_purgatory_discard")
+                    db.add(bl)
+                    db.delete(item)
+                    count += 1
+            db.commit()
+            st.session_state.purgatory_selection.clear()
+            st.toast(f"Exiliadas {count} almas al olvido.")
+            st.rerun()
+
+    with c_bulk2:
+        if st.button("🔗 Vínculo Automático (90%+)", type="primary", use_container_width=True):
+            # Lógica para procesar toodo lo visible que tenga > 0.9 de confianza
+            count = 0
+            from src.infrastructure.repositories.product import ProductRepository
+            repo = ProductRepository(db)
+            for item in pending_items:
+                # Re-match rápido
+                m_best = None
+                m_score = 0.0
+                for p in all_products:
+                    _, sc, _ = matcher.match(p.name, item.scraped_name, item.url)
+                    if sc > m_score:
+                        m_score = sc
+                        m_best = p
+                
+                if m_best and m_score >= 0.9:
+                    repo.add_offer(m_best, {
+                        "shop_name": item.shop_name,
+                        "price": item.price,
+                        "currency": item.currency,
+                        "url": item.url,
+                        "is_available": True
+                    })
+                    db.delete(item)
+                    count += 1
+            db.commit()
+            st.success(f"Vinculadas {count} ofertas de alta confianza.")
+            st.rerun()
+
+    with c_bulk3:
+        if st.button("🧹 Limpiar Selección", use_container_width=True):
+            st.session_state.purgatory_selection.clear()
+            st.rerun()
+
+    st.divider()
+
     # Group controls
     for item in pending_items:
         # Lógica de Sugerencia Inteligente
@@ -460,7 +517,17 @@ def _render_purgatory_content(db):
                 best_score = score
                 best_match = p
         
-        with st.expander(f"{item.scraped_name} - {item.shop_name} ({item.price}€)", expanded=(best_score > 0.8)):
+        col_select, col_expander = st.columns([0.1, 9.9])
+        
+        with col_select:
+            is_selected = item.id in st.session_state.purgatory_selection
+            if st.checkbox("Select", value=is_selected, key=f"sel_{item.id}", label_visibility="collapsed"):
+                st.session_state.purgatory_selection.add(item.id)
+            else:
+                st.session_state.purgatory_selection.discard(item.id)
+
+        with col_expander:
+            with st.expander(f"{item.scraped_name} - {item.shop_name} ({item.price}€)", expanded=(best_score > 0.8)):
             if item.image_url:
                 st.image(item.image_url, width=100)
             
