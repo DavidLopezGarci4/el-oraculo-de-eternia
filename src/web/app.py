@@ -288,6 +288,7 @@ with st.sidebar:
     menu_items = [
         {"id": "Tablero", "label": "Tablero"},
         {"id": "Catalogo", "label": "Catálogo"},
+        {"id": "Centinela", "label": "Centinela"},
         {"id": "Cazador", "label": "Cazador"},
         {"id": "Coleccion", "label": "Mi Colección"}
     ]
@@ -330,6 +331,9 @@ if st.session_state.authenticated and user:
         elif page == "Catalogo":
             from src.web.views import catalog
             catalog.render(db, IMG_DIR, user, repo)
+        elif page == "Centinela":
+            from src.web.views import alerts
+            alerts.render(db, user, IMG_DIR)
         elif page == "Cazador":
             from src.web.views import hunter
             hunter.render(db, IMG_DIR, user, repo)

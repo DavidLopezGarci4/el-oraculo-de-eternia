@@ -2,7 +2,9 @@ import httpx
 import logging
 from typing import Optional
 from src.core.config import settings
-from src.domain.models import ProductModel, OfferModel
+from src.domain.models import ProductModel, OfferModel, PriceAlertModel
+from sqlalchemy.orm import Session
+from datetime import datetime
 
 logger = logging.getLogger("notifier")
 
@@ -85,10 +87,53 @@ class NotifierService:
 
         payload = {
             "chat_id": self.chat_id,
-            "text": text
+            "text": text,
+            "parse_mode": "Markdown"
         }
         try:
             async with httpx.AsyncClient() as client:
                 await client.post(self.api_url, json=payload)
         except Exception:
             pass
+
+    def check_price_alerts_sync(self, db: Session, product: ProductModel, offer: OfferModel):
+        """
+        Checks if a newly updated price triggers any user alerts.
+        """
+        alerts = db.query(PriceAlertModel).filter(
+            PriceAlertModel.product_id == product.id,
+            PriceAlertModel.is_active == True,
+            PriceAlertModel.target_price >= offer.price
+        ).all()
+        
+        for alert in alerts:
+            # Avoid notifying too often (e.g. once per 12h per alert)
+            if alert.last_notified_at:
+                from datetime import timedelta
+                if datetime.utcnow() - alert.last_notified_at < timedelta(hours=12):
+                    continue
+            
+            msg = (
+                f"🛡️ **EL CENTINELA HA AVISTADO UNA PRESA** 🛡️\n\n"
+                f"🎯 **{product.name}** ha bajado de tu umbral ({alert.target_price:.2f}€)\n"
+                f"💰 Precio Actual: **{offer.price:.2f}€**\n"
+                f"🏪 Tienda: {offer.shop_name}\n\n"
+                f"[🔗 Abrir en el Oráculo]({offer.url})"
+            )
+            
+            payload = {
+                "chat_id": self.chat_id, # Target chat_id
+                "text": msg,
+                "parse_mode": "Markdown"
+            }
+            
+            try:
+                if self.api_url:
+                    with httpx.Client() as client:
+                        resp = client.post(self.api_url, json=payload, timeout=10.0)
+                        if resp.status_code == 200:
+                            alert.last_notified_at = datetime.utcnow()
+                            db.commit()
+                            logger.info(f"🔔 Price alert sent to user {alert.user_id} for {product.name}")
+            except Exception as e:
+                logger.error(f"❌ Failed to send Sentinel alert: {e}")

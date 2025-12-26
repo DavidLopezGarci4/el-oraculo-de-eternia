@@ -80,13 +80,17 @@ class ScrapingPipeline:
                 if existing_offer:
                     # It's an update to an existing link
                     logger.info(f"🔗 Known Link: '{offer.product_name}' -> '{existing_offer.product.name}' (Price Update)")
-                    repo.add_offer(existing_offer.product, {
+                    saved_o, _ = repo.add_offer(existing_offer.product, {
                         "shop_name": offer.shop_name,
                         "price": offer.price,
                         "currency": offer.currency, 
                         "url": str(offer.url),
                         "is_available": offer.is_available
                     })
+                    
+                    # Centinela Check
+                    from src.core.notifier import NotifierService
+                    NotifierService().check_price_alerts_sync(db, existing_offer.product, saved_o)
                     continue # Skip SmartMatch
                 
                 # Iterate all DB products to find best
@@ -121,6 +125,10 @@ class ScrapingPipeline:
                         from src.core.notifier import NotifierService
                         notifier = NotifierService()
                         notifier.send_deal_alert_sync(best_match_product, saved_offer, alert_discount)
+                    
+                    # Centinela Check (Fase 15)
+                    from src.core.notifier import NotifierService
+                    NotifierService().check_price_alerts_sync(db, best_match_product, saved_offer)
                 else:
                     logger.info(f"⏳ No Match Found: '{offer.product_name}' (Top Score: {best_match_score:.2f}) -> Routing to Purgatory")
                     

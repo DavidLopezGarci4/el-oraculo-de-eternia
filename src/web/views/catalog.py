@@ -1,7 +1,7 @@
 import streamlit as st
 import math
 from sqlalchemy.orm import Session
-from src.domain.models import ProductModel, CollectionItemModel, OfferModel, PriceHistoryModel
+from src.domain.models import ProductModel, CollectionItemModel, OfferModel, PriceHistoryModel, PriceAlertModel
 from src.web.shared import toggle_ownership
 from src.web.views.admin import render_inline_product_admin
 from src.infrastructure.repositories.product import ProductRepository
@@ -203,6 +203,21 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
                     if toggle_ownership(db, p_id, current_user_id):
                         st.cache_data.clear() # Cache invalidation on change
                         st.rerun()
+                
+                # Botón de Alerta Centinela (Añadido Fase 15)
+                with st.popover("🔔 Alerta", use_container_width=True):
+                    st.write(f"Vigilar {p_name}")
+                    t_price = st.number_input("Avisar si baja de (€)", min_value=1.0, value=max(1.0, p_best * 0.9 if p_best < 900000 else 20.0), key=f"alrt_in_{p_id}")
+                    if st.button("Activar Centinela", key=f"alrt_btn_{p_id}", type="primary"):
+                        # Lógica rápida de inserción
+                        exists = db.query(PriceAlertModel).filter(PriceAlertModel.user_id == user.id, PriceAlertModel.product_id == p_id).first()
+                        if not exists:
+                            new_al = PriceAlertModel(user_id=user.id, product_id=p_id, target_price=t_price)
+                            db.add(new_al)
+                            db.commit()
+                            st.success("¡Centinela desplegado!")
+                        else:
+                            st.warning("Ya tienes una alerta activa.")
             
             st.markdown("---")
 

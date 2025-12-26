@@ -105,8 +105,24 @@ class PendingMatchModel(Base):
     
     found_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     
-    # Optional logic: Store "Best Guess" match?
-    # suggested_product_id: Mapped[Optional[int]]
+class PriceAlertModel(Base):
+    """
+    Vigilancia de precios del Centinela.
+    """
+    __tablename__ = "price_alerts"
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    product_id: Mapped[int] = mapped_column(ForeignKey("products.id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    
+    target_price: Mapped[float] = mapped_column(Float)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    last_notified_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+    # Relationships
+    product: Mapped["ProductModel"] = relationship("ProductModel")
+    user: Mapped["UserModel"] = relationship("UserModel", back_populates="price_alerts")
 
 
 class UserModel(Base):
@@ -119,6 +135,7 @@ class UserModel(Base):
     role: Mapped[str] = mapped_column(String, default="viewer") # admin, viewer
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     
+    price_alerts: Mapped[List["PriceAlertModel"]] = relationship("PriceAlertModel", back_populates="user", cascade="all, delete-orphan")
     collection_items: Mapped[List["CollectionItemModel"]] = relationship(
         "CollectionItemModel",
         back_populates="owner",
