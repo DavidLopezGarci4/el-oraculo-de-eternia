@@ -1,5 +1,5 @@
 import streamlit as st
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from datetime import datetime
 
 def render(db: Session, user, img_dir):
@@ -16,7 +16,9 @@ def render(db: Session, user, img_dir):
     tab_list, tab_create = st.tabs(["📡 Vigilancias Activas", "➕ Nueva Alerta"])
     
     with tab_list:
-        alerts = db.query(PriceAlertModel).filter(PriceAlertModel.user_id == user.id).all()
+        alerts = db.query(PriceAlertModel).options(
+            joinedload(PriceAlertModel.product).joinedload(ProductModel.offers)
+        ).filter(PriceAlertModel.user_id == user.id).all()
         if not alerts:
             st.info("No tienes centinelas activos. Añade uno desde el catálogo o la pestaña 'Nueva Alerta'.")
         else:
@@ -43,8 +45,8 @@ def render(db: Session, user, img_dir):
 
     with tab_create:
         st.subheader("Desplegar nuevo Centinela")
-        # Selector de producto
-        all_products = db.query(ProductModel).order_by(ProductModel.name).all()
+        # Selector de producto con carga ansiosa de ofertas para evitar DetachedInstanceError
+        all_products = db.query(ProductModel).options(joinedload(ProductModel.offers)).order_by(ProductModel.name).all()
         target_p = st.selectbox("Selecciona la figura a vigilar", all_products, format_func=lambda x: x.name)
         
         if target_p:
