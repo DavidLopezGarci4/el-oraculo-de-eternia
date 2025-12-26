@@ -395,17 +395,39 @@ def _render_mission_control(db, img_dir):
         st.info("No hay historial disponible.")
 
 def _render_purgatory_content(db):
-    st.info("Aquí yacen las ofertas que no encontraron su camino...")
+    from src.core.matching import SmartMatcher
+    matcher = SmartMatcher()
     
-    # --- Pagination Logic ---
-    PAGE_SIZE = 50
+    # 1. Cargar catálogo para sugerencias (Cacheado por ejecución de renderizado)
+    all_products = db.query(ProductModel).options(joinedload(ProductModel.offers)).all()
+    
+    # --- Controles Superiores ---
+    st.subheader("🕵️ Buscador del Espejo")
+    c_f1, c_f2 = st.columns([2, 1])
+    with c_f1:
+        purg_search = st.text_input("Filtrar almas por nombre...", key="purg_search", placeholder="Ej: He-Man...")
+    with c_f2:
+        shops = [r[0] for r in db.query(PendingMatchModel.shop_name).distinct().all()]
+        sel_shops = st.multiselect("Filtrar por tienda", options=sorted(shops), key="purg_shops")
+
+    st.divider()
+
+    # --- Query con Filtros ---
+    query = db.query(PendingMatchModel)
+    if purg_search:
+        query = query.filter(PendingMatchModel.scraped_name.ilike(f"%{purg_search}%"))
+    if sel_shops:
+        query = query.filter(PendingMatchModel.shop_name.in_(sel_shops))
+    
+    total_items = query.count()
+    if total_items == 0:
+        st.success("El Purgatorio está libre de esas almas. ¡Victoria!")
+        return
+    
+    # --- Paginación ---
+    PAGE_SIZE = 25 # Reducido para mejor rendimiento con SmartMatcher
     if "purgatory_page" not in st.session_state:
         st.session_state.purgatory_page = 0
-    
-    total_items = db.query(PendingMatchModel).count()
-    if total_items == 0:
-        st.success("El Purgatorio está vacío. ¡Alabado sea!")
-        return
 
     total_pages = (total_items - 1) // PAGE_SIZE + 1
     
@@ -427,9 +449,23 @@ def _render_purgatory_content(db):
 
     # Group controls
     for item in pending_items:
-        with st.expander(f"{item.scraped_name} - {item.shop_name} ({item.price}€)", expanded=True):
+        # Lógica de Sugerencia Inteligente
+        best_match = None
+        best_score = 0.0
+        
+        # Solo buscamos sugerencias si hay productos y es la página actual (ahorro CPU)
+        for p in all_products:
+            is_m, score, _ = matcher.match(p.name, item.scraped_name, item.url)
+            if score > best_score:
+                best_score = score
+                best_match = p
+        
+        with st.expander(f"{item.scraped_name} - {item.shop_name} ({item.price}€)", expanded=(best_score > 0.8)):
             if item.image_url:
                 st.image(item.image_url, width=100)
+            
+            if best_match:
+                st.info(f"🎯 **Sugerencia del Oráculo:** {best_match.name} (Confianza: {best_score:.2%})")
             
             from src.web.shared import render_external_link
             render_external_link(item.url, "Abrir Enlace", key_suffix=f"purg_{item.id}")
@@ -438,10 +474,16 @@ def _render_purgatory_content(db):
             
             # Match
             from src.infrastructure.repositories.product import ProductRepository
-            repo = ProductRepository(db) # We need repo for searching? Or just DB query.
-            # Simple Selection
-            all_products = db.query(ProductModel).order_by(ProductModel.name).all()
-            target_p = c1.selectbox("Vincular a:", all_products, format_func=lambda x: x.name, key=f"purg_sel_{item.id}")
+            repo = ProductRepository(db)
+            
+            # Selection con sugerencia por defecto
+            idx_suggestion = 0
+            if best_match:
+                try:
+                    idx_suggestion = all_products.index(best_match)
+                except ValueError: pass
+
+            target_p = c1.selectbox("Vincular a:", all_products, index=idx_suggestion, format_func=lambda x: x.name, key=f"purg_sel_{item.id}")
             
             if c2.button("✅ Vincular", key=f"purg_ok_{item.id}"):
                 if target_p:
