@@ -314,7 +314,10 @@ with st.sidebar:
             logout()
     
     st.sidebar.markdown("---")
-    st.sidebar.caption("v3.0 Mobile Native")
+    # Cloud Status Indicator
+    db_type = "☁️ Nube (Supabase)" if "postgres" in settings.DATABASE_URL else "🏠 Local (SQLite)"
+    st.sidebar.caption(f"Motor: {db_type}")
+    st.sidebar.caption("v3.0 Mobile Native | Guardian v1.0")
 
 
 # --- ROUTER ---
