@@ -292,7 +292,7 @@ with st.sidebar:
     menu_items = [
         {"id": "Tablero", "label": "Tablero"},
         {"id": "Catalogo", "label": "Catálogo"},
-        {"id": "Centinela", "label": "Centinela"},
+        {"id": "Centinela", "label": "El Centinela"},
         {"id": "Cazador", "label": "Cazador"},
         {"id": "Coleccion", "label": "Mi Colección"}
     ]
