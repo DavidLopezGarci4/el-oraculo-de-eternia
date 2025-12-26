@@ -1,7 +1,7 @@
 import streamlit as st
 import math
 from sqlalchemy.orm import Session
-from src.domain.models import ProductModel, CollectionItemModel
+from src.domain.models import ProductModel, CollectionItemModel, OfferModel, PriceHistoryModel
 from src.web.shared import toggle_ownership
 from src.web.views.admin import render_inline_product_admin
 from src.infrastructure.repositories.product import ProductRepository
@@ -27,7 +27,7 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
             cats = [r[0] for r in db.query(ProductModel.category).distinct() if r[0]]
             sel_cat = st.selectbox("Categoría", ["Todas"] + sorted(cats), label_visibility="collapsed")
         with col_page_jump:
-            # Placeholder for page jump - will be updated after total_pages is known
+            # Placeholder for page jump - total_pages needed
             page_jump_placeholder = st.empty()
 
         col_filter, col_sort = st.columns(2)
@@ -44,9 +44,9 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
         import pandas as pd
         with SessionLocal() as session:
             # Eager load offers and price history for total performance
-            from sqlalchemy.orm import joinedload, subqueryload
+            from sqlalchemy.orm import joinedload
             products_raw = session.query(ProductModel).options(
-                joinedload(ProductModel.offers).subqueryload(OfferModel.price_history)
+                joinedload(ProductModel.offers).joinedload(OfferModel.price_history)
             ).all()
             owned_ids = {r[0] for r in session.query(CollectionItemModel.product_id).filter(CollectionItemModel.owner_id == _current_uid).all()}
             
@@ -54,6 +54,24 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
             for p in products_raw:
                 prices = [o.price for o in p.offers if o.price > 0]
                 min_prices = [o.min_price for o in p.offers if o.min_price > 0]
+                
+                # Serialize offers for the UI (Avoiding DetachedInstanceError)
+                serialized_offers = []
+                serialized_history = []
+                for o in p.offers:
+                    serialized_offers.append({
+                        "id": o.id,
+                        "shop_name": o.shop_name,
+                        "price": o.price,
+                        "url": o.url
+                    })
+                    for ph in o.price_history:
+                        serialized_history.append({
+                            "Fecha": ph.recorded_at,
+                            "Precio": ph.price,
+                            "Tienda": o.shop_name
+                        })
+                
                 data.append({
                     "id": p.id,
                     "name": p.name,
@@ -62,8 +80,8 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
                     "is_owned": p.id in owned_ids,
                     "best_price": min(prices) if prices else 999999.0,
                     "historic_low": min(min_prices) if min_prices else 999999.0,
-                    "offers_count": len(p.offers),
-                    "obj": p # Keep reference to ORM object for expanders if needed, but caution with detached sessions
+                    "offers": serialized_offers,
+                    "history": serialized_history
                 })
             return pd.DataFrame(data)
 
@@ -98,17 +116,17 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
     if "catalog_page" not in st.session_state:
         st.session_state.catalog_page = 0
     
+    # Boundary check for pagination
+    st.session_state.catalog_page = min(st.session_state.catalog_page, total_pages - 1)
+    st.session_state.catalog_page = max(0, st.session_state.catalog_page)
+
     # Update Page Jump Selector in the filters area
     with page_jump_placeholder:
-        jump_page = st.number_input("Ir a página", min_value=1, max_value=total_pages, value=st.session_state.catalog_page + 1, label_visibility="collapsed")
+        jump_page = st.number_input("Página", min_value=1, max_value=total_pages, value=st.session_state.catalog_page + 1, label_visibility="collapsed")
         if jump_page - 1 != st.session_state.catalog_page:
             st.session_state.catalog_page = jump_page - 1
             st.rerun()
 
-    # Boundary check for pagination
-    st.session_state.catalog_page = min(st.session_state.catalog_page, total_pages - 1)
-    st.session_state.catalog_page = max(0, st.session_state.catalog_page)
-    
     start_idx = st.session_state.catalog_page * PAGE_SIZE
     visible_df = filtered_df.iloc[start_idx : start_idx + PAGE_SIZE]
     
@@ -116,13 +134,8 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
     st.caption(f"Encontradas {total_items} figuras. Página {st.session_state.catalog_page+1} de {total_pages}")
 
     # Use a set for ownership truth from the DataFrame for fast lookup in render loop
-    # We still need optimistic updates to feel fast
     if "optimistic_updates" not in st.session_state:
         st.session_state.optimistic_updates = {}
-    
-    # Limpieza de estados redundantes (antes aquí había un bloque repetido)
-    start_idx = st.session_state.catalog_page * PAGE_SIZE
-    end_idx = start_idx + PAGE_SIZE
     
     # --- Render List ---
     for _, row in visible_df.iterrows():
@@ -133,13 +146,11 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
         p_best = row['best_price']
         p_hist = row['historic_low']
         p_is_owned = row['is_owned']
-        p_obj = row['obj'] # Original ORM object for details
+        p_offers = row['offers']
+        p_history = row['history']
         
-        # Apply Optimistic UI
         is_owned = st.session_state.optimistic_updates.get(p_id, p_is_owned)
-            
         btn_label = "✅ En Colección" if is_owned else "➕ Añadir"
-        
         current_best = f"{p_best:.2f}€" if p_best < 900000 else "---"
         historic_low = f"{p_hist:.2f}€" if p_hist < 900000 else "---"
 
@@ -154,38 +165,31 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
             
             with c_info:
                 if user.role == "admin":
-                    render_inline_product_admin(db, p_obj, current_user_id)
+                    p_obj_live = db.get(ProductModel, p_id)
+                    render_inline_product_admin(db, p_obj_live, current_user_id)
                 else:
                     st.subheader(p_name)
                     st.caption(f"Categoría: {p_cat}")
                 
                 # Offers Expander
-                if p_obj.offers:
-                     with st.expander(f"Ver {len(p_obj.offers)} tiendas y Precios 📉"):
-                          for o in p_obj.offers:
+                if p_offers:
+                     with st.expander(f"Ver {len(p_offers)} tiendas y Precios 📉"):
+                          for o in p_offers:
                                from src.web.shared import render_external_link
-                               render_external_link(o.url, "Ver Oferta", key_suffix=f"cat_{o.id}")
+                               render_external_link(o['url'], "Ver Oferta", key_suffix=f"cat_{o['id']}")
                           
                           # Chart Logic
                           st.divider()
                           st.subheader("Evolución Temporal")
-                          try:
-                              import pandas as pd
-                              chart_data = []
-                              for o in p_obj.offers:
-                                  for ph in o.price_history:
-                                      chart_data.append({
-                                          "Fecha": ph.recorded_at,
-                                          "Precio": ph.price,
-                                          "Tienda": o.shop_name
-                                      })
-                              if chart_data:
-                                  df_hist = pd.DataFrame(chart_data).sort_values("Fecha")
-                                  st.line_chart(df_hist, x="Fecha", y="Precio", color="Tienda")
-                              else:
-                                  st.info("Faltan datos históricos.")
-                          except Exception:
-                              pass
+                          if p_history:
+                               try:
+                                   import pandas as pd
+                                   df_hist = pd.DataFrame(p_history).sort_values("Fecha")
+                                   st.line_chart(df_hist, x="Fecha", y="Precio", color="Tienda")
+                               except Exception:
+                                   pass
+                          else:
+                               st.info("Faltan datos históricos.")
 
             with c_price_curr:
                 st.metric("Mejor Precio", current_best)
