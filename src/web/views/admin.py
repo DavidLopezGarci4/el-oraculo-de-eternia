@@ -4,7 +4,7 @@ import sys
 import subprocess
 import signal
 from datetime import datetime, timedelta
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from src.domain.models import ProductModel, OfferModel, PendingMatchModel, BlackcludedItemModel, CollectionItemModel, UserModel, ScraperStatusModel, ScraperExecutionLogModel
 
 def render_inline_product_admin(db: Session, p: ProductModel, current_user_id: int):
