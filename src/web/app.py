@@ -7,8 +7,8 @@ root_path = Path(__file__).resolve().parent.parent.parent
 IMG_DIR = root_path / "src" / "web" / "static" / "images"
 sys.path.append(str(root_path))
 
-# --- REFRESH FORCE ---
 import streamlit as st
+import importlib
 from sqlalchemy import text
 from src.core.config import settings
 from src.domain import models
@@ -340,6 +340,7 @@ if st.session_state.authenticated and user:
             catalog.render(db, IMG_DIR, user, repo)
         elif page == "Centinela":
             from src.web.views import alerts
+            importlib.reload(alerts)
             alerts.render(db, user, IMG_DIR)
         elif page == "Cazador":
             from src.web.views import hunter
