@@ -20,12 +20,15 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
 
     # --- Filters ---
     with st.expander("🔍 Buscador, Filtros y Orden", expanded=True):
-        col_search, col_cat = st.columns([2, 1])
+        col_search, col_cat, col_page_jump = st.columns([2, 1, 1])
         with col_search:
-            search = st.text_input("Buscador", placeholder="Nombre de la figura...", label_visibility="collapsed")
+            search = st.text_input("Buscador", placeholder="Nombre de la figura...", label_visibility="collapsed", key="catalog_search_input")
         with col_cat:
             cats = [r[0] for r in db.query(ProductModel.category).distinct() if r[0]]
             sel_cat = st.selectbox("Categoría", ["Todas"] + sorted(cats), label_visibility="collapsed")
+        with col_page_jump:
+            # Placeholder for page jump - will be updated after total_pages is known
+            page_jump_placeholder = st.empty()
 
         col_filter, col_sort = st.columns(2)
         with col_filter:
@@ -90,13 +93,21 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
     # --- Pagination ---
     PAGE_SIZE = 50
     total_items = len(filtered_df)
-    total_pages = math.ceil(total_items / PAGE_SIZE)
+    total_pages = max(1, math.ceil(total_items / PAGE_SIZE))
     
     if "catalog_page" not in st.session_state:
         st.session_state.catalog_page = 0
     
+    # Update Page Jump Selector in the filters area
+    with page_jump_placeholder:
+        jump_page = st.number_input("Ir a página", min_value=1, max_value=total_pages, value=st.session_state.catalog_page + 1, label_visibility="collapsed")
+        if jump_page - 1 != st.session_state.catalog_page:
+            st.session_state.catalog_page = jump_page - 1
+            st.rerun()
+
     # Boundary check for pagination
-    st.session_state.catalog_page = min(st.session_state.catalog_page, max(0, total_pages - 1))
+    st.session_state.catalog_page = min(st.session_state.catalog_page, total_pages - 1)
+    st.session_state.catalog_page = max(0, st.session_state.catalog_page)
     
     start_idx = st.session_state.catalog_page * PAGE_SIZE
     visible_df = filtered_df.iloc[start_idx : start_idx + PAGE_SIZE]
@@ -108,24 +119,8 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
     # We still need optimistic updates to feel fast
     if "optimistic_updates" not in st.session_state:
         st.session_state.optimistic_updates = {}
-
-    # Execute Cached Query
-    # We pass 'str(db.bind.url)' as a hash key if we wanted to invalidate on DB change, but TTL is fine.
-    # We pass user.id (int) not the object to be safe.
-    products = get_catalog_products(None, search, sel_cat, filter_opt, current_user_id, sort_opt)
-
-    # --- Pagination ---
-    PAGE_SIZE = 50
-    total_items = len(products)
-    total_pages = math.ceil(total_items / PAGE_SIZE)
     
-    if "catalog_page" not in st.session_state:
-        st.session_state.catalog_page = 0
-        
-    # Boundary Check
-    if st.session_state.catalog_page >= total_pages:
-        st.session_state.catalog_page = max(0, total_pages - 1)
-        
+    # Limpieza de estados redundantes (antes aquí había un bloque repetido)
     start_idx = st.session_state.catalog_page * PAGE_SIZE
     end_idx = start_idx + PAGE_SIZE
     

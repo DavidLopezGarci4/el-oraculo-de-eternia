@@ -31,22 +31,45 @@ class BaseScraper(ABC):
 
     async def _safe_navigate(self, page: Page, url: str) -> bool:
         """
-        Helper for robust navigation with error handling and human-like delays.
+        Helper for robust navigation with error handling, human-like delays, 
+        and exponential backoff retries (KAIZEN Hardening).
         """
         import random
         import asyncio
-        delay = random.uniform(2.0, 5.0)
-        logger.info(f"[{self.spider_name}] Humanized delay: {delay:.2f}s before navigating...")
-        await asyncio.sleep(delay)
         
-        try:
-            await page.goto(url, timeout=60000, wait_until="domcontentloaded")
-            await self._handle_popups(page)
-            return True
-        except Exception as e:
-            logger.error(f"[{self.spider_name}] Error navigating to {url}: {e}")
-            self.errors += 1
-            return False
+        max_retries = 3
+        for attempt in range(max_retries):
+            # Jittered delay
+            delay = random.uniform(2.0, 5.0) * (attempt + 1)
+            if attempt > 0:
+                logger.info(f"[{self.spider_name}] 🔄 Retry {attempt}/{max_retries} for {url}. Waiting {delay:.2f}s...")
+            else:
+                logger.info(f"[{self.spider_name}] Humanized delay: {delay:.2f}s before navigating...")
+            
+            await asyncio.sleep(delay)
+            
+            try:
+                await page.goto(url, timeout=60000, wait_until="domcontentloaded")
+                await self._handle_popups(page)
+                
+                # Check if we were blocked (Anti-bot detection)
+                content = await page.content()
+                if "captcha" in content.lower() or "blocked" in content.lower() or "connection reset" in content.lower():
+                     raise Exception("Anti-bot or Connection block detected")
+                
+                return True
+            except Exception as e:
+                logger.error(f"[{self.spider_name}] Attempt {attempt+1} failed for {url}: {e}")
+                if self.audit_logger and attempt == max_retries - 1:
+                    self.audit_logger.log_insight(
+                        self.spider_name, 
+                        "network_failure", 
+                        f"Failed after {max_retries} attempts: {e}",
+                        severity="error"
+                    )
+                
+        self.errors += 1
+        return False
 
     async def _handle_popups(self, page: Page):
         """

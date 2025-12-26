@@ -86,15 +86,24 @@ class FantasiaScraper(BaseScraper):
             price_val = 0.0
             price_span = item.select_one('span.price')
             
-            if price_span and price_span.has_attr('content'):
-                 try:
-                    price_val = float(price_span['content'])
-                 except:
-                    pass
+            if price_span:
+                # Try attribute first
+                if price_span.has_attr('content'):
+                    try:
+                        price_val = float(price_span['content'])
+                    except:
+                        pass
+                
+                # Fallback to text cleaning if attribute fails or is missing
+                if price_val == 0.0:
+                    price_val = self._normalize_price(price_span.get_text(strip=True))
             
-            if price_val == 0.0 and price_span:
-                 price_val = self._normalize_price(price_span.get_text(strip=True))
-
+            if price_val == 0.0:
+                # One last attempt: look for meta[itemprop="price"] inside item
+                meta_price = item.select_one('meta[itemprop="price"]')
+                if meta_price and meta_price.has_attr('content'):
+                    price_val = self._normalize_price(meta_price['content'])
+            
             if price_val == 0.0:
                 return None
 

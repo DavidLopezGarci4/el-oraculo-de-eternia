@@ -173,6 +173,7 @@ with st.sidebar:
         st.image(str(IMG_DIR / "mini_espejo.png"), width=63)
     with c_mirror_lbl:
         st.markdown("**Espejo de los Espíritus**")
+        st.caption("Visión del Purgatorio")
         
     # Optimized Sidebar Status with Caching
     @st.cache_data(ttl=60)
@@ -291,9 +292,8 @@ with st.sidebar:
         {"id": "Coleccion", "label": "Mi Colección"}
     ]
     
-    if st.session_state.role == "admin":
         menu_items.extend([
-            {"id": "Purgatorio", "label": "Purgatorio"},
+            {"id": "Purgatorio", "label": "Purgatorio (Espejo)"},
             {"id": "Configuracion", "label": "Configuración"}
         ])
     
@@ -340,6 +340,7 @@ if st.session_state.authenticated and user:
             # Admin check
             if user.role == "admin":
                 from src.web.views import admin
+                st.subheader("🔮 El Espejo de los Espíritus (Purgatorio)")
                 admin.render_purgatory(db, IMG_DIR)
             else:
                 st.error("Zona restringida.")
