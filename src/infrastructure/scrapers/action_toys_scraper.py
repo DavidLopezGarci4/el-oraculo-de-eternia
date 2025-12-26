@@ -115,6 +115,10 @@ class ActionToysScraper(BaseScraper):
                 shop_name=self.spider_name,
                 is_available=is_avl
             )
+        except Exception as e:
+            logger.warning(f"[{self.spider_name}] Item parsing error: {e}")
+            return None
+
     async def _scrape_detail(self, page: Page, url: str) -> dict:
         """
         ActionToys specific: Extract GTIN/EAN.
@@ -133,6 +137,7 @@ class ActionToysScraper(BaseScraper):
         return {}
 
     async def _handle_popups(self, page: Page):
+        pass
 
     def _extract_price_text(self, tag) -> float:
         """Helper to extract float from bdi/span tag"""

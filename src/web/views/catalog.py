@@ -34,53 +34,80 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
             sort_opt = st.selectbox("Orden", ["Nombre (A-Z)", "Nombre (Z-A)", "Precio (Menor a Mayor)", "Precio (Mayor a Menor)"])
 
     
-    # --- Performance Cache ---
-    @st.cache_data(ttl=300) # Cache for 5 minutes
-    def get_catalog_products(_db_session, _search, _cat, _filter_mode, _current_uid, _sort_opt): 
-        # Note: _db_session is underscored to prevent hashing (it's not pickle-safe), but we need a fresh session inside if caching.
-        # Actually, for st.cache_data, we should return Pydantic models or plain dicts, not ORM objects attached to session.
-        # However, eager loading (joinedload) can work if we detach them.
-        
-        # Re-create session inside cache to avoid Thread errors with Streamlit
+    # --- Performance Cache: Master Data Load ---
+    @st.cache_data(ttl=300) # 5m cache
+    def get_master_catalog_df(_current_uid):
         from src.infrastructure.database import SessionLocal
+        import pandas as pd
         with SessionLocal() as session:
-            q = session.query(ProductModel)
+            # Eager load offers and price history for total performance
+            from sqlalchemy.orm import joinedload, subqueryload
+            products_raw = session.query(ProductModel).options(
+                joinedload(ProductModel.offers).subqueryload(OfferModel.price_history)
+            ).all()
+            owned_ids = {r[0] for r in session.query(CollectionItemModel.product_id).filter(CollectionItemModel.owner_id == _current_uid).all()}
             
-            # Apply filters
-            if _search:
-                q = q.filter(ProductModel.name.ilike(f"%{_search}%"))
-            if _cat != "Todas":
-                q = q.filter(ProductModel.category == _cat)
-                
-            if _filter_mode == "Adquiridos":
-                q = q.join(CollectionItemModel).filter(CollectionItemModel.owner_id == _current_uid)
-            elif _filter_mode == "Faltantes":
-                subq = session.query(CollectionItemModel.product_id).filter(CollectionItemModel.owner_id == _current_uid)
-                q = q.filter(~ProductModel.id.in_(subq))
-            
-            # Eager load offers for price sorting/display to avoid N+1 queries later
-            from sqlalchemy.orm import joinedload
-            q = q.options(joinedload(ProductModel.offers))
-            
-            results = q.all()
-            
-            # Sort in Python (since we need computed price logic not easy in SQL for this schema)
-            if _sort_opt == "Nombre (A-Z)":
-                results.sort(key=lambda x: x.name.lower())
-            elif _sort_opt == "Nombre (Z-A)":
-                results.sort(key=lambda x: x.name.lower(), reverse=True)
-            elif "Precio" in _sort_opt:
-                def get_price(p):
-                    if not p.offers: return 999999.0
-                    valid = [o.price for o in p.offers if o.price > 0]
-                    return min(valid) if valid else 999999.0
-                results.sort(key=get_price, reverse="Mayor" in _sort_opt)
-                
-            # Serialize to prevent session detach issues
-            # We return a list of detached instances or a specialized DTO if needed. 
-            # SQLAlchemy objs can be cached if they are fully loaded and we use expunge_all.
-            session.expunge_all()
-            return results
+            data = []
+            for p in products_raw:
+                prices = [o.price for o in p.offers if o.price > 0]
+                min_prices = [o.min_price for o in p.offers if o.min_price > 0]
+                data.append({
+                    "id": p.id,
+                    "name": p.name,
+                    "category": p.category or "MOTU",
+                    "image_url": p.image_url,
+                    "is_owned": p.id in owned_ids,
+                    "best_price": min(prices) if prices else 999999.0,
+                    "historic_low": min(min_prices) if min_prices else 999999.0,
+                    "offers_count": len(p.offers),
+                    "obj": p # Keep reference to ORM object for expanders if needed, but caution with detached sessions
+                })
+            return pd.DataFrame(data)
+
+    # 1. Load Data
+    df = get_master_catalog_df(current_user_id)
+    
+    # 2. Apply Filters (Instant in memory)
+    filtered_df = df.copy()
+    if search:
+        filtered_df = filtered_df[filtered_df['name'].str.contains(search, case=False, na=False)]
+    if sel_cat != "Todas":
+        filtered_df = filtered_df[filtered_df['category'] == sel_cat]
+        
+    if filter_opt == "Adquiridos":
+        filtered_df = filtered_df[filtered_df['is_owned'] == True]
+    elif filter_opt == "Faltantes":
+        filtered_df = filtered_df[filtered_df['is_owned'] == False]
+        
+    # 3. Sort (Instant in memory)
+    if sort_opt == "Nombre (A-Z)":
+        filtered_df = filtered_df.sort_values("name")
+    elif sort_opt == "Nombre (Z-A)":
+        filtered_df = filtered_df.sort_values("name", ascending=False)
+    elif "Precio" in sort_opt:
+        filtered_df = filtered_df.sort_values("best_price", ascending="Menor" in sort_opt)
+
+    # --- Pagination ---
+    PAGE_SIZE = 50
+    total_items = len(filtered_df)
+    total_pages = math.ceil(total_items / PAGE_SIZE)
+    
+    if "catalog_page" not in st.session_state:
+        st.session_state.catalog_page = 0
+    
+    # Boundary check for pagination
+    st.session_state.catalog_page = min(st.session_state.catalog_page, max(0, total_pages - 1))
+    
+    start_idx = st.session_state.catalog_page * PAGE_SIZE
+    visible_df = filtered_df.iloc[start_idx : start_idx + PAGE_SIZE]
+    
+    st.divider()
+    st.caption(f"Encontradas {total_items} figuras. Página {st.session_state.catalog_page+1} de {total_pages}")
+
+    # Use a set for ownership truth from the DataFrame for fast lookup in render loop
+    # We still need optimistic updates to feel fast
+    if "optimistic_updates" not in st.session_state:
+        st.session_state.optimistic_updates = {}
 
     # Execute Cached Query
     # We pass 'str(db.bind.url)' as a hash key if we wanted to invalidate on DB change, but TTL is fine.
@@ -102,62 +129,45 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
     start_idx = st.session_state.catalog_page * PAGE_SIZE
     end_idx = start_idx + PAGE_SIZE
     
-    # Slice
-    visible_products = products[start_idx:end_idx]
-    
-    st.divider()
-    st.caption(f"Mostrando {start_idx+1}-{min(end_idx, total_items)} de {total_items} figuras.")
-
-    # Optimized Ownership Check with Optimistic UI
-    # 1. Fetch DB Truth
-    owned_ids_query = db.query(CollectionItemModel.product_id).filter(CollectionItemModel.owner_id == current_user_id).all()
-    owned_ids_set = {r[0] for r in owned_ids_query}
-    
-    # 2. Initialize Optimistic State Override if not exists
-    if "optimistic_updates" not in st.session_state:
-        st.session_state.optimistic_updates = {}
-
     # --- Render List ---
-    for p in visible_products:
-        # Determine Status: DB Truth + Local Overrides
-        is_owned_db = p.id in owned_ids_set
+    for _, row in visible_df.iterrows():
+        p_id = row['id']
+        p_name = row['name']
+        p_cat = row['category']
+        p_img = row['image_url']
+        p_best = row['best_price']
+        p_hist = row['historic_low']
+        p_is_owned = row['is_owned']
+        p_obj = row['obj'] # Original ORM object for details
         
-        # Apply override if exists for this product
-        if p.id in st.session_state.optimistic_updates:
-            is_owned = st.session_state.optimistic_updates[p.id]
-        else:
-            is_owned = is_owned_db
+        # Apply Optimistic UI
+        is_owned = st.session_state.optimistic_updates.get(p_id, p_is_owned)
             
         btn_label = "✅ En Colección" if is_owned else "➕ Añadir"
         
-        current_best = "---"
-        historic_low = "---"
-        if p.offers:
-            prices = [o.price for o in p.offers if o.price > 0]
-            if prices: current_best = f"{min(prices):.2f}€"
-            mins = [o.min_price for o in p.offers if o.min_price > 0]
-            if mins: historic_low = f"{min(mins):.2f}€"
+        current_best = f"{p_best:.2f}€" if p_best < 900000 else "---"
+        historic_low = f"{p_hist:.2f}€" if p_hist < 900000 else "---"
 
         with st.container():
             c_img, c_info, c_price_curr, c_price_hist, c_action = st.columns([1, 3, 1.5, 1.5, 1.5])
             
             with c_img:
-                if p.image_url:
-                    st.image(p.image_url, width=80)
+                if p_img:
+                    st.image(p_img, width=80)
                 else:
                     st.write("🖼️")
             
             with c_info:
                 if user.role == "admin":
-                    render_inline_product_admin(db, p, current_user_id)
+                    render_inline_product_admin(db, p_obj, current_user_id)
                 else:
-                    st.subheader(p.name)
-                    st.caption(f"Categoría: {p.category}")
+                    st.subheader(p_name)
+                    st.caption(f"Categoría: {p_cat}")
                 
                 # Offers Expander
-                if p.offers:
-                     with st.expander(f"Ver {len(p.offers)} tiendas y Precios 📉"):
-                          for o in p.offers:
+                if p_obj.offers:
+                     with st.expander(f"Ver {len(p_obj.offers)} tiendas y Precios 📉"):
+                          for o in p_obj.offers:
                                from src.web.shared import render_external_link
                                render_external_link(o.url, "Ver Oferta", key_suffix=f"cat_{o.id}")
                           
@@ -167,7 +177,7 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
                           try:
                               import pandas as pd
                               chart_data = []
-                              for o in p.offers:
+                              for o in p_obj.offers:
                                   for ph in o.price_history:
                                       chart_data.append({
                                           "Fecha": ph.recorded_at,
@@ -189,12 +199,10 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
                 st.metric("Mín. Histórico", historic_low)
             
             with c_action:
-                if st.button(btn_label, key=f"btn_{p.id}", width="stretch"):
-                    # Optimistic Update: Set the OPPOSITE of what is currently displayed
-                    st.session_state.optimistic_updates[p.id] = not is_owned
-                    
-                    if toggle_ownership(db, p.id, current_user_id):
-                        st.cache_data.clear() # Force refresh data
+                if st.button(btn_label, key=f"btn_{p_id}", width="stretch"):
+                    st.session_state.optimistic_updates[p_id] = not is_owned
+                    if toggle_ownership(db, p_id, current_user_id):
+                        st.cache_data.clear() # Cache invalidation on change
                         st.rerun()
             
             st.markdown("---")

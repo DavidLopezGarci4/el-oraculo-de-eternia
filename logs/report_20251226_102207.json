@@ -1,0 +1,20 @@
+{
+  "ActionToys": {
+    "items_found": 0,
+    "status": "Empty"
+  },
+  "Fantasia": {
+    "items_found": 0,
+    "status": "Empty"
+  },
+  "Frikiverso": {
+    "error": "(psycopg2.errors.UndefinedColumn) column products.ean does not exist\nLINE 1: ...d AS products_id, products.name AS products_name, products.e...\n                                                             ^\n\n[SQL: SELECT products.id AS products_id, products.name AS products_name, products.ean AS products_ean, products.image_url AS products_image_url, products.category AS products_category, products.created_at AS products_created_at, products.updated_at AS products_updated_at \nFROM products \n LIMIT %(param_1)s OFFSET %(param_2)s]\n[parameters: {'param_1': 5000, 'param_2': 0}]\n(Background on this error at: https://sqlalche.me/e/20/f405)"
+  },
+  "Pixelatoy": {
+    "items_found": 0,
+    "status": "Empty"
+  },
+  "Electropolis": {
+    "error": "(psycopg2.errors.UndefinedColumn) column products.ean does not exist\nLINE 1: ...d AS products_id, products.name AS products_name, products.e...\n                                                             ^\n\n[SQL: SELECT products.id AS products_id, products.name AS products_name, products.ean AS products_ean, products.image_url AS products_image_url, products.category AS products_category, products.created_at AS products_created_at, products.updated_at AS products_updated_at \nFROM products \n LIMIT %(param_1)s OFFSET %(param_2)s]\n[parameters: {'param_1': 5000, 'param_2': 0}]\n(Background on this error at: https://sqlalche.me/e/20/f405)"
+  }
+}

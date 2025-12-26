@@ -202,10 +202,16 @@ async def run_daily_scan(progress_callback=None):
                             if not getattr(item, 'ean', None):
                                 # Ensure the scraper has a _scrape_detail method
                                 if hasattr(scraper, '_scrape_detail') and callable(getattr(scraper, '_scrape_detail')):
-                                    detail_data = await scraper._scrape_detail(context, item.url) # Pass context, not context.pages[-1]
-                                    if detail_data and detail_data.get('ean'):
-                                        item.ean = detail_data['ean']
-                                        logger.info(f"   🎯 Fingerprint found for '{item.product_name}': {item.ean}")
+                                    # Create a temporary page for detail scraping to avoid interference
+                                    detail_page = await context.new_page()
+                                    try:
+                                        detail_data = await scraper._scrape_detail(detail_page, item.url)
+                                        if detail_data and detail_data.get('ean'):
+                                            item.ean = detail_data['ean']
+                                            logger.info(f"   🎯 Fingerprint found for '{item.product_name}': {item.ean}")
+                                    finally:
+                                        await detail_page.close()
+                                        
                                     await asyncio.sleep(random.uniform(1.0, 3.0)) # Jitter between detail pages
                                 else:
                                     logger.warning(f"⚠️ Scraper {scraper.spider_name} does not implement _scrape_detail for deep harvest.")

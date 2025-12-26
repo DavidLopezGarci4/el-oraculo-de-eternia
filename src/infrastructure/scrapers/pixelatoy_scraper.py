@@ -114,6 +114,10 @@ class PixelatoyScraper(BaseScraper):
                 is_available=is_avl,
                 image_url=img_url
             )
+        except Exception as e:
+            logger.warning(f"[{self.spider_name}] Item parsing error: {e}")
+            return None
+
     async def _scrape_detail(self, page: Page, url: str) -> dict:
         """
         Pixelatoy specific: Extract EAN/Referencia.
@@ -132,3 +136,4 @@ class PixelatoyScraper(BaseScraper):
         return {}
 
     async def _handle_popups(self, page: Page):
+        pass
