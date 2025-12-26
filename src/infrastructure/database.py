@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from src.core.config import settings
-from src.domain.models import Base
+from src.domain.base import Base
 
 # FinOps: Hybrid Engine (SQLite for Dev, Postgres for Cloud)
 # Fix deprecated 'postgres://' scheme from some providers (fly.io/render/supabase)
