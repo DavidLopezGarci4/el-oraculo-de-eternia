@@ -291,7 +291,7 @@ with st.sidebar:
         {"id": "Cazador", "label": "Cazador"},
         {"id": "Coleccion", "label": "Mi Colección"}
     ]
-    
+    if st.session_state.role == "admin":
         menu_items.extend([
             {"id": "Purgatorio", "label": "Purgatorio (Espejo)"},
             {"id": "Configuracion", "label": "Configuración"}
