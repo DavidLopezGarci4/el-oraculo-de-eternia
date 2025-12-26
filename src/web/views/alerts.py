@@ -8,7 +8,7 @@ def render(db: Session, user, img_dir):
     with c1:
         st.image(str(img_dir / "centinela.png"), width="stretch") # Asset específico del Centinela
     with c2:
-        st.markdown("# El Sistema de Centinela")
+        st.markdown("# El Sistema de Centinela 👁️")
     st.caption("Gestiona tus vigilancias de precios y no dejes escapar ninguna reliquia.")
     
     st.divider()
