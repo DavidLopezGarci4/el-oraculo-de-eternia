@@ -6,7 +6,7 @@ def render(db: Session, user, img_dir):
     from src.domain.models import ProductModel, PriceAlertModel, UserModel
     c1, c2 = st.columns([1, 8])
     with c1:
-        st.image(str(img_dir / "cazador_ofertas.png"), width="stretch") # Reusando asset temático
+        st.image(str(img_dir / "centinela.png"), width="stretch") # Asset específico del Centinela
     with c2:
         st.markdown("# El Sistema de Centinela")
     st.caption("Gestiona tus vigilancias de precios y no dejes escapar ninguna reliquia.")
