@@ -5,9 +5,9 @@ import subprocess
 import signal
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session, joinedload
-from src.domain.models import ProductModel, OfferModel, PendingMatchModel, BlackcludedItemModel, CollectionItemModel, UserModel, ScraperStatusModel, ScraperExecutionLogModel
 
-def render_inline_product_admin(db: Session, p: ProductModel, current_user_id: int):
+def render_inline_product_admin(db: Session, p, current_user_id: int):
+    from src.domain.models import ProductModel, OfferModel, CollectionItemModel
     """
     Renders the Superuser Edit Panel for a single product.
     Includes Metadata editing, nuclear options (Purge/Blacklist Product), and Offer management.
@@ -270,6 +270,7 @@ def render_purgatory(db: Session, img_dir):
         _render_mission_control(db, img_dir)
 
 def _render_mission_control(db, img_dir):
+    from src.domain.models import ScraperStatusModel, ScraperExecutionLogModel
     st.subheader("📡 Centro de Operaciones")
     
     active_scrapers = db.query(ScraperStatusModel).filter(ScraperStatusModel.status == "running").all()
@@ -395,6 +396,7 @@ def _render_mission_control(db, img_dir):
         st.info("No hay historial disponible.")
 
 def _render_purgatory_content(db):
+    from src.domain.models import ProductModel, OfferModel, PendingMatchModel, BlackcludedItemModel
     from src.core.matching import SmartMatcher
     matcher = SmartMatcher()
     
