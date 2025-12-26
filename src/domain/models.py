@@ -7,24 +7,7 @@ DOMAIN_VERSION = "1.2.1-GUARDIAN"
 
 from src.domain.base import Base
 
-class PriceAlertModel(Base):
-    """
-    Vigilancia de precios del Centinela.
-    """
-    __tablename__ = "price_alerts"
-    
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    product_id: Mapped[int] = mapped_column(ForeignKey("products.id"))
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    
-    target_price: Mapped[float] = mapped_column(Float)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    last_notified_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-
-    # Relationships
-    product: Mapped["ProductModel"] = relationship("ProductModel")
-    user: Mapped["UserModel"] = relationship("UserModel", back_populates="price_alerts")
+# PriceAlertModel moved down for dependency resolution
 
 class ProductModel(Base):
     __tablename__ = "products"
@@ -120,7 +103,26 @@ class PendingMatchModel(Base):
     
     found_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     
-# PriceAlertModel promoted to top
+# PriceAlertModel promoted to top (moved here for coherence)
+class PriceAlertModel(Base):
+    """
+    Vigilancia de precios del Centinela.
+    """
+    __tablename__ = "price_alerts"
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    product_id: Mapped[int] = mapped_column(ForeignKey("products.id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    
+    target_price: Mapped[float] = mapped_column(Float)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    last_notified_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+    # Relationships
+    product: Mapped["ProductModel"] = relationship("ProductModel")
+    user: Mapped["UserModel"] = relationship("UserModel", back_populates="price_alerts")
+
 
 
 class UserModel(Base):
