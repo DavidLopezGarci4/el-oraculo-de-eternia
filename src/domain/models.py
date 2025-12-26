@@ -3,6 +3,8 @@ from sqlalchemy.orm import relationship, DeclarativeBase, Mapped, mapped_column
 from datetime import datetime
 from typing import List, Optional
 
+DOMAIN_VERSION = "1.2.1-GUARDIAN"
+
 from src.domain.base import Base
 
 class PriceAlertModel(Base):
@@ -225,6 +227,7 @@ __all__ = [
     "BlackcludedItemModel", 
     "PriceHistoryModel", 
     "ScraperExecutionLogModel", 
-    "KaizenInsightModel"
+    "KaizenInsightModel",
+    "DOMAIN_VERSION"
 ]
 

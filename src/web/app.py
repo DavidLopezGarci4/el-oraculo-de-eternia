@@ -13,6 +13,7 @@ import importlib
 from src.core.config import settings
 from src.domain import models
 importlib.reload(models)
+print(f"🔮 Oráculo de Eternia - Domain Loaded: {getattr(models, 'DOMAIN_VERSION', 'Legacy')}")
 
 from src.infrastructure.database import SessionLocal, init_db, engine
 from src.infrastructure.repositories.product import ProductRepository
