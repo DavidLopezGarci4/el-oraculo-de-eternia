@@ -55,11 +55,6 @@ class OfferModel(Base):
         back_populates="offer",
         cascade="all, delete-orphan"
     )
-    price_history: Mapped[List["PriceHistoryModel"]] = relationship(
-        "PriceHistoryModel", 
-        back_populates="offer",
-        cascade="all, delete-orphan"
-    )
 
 class CollectionItemModel(Base):
     __tablename__ = "collection_items"
@@ -216,4 +211,19 @@ class KaizenInsightModel(Base):
     
     status: Mapped[str] = mapped_column(String, default="pending") # pending, implemented, rejected
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+__all__ = [
+    "Base", 
+    "ProductModel", 
+    "OfferModel", 
+    "CollectionItemModel", 
+    "PendingMatchModel", 
+    "PriceAlertModel", 
+    "UserModel", 
+    "ScraperStatusModel", 
+    "BlackcludedItemModel", 
+    "PriceHistoryModel", 
+    "ScraperExecutionLogModel", 
+    "KaizenInsightModel"
+]
 
