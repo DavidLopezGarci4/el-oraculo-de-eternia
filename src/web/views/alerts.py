@@ -10,6 +10,10 @@ def render(db: Session, user, img_dir):
     with c2:
         st.markdown("# El Sistema de Centinela 👁️")
     st.caption("Gestiona tus vigilancias de precios y no dejes escapar ninguna reliquia.")
+    # debug
+    if st.checkbox("Depurar Imagen", False):
+        st.write(f"Buscando asset en: {img_dir / 'centinela.png'}")
+        st.write(f"Existe: {(img_dir / 'centinela.png').exists()}")
     
     st.divider()
     
