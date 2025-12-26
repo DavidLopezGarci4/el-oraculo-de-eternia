@@ -1,1 +1,1 @@
-from .models import *
+# Package file for domain models
