@@ -1,9 +1,9 @@
 import streamlit as st
 from sqlalchemy.orm import Session
-from src.domain.models import ProductModel, PriceAlertModel, UserModel
 from datetime import datetime
 
-def render(db: Session, user: UserModel, img_dir):
+def render(db: Session, user, img_dir):
+    from src.domain.models import ProductModel, PriceAlertModel, UserModel
     c1, c2 = st.columns([1, 8])
     with c1:
         st.image(str(img_dir / "Cazador.png"), width="stretch") # Reusando asset temático

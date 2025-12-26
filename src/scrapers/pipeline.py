@@ -3,7 +3,6 @@ from typing import List
 from loguru import logger
 from src.scrapers.base import BaseSpider, ScrapedOffer
 from src.domain.schemas import Product
-from src.domain.models import PendingMatchModel, BlackcludedItemModel
 from src.infrastructure.repositories.product import ProductRepository
 from sqlalchemy.orm import Session
 from src.infrastructure.database import SessionLocal
@@ -133,6 +132,7 @@ class ScrapingPipeline:
                     logger.info(f"⏳ No Match Found: '{offer.product_name}' (Top Score: {best_match_score:.2f}) -> Routing to Purgatory")
                     
                     # Check blacklist
+                    from src.domain.models import BlackcludedItemModel
                     is_blacklisted = db.query(BlackcludedItemModel).filter(BlackcludedItemModel.url == str(offer.url)).first()
                     if is_blacklisted:
                         logger.warning(f"🚫 Ignored (Blacklist): {offer.product_name}")
@@ -141,6 +141,7 @@ class ScrapingPipeline:
                     # Check if already exists in Pending
                     existing = db.query(PendingMatchModel).filter(PendingMatchModel.url == str(offer.url)).first()
                     if not existing:
+                        from src.domain.models import PendingMatchModel
                         pending = PendingMatchModel(
                             scraped_name=offer.product_name,
                             ean=getattr(offer, 'ean', None),

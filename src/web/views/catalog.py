@@ -1,12 +1,12 @@
 import streamlit as st
 import math
 from sqlalchemy.orm import Session
-from src.domain.models import ProductModel, CollectionItemModel, OfferModel, PriceHistoryModel, PriceAlertModel
 from src.web.shared import toggle_ownership
 from src.web.views.admin import render_inline_product_admin
 from src.infrastructure.repositories.product import ProductRepository
 
 def render(db: Session, img_dir, user, repo: ProductRepository):
+    from src.domain.models import ProductModel, CollectionItemModel, OfferModel, PriceHistoryModel, PriceAlertModel
     total_products = db.query(ProductModel).count()
     # Header
     c1, c2 = st.columns([1, 8])
