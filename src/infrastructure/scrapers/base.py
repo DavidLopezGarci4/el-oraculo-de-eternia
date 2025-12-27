@@ -55,15 +55,25 @@ class BaseScraper(ABC):
                 
                 await self._handle_popups(page)
                 
-                # Check if we were blocked (Anti-bot detection)
+                # Check if we were blocked (Anti-bot detection) - Surgical precision
                 content = await page.content()
-                is_blocked = (
-                    api_status in [403, 429] or
-                    "captcha" in content.lower() or 
-                    "blocked" in content.lower() or 
-                    "connection reset" in content.lower() or
-                    "access denied" in content.lower()
-                )
+                content_lower = content.lower()
+                
+                # Active blocking indicators (not just script availability)
+                is_blocked = (api_status in [403, 429])
+                
+                if not is_blocked:
+                    # Check for explicit 'blocked' or 'access denied' patterns in body
+                    # BUT only if it looks like an error page (short content or specific headers)
+                    if len(content) < 2000: # Typical error page size
+                        if any(term in content_lower for term in ["blocked", "access denied", "connection reset"]):
+                            is_blocked = True
+                    
+                    # CAPTCHA detection: look for common challenge elements, not just the word 'captcha'
+                    if "g-recaptcha" in content_lower or "h-captcha" in content_lower or "cloudflare" in content_lower:
+                        # Only if we don't see typical product data
+                        if "product" not in content_lower and "price" not in content_lower:
+                            is_blocked = True
 
                 if is_blocked:
                     self.blocked = True

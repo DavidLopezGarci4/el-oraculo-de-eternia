@@ -25,7 +25,7 @@ class PixelatoyScraper(BaseScraper):
         try:
             current_url = self.base_url
             page_num = 1
-            max_pages = 5
+            max_pages = 25 # Increased for safety
             
             while current_url and page_num <= max_pages:
                 logger.info(f"[{self.spider_name}] Scraping page {page_num}: {current_url}")
@@ -33,10 +33,11 @@ class PixelatoyScraper(BaseScraper):
                 if not await self._safe_navigate(page, current_url):
                     break
                 
-                await asyncio.sleep(3.0) # Longer wait
+                await self._handle_popups(page)
+                await asyncio.sleep(2.0) 
                 
                 # Human-like interaction (Kaizen Hardening)
-                await page.mouse.wheel(0, 400)
+                await page.mouse.wheel(0, 500)
                 await asyncio.sleep(1.0)
                 
                 html_content = await page.content()
@@ -46,16 +47,22 @@ class PixelatoyScraper(BaseScraper):
                 items = soup.select('article.product-miniature, article.js-product-miniature')
                 logger.info(f"[{self.spider_name}] Found {len(items)} items on page {page_num}")
                 
+                if not items:
+                    logger.warning(f"[{self.spider_name}] No items found on page {page_num}. Possible block or selector change.")
+                    break
+
                 for item in items:
                     prod = self._parse_html_item(item)
                     if prod:
                         products.append(prod)
                         self.items_scraped += 1
                 
-                # Pagination
-                next_tag = soup.select_one('a.next.js-search-link, .pagination .next a')
-                if next_tag and next_tag.get('href'):
+                # Pagination: PrestaShop .next.js-search-link
+                next_tag = soup.select_one('a.next.js-search-link, .pagination .next a, a#infinity-url')
+                if next_tag and next_tag.get('href') and 'javascript:void' not in next_tag.get('href'):
                     current_url = next_tag.get('href')
+                    if current_url.startswith('/'):
+                        current_url = f"https://www.pixelatoy.com{current_url}"
                     page_num += 1
                 else:
                     logger.info(f"[{self.spider_name}] End of pagination.")
@@ -73,34 +80,49 @@ class PixelatoyScraper(BaseScraper):
     def _parse_html_item(self, item) -> Optional[ScrapedOffer]:
         try:
             # 1. Link & Name
-            a_tag = item.select_one('h3.h3.product-title a')
+            a_tag = item.select_one('.product-title a, h3.product-title a')
             if not a_tag: return None
             
             link = a_tag.get('href')
             name = a_tag.get_text(strip=True)
             
+            if link and link.startswith('/'):
+                 link = f"https://www.pixelatoy.com{link}"
+
             # 2. Price (PrestaShop Content Attribute Pattern)
             price_val = 0.0
-            price_span = item.select_one('span.price')
+            # Current display price selector from audit
+            price_span = item.select_one('.product-price, span.product-price, span.price')
             
-            if price_span and price_span.has_attr('content'):
-                # Best reliability: content="29.99"
-                try:
-                    price_val = float(price_span['content'])
-                except:
-                    pass
+            if price_span:
+                # Try attribute first (very reliable for EUR)
+                if price_span.has_attr('content'):
+                    try:
+                        price_val = float(price_span['content'].replace(',', '.'))
+                    except:
+                        pass
+                
+                # Fallback to text cleaning
+                if price_val == 0.0:
+                    price_val = self._normalize_price(price_span.get_text(strip=True))
             
-            if price_val == 0.0 and price_span:
-                # Fallback to text
-                price_val = self._normalize_price(price_span.get_text(strip=True))
-            
+            # Additional fallback check
             if price_val == 0.0:
+                 meta_price = item.select_one('meta[itemprop="price"]')
+                 if meta_price and meta_price.has_attr('content'):
+                     try:
+                         price_val = float(meta_price['content'].replace(',', '.'))
+                     except:
+                         pass
+
+            if price_val == 0.0:
+                logger.debug(f"[{self.spider_name}] Skipping item {name} - Price could not be parsed.")
                 return None
 
             # 3. Availability
             is_avl = True
-            # Check for 'product-unavailable' class on the flags
-            if item.select_one('.product-unavailable'):
+            # Check for 'product-unavailable' class (Agotado)
+            if item.select_one('.product-unavailable, .out-of-stock'):
                 is_avl = False
             
             # 4. Image
@@ -108,6 +130,8 @@ class PixelatoyScraper(BaseScraper):
             img_url = None
             if img_tag:
                  img_url = img_tag.get('data-src') or img_tag.get('src') 
+                 if img_url and img_url.startswith('/'):
+                     img_url = f"https://www.pixelatoy.com{img_url}"
 
             return ScrapedOffer(
                 product_name=name,
@@ -144,11 +168,17 @@ class PixelatoyScraper(BaseScraper):
         Pixelatoy specific: Close cookie banners and newsletters.
         """
         try:
-            # Common PrestaShop cookie accept button
-            accept_btn = page.locator("button:has-text('ACEPTAR'), .btn-primary:has-text('Aceptar'), button[aria-label='Accept']")
+            # Common PrestaShop cookie accept button + Pixelatoy specific
+            accept_btn = page.locator("#iqitcookielaw-accept, button:has-text('ACEPTAR'), .btn-primary:has-text('Aceptar'), button[aria-label='Accept']")
             if await accept_btn.is_visible(timeout=3000):
                 logger.info(f"[{self.spider_name}] 🍪 Accepting cookies...")
                 await accept_btn.click()
                 await asyncio.sleep(0.5)
+            
+            # Additional newsletter check (iqitnewsletter)
+            close_newsletter = page.locator(".iqitnewsletter-close, #iqitnewsletter-close")
+            if await close_newsletter.is_visible(timeout=2000):
+                logger.info(f"[{self.spider_name}] 📧 Closing newsletter...")
+                await close_newsletter.click()
         except Exception:
             pass
