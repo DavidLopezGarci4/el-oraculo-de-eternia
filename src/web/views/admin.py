@@ -105,14 +105,20 @@ def render_inline_product_admin(db: Session, p, current_user_id: int):
                         for o in target_p.offers:
                             exists = db.query(PendingMatchModel).filter(PendingMatchModel.url == o.url).first()
                             if not exists:
-                                pending = PendingMatchModel(
-                                    scraped_name=target_p.name,
-                                    price=o.price,
-                                    currency=o.currency,
-                                    url=o.url,
-                                    shop_name=o.shop_name,
-                                    image_url=target_p.image_url
-                                )
+                                all_data = {
+                                    "scraped_name": target_p.name,
+                                    "price": o.price,
+                                    "currency": o.currency,
+                                    "url": o.url,
+                                    "shop_name": o.shop_name,
+                                    "image_url": target_p.image_url
+                                }
+                                from sqlalchemy.inspect import inspect
+                                mapper = inspect(PendingMatchModel)
+                                allowed_keys = {c.key for c in mapper.attrs}
+                                pending_data = {k: v for k, v in all_data.items() if k in allowed_keys}
+                                
+                                pending = PendingMatchModel(**pending_data)
                                 db.add(pending)
                         
                         db.delete(target_p)
@@ -230,14 +236,20 @@ def render_inline_product_admin(db: Session, p, current_user_id: int):
                          if target_o:
                              exists = db.query(PendingMatchModel).filter(PendingMatchModel.url == target_o.url).first()
                              if not exists:
-                                 pending = PendingMatchModel(
-                                     scraped_name=p.name,
-                                     price=target_o.price,
-                                     currency=target_o.currency,
-                                     url=target_o.url,
-                                     shop_name=target_o.shop_name,
-                                     image_url=p.image_url
-                                 )
+                                 all_data = {
+                                     "scraped_name": p.name,
+                                     "price": target_o.price,
+                                     "currency": target_o.currency,
+                                     "url": target_o.url,
+                                     "shop_name": target_o.shop_name,
+                                     "image_url": p.image_url
+                                 }
+                                 from sqlalchemy.inspect import inspect
+                                 mapper = inspect(PendingMatchModel)
+                                 allowed_keys = {c.key for c in mapper.attrs}
+                                 pending_data = {k: v for k, v in all_data.items() if k in allowed_keys}
+
+                                 pending = PendingMatchModel(**pending_data)
                                  db.add(pending)
                              db.delete(target_o)
                              db.commit()

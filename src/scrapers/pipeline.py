@@ -164,9 +164,22 @@ class ScrapingPipeline:
                             # Fallback if inspection fails
                             pending_data = {k: v for k, v in all_data.items() if hasattr(PendingMatchModel, k)}
 
-                        pending = PendingMatchModel(**pending_data)
-                        db.add(pending)
-                        db.commit()
+                        try:
+                            pending = PendingMatchModel(**pending_data)
+                            db.add(pending)
+                            db.commit()
+                        except TypeError as e:
+                            # Level 4 Safeguard: If instantiation fails due to keyword args, 
+                            # try a safe fallback without extra metadata
+                            logger.warning(f"⚠️ Model instantiation failed: {e}. Retrying with safe subset.")
+                            db.rollback()
+                            safe_data = {k: v for k, v in pending_data.items() if k not in ['ean', 'image_url']}
+                            pending = PendingMatchModel(**safe_data)
+                            db.add(pending)
+                            db.commit()
+                        except Exception as e:
+                            logger.error(f"❌ Critical DB failure in Purgatory routing: {e}")
+                            db.rollback()
                         
                         # LOG HISTORY: PURGATORY
                         try:

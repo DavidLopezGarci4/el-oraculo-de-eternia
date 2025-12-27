@@ -69,10 +69,8 @@ class ActionToysScraper(BaseScraper):
                         current_url = f"https://actiontoys.es{current_url}"
                     page_num += 1
                 else:
-                    if len(items) < 20: # Just a heuristic for WooCommerce default 24
-                        logger.info(f"[{self.spider_name}] Page {page_num} was likely the only one (found {len(items)} items).")
-                    else:
-                        logger.info(f"[{self.spider_name}] No more pages found after page {page_num}.")
+                    # HEURISTIC: Check if there's any other indicator of a next page
+                    logger.info(f"[{self.spider_name}] No more explicit 'Next' links found.")
                     break
                     
         except Exception as e:
