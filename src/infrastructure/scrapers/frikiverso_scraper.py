@@ -158,3 +158,21 @@ class FrikiversoScraper(BaseScraper):
                 await asyncio.sleep(0.5)
         except Exception:
             pass
+
+    async def _scrape_detail(self, page: Page, url: str) -> dict:
+        """
+        Frikiverso specific: Extract EAN from detail page.
+        """
+        if not await self._safe_navigate(page, url):
+            return {}
+        
+        try:
+            # Audit showed it's inside .product-prices near a <strong>EAN:</strong>
+            # We'll use JS for precision
+            ean = await page.evaluate("""() => {
+                const label = Array.from(document.querySelectorAll('strong')).find(st => st.textContent.includes('EAN:'));
+                return label ? label.parentElement.innerText.replace('EAN:', '').trim() : null;
+            }""")
+            return {"ean": ean} if ean else {}
+        except Exception:
+            return {}

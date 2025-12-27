@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "timestamp": "2025-12-27T18:15:24.513660",
+    "timestamp": "2025-12-27T20:59:26.464026",
     "version": "1.1-TOTAL"
   },
   "data": {
@@ -2879,18 +2879,6 @@
         "max_price": 8.38
       },
       {
-        "id": 76,
-        "product_id": 320,
-        "shop_name": "Pixelatoy",
-        "price": 16.84,
-        "currency": "EUR",
-        "url": "https://www.pixelatoy.com/es/catalogo/27751-casey-jones-motu-x-tmnt-turtles-of-grayskull-194735190225.html",
-        "is_available": true,
-        "last_seen": "2025-12-25T22:33:09.646994",
-        "min_price": 16.84,
-        "max_price": 16.84
-      },
-      {
         "id": 117,
         "product_id": 513,
         "shop_name": "ActionToys",
@@ -3395,18 +3383,6 @@
         "max_price": 17.95
       },
       {
-        "id": 78,
-        "product_id": 308,
-        "shop_name": "Pixelatoy",
-        "price": 22.39,
-        "currency": "EUR",
-        "url": "https://www.pixelatoy.com/es/catalogo/30438-leatherhead-deluxe-motu-x-tmnt-turtles-of-grayskull-194735190089.html",
-        "is_available": true,
-        "last_seen": "2025-12-26T13:43:59.886995",
-        "min_price": 22.39,
-        "max_price": 22.39
-      },
-      {
         "id": 165,
         "product_id": 520,
         "shop_name": "ActionToys",
@@ -3417,18 +3393,6 @@
         "last_seen": "2025-12-27T16:12:02.375239",
         "min_price": 14.99,
         "max_price": 14.99
-      },
-      {
-        "id": 80,
-        "product_id": 333,
-        "shop_name": "Pixelatoy",
-        "price": 22.49,
-        "currency": "EUR",
-        "url": "https://www.pixelatoy.com/es/catalogo/36307-mutated-ninjor-motu-x-tmnt-turtles-of-grayskull-194735264292.html",
-        "is_available": true,
-        "last_seen": "2025-12-26T13:45:25.242149",
-        "min_price": 22.49,
-        "max_price": 22.49
       },
       {
         "id": 166,
@@ -3455,90 +3419,6 @@
         "max_price": 9.75
       },
       {
-        "id": 83,
-        "product_id": 340,
-        "shop_name": "Pixelatoy",
-        "price": 23.39,
-        "currency": "EUR",
-        "url": "https://www.pixelatoy.com/es/catalogo/59334-cheetara-motu-x-thundercats-194735307623.html",
-        "is_available": true,
-        "last_seen": "2025-12-26T13:46:09.971029",
-        "min_price": 23.39,
-        "max_price": 23.39
-      },
-      {
-        "id": 84,
-        "product_id": 327,
-        "shop_name": "Pixelatoy",
-        "price": 22.49,
-        "currency": "EUR",
-        "url": "https://www.pixelatoy.com/es/catalogo/33804-mekanek-motu-x-tmnt-turtles-of-grayskull-194735264483.html",
-        "is_available": true,
-        "last_seen": "2025-12-26T13:46:33.391837",
-        "min_price": 22.49,
-        "max_price": 22.49
-      },
-      {
-        "id": 86,
-        "product_id": 329,
-        "shop_name": "Pixelatoy",
-        "price": 21.24,
-        "currency": "EUR",
-        "url": "https://www.pixelatoy.com/es/catalogo/33805-rattlor-motu-x-tmnt-turtles-of-grayskull-194735264216.html",
-        "is_available": true,
-        "last_seen": "2025-12-26T13:47:02.192510",
-        "min_price": 21.24,
-        "max_price": 21.24
-      },
-      {
-        "id": 91,
-        "product_id": 318,
-        "shop_name": "Pixelatoy",
-        "price": 19.99,
-        "currency": "EUR",
-        "url": "https://www.pixelatoy.com/es/catalogo/33803-raphael-motu-x-tmnt-turtles-of-grayskull-194735264315.html",
-        "is_available": true,
-        "last_seen": "2025-12-26T13:48:25.079435",
-        "min_price": 19.99,
-        "max_price": 19.99
-      },
-      {
-        "id": 94,
-        "product_id": 316,
-        "shop_name": "Pixelatoy",
-        "price": 19.99,
-        "currency": "EUR",
-        "url": "https://www.pixelatoy.com/es/catalogo/36308-plantilla-masters-of-the-universe-origins-194735264223.html",
-        "is_available": true,
-        "last_seen": "2025-12-26T13:49:10.454074",
-        "min_price": 19.99,
-        "max_price": 19.99
-      },
-      {
-        "id": 95,
-        "product_id": 321,
-        "shop_name": "Pixelatoy",
-        "price": 19.99,
-        "currency": "EUR",
-        "url": "https://www.pixelatoy.com/es/catalogo/36309-michelangelo-motu-x-tmnt-turtles-of-grayskull-194735264322.html",
-        "is_available": true,
-        "last_seen": "2025-12-26T13:49:23.591746",
-        "min_price": 19.99,
-        "max_price": 19.99
-      },
-      {
-        "id": 99,
-        "product_id": 339,
-        "shop_name": "Pixelatoy",
-        "price": 25.99,
-        "currency": "EUR",
-        "url": "https://www.pixelatoy.com/es/catalogo/59335-thundercat-battle-cat-motu-x-thundercats-194735307654.html",
-        "is_available": true,
-        "last_seen": "2025-12-26T13:52:37.993137",
-        "min_price": 25.99,
-        "max_price": 25.99
-      },
-      {
         "id": 100,
         "product_id": 343,
         "shop_name": "Pixelatoy",
@@ -3546,7 +3426,7 @@
         "currency": "EUR",
         "url": "https://www.pixelatoy.com/es/catalogo/61260-panthro-motu-x-thundercats-194735307524.html",
         "is_available": true,
-        "last_seen": "2025-12-26T13:52:50.936499",
+        "last_seen": "2025-12-27T17:26:12.322160",
         "min_price": 25.99,
         "max_price": 25.99
       },
@@ -3587,18 +3467,6 @@
         "max_price": 20.95
       },
       {
-        "id": 106,
-        "product_id": 324,
-        "shop_name": "Frikiverso",
-        "price": 5.15,
-        "currency": "EUR",
-        "url": "https://frikiverso.es/es/30-/7537-masters-of-the-universe-motu-turtles-of-grayskull-stealth-ninja-he-man-figura-de-accion-con-accesorios-inspirado-en-las-tortu-0194735190232.html",
-        "is_available": true,
-        "last_seen": "2025-12-26T14:18:19.885919",
-        "min_price": 5.15,
-        "max_price": 5.15
-      },
-      {
         "id": 159,
         "product_id": 421,
         "shop_name": "ActionToys",
@@ -3609,18 +3477,6 @@
         "last_seen": "2025-12-27T16:09:05.203220",
         "min_price": 42.0,
         "max_price": 42.0
-      },
-      {
-        "id": 108,
-        "product_id": 294,
-        "shop_name": "Frikiverso",
-        "price": 6.88,
-        "currency": "EUR",
-        "url": "https://frikiverso.es/es/30-/7256-masters-of-the-universe-motu-turtles-of-grayskull-teela-figura-de-accion-con-accesorios-de-batalla-inspirado-en-las-tortugas-0194735190065.html",
-        "is_available": true,
-        "last_seen": "2025-12-26T14:19:09.555817",
-        "min_price": 6.88,
-        "max_price": 6.88
       },
       {
         "id": 160,
@@ -3669,6 +3525,150 @@
         "last_seen": "2025-12-27T16:09:50.810545",
         "min_price": 16.0,
         "max_price": 16.0
+      },
+      {
+        "id": 99,
+        "product_id": 339,
+        "shop_name": "Pixelatoy",
+        "price": 25.99,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/catalogo/59335-thundercat-battle-cat-motu-x-thundercats-194735307654.html",
+        "is_available": true,
+        "last_seen": "2025-12-27T17:26:13.018564",
+        "min_price": 25.99,
+        "max_price": 25.99
+      },
+      {
+        "id": 83,
+        "product_id": 340,
+        "shop_name": "Pixelatoy",
+        "price": 23.39,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/catalogo/59334-cheetara-motu-x-thundercats-194735307623.html",
+        "is_available": true,
+        "last_seen": "2025-12-27T17:26:13.301111",
+        "min_price": 23.39,
+        "max_price": 23.39
+      },
+      {
+        "id": 95,
+        "product_id": 321,
+        "shop_name": "Pixelatoy",
+        "price": 19.99,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/catalogo/36309-michelangelo-motu-x-tmnt-turtles-of-grayskull-194735264322.html",
+        "is_available": true,
+        "last_seen": "2025-12-27T17:26:14.158145",
+        "min_price": 19.99,
+        "max_price": 19.99
+      },
+      {
+        "id": 94,
+        "product_id": 316,
+        "shop_name": "Pixelatoy",
+        "price": 19.99,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/catalogo/36308-plantilla-masters-of-the-universe-origins-194735264223.html",
+        "is_available": true,
+        "last_seen": "2025-12-27T17:26:14.603931",
+        "min_price": 19.99,
+        "max_price": 19.99
+      },
+      {
+        "id": 80,
+        "product_id": 333,
+        "shop_name": "Pixelatoy",
+        "price": 22.49,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/catalogo/36307-mutated-ninjor-motu-x-tmnt-turtles-of-grayskull-194735264292.html",
+        "is_available": true,
+        "last_seen": "2025-12-27T17:26:14.862224",
+        "min_price": 22.49,
+        "max_price": 22.49
+      },
+      {
+        "id": 86,
+        "product_id": 329,
+        "shop_name": "Pixelatoy",
+        "price": 21.24,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/catalogo/33805-rattlor-motu-x-tmnt-turtles-of-grayskull-194735264216.html",
+        "is_available": true,
+        "last_seen": "2025-12-27T17:26:15.456083",
+        "min_price": 21.24,
+        "max_price": 21.24
+      },
+      {
+        "id": 84,
+        "product_id": 327,
+        "shop_name": "Pixelatoy",
+        "price": 22.49,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/catalogo/33804-mekanek-motu-x-tmnt-turtles-of-grayskull-194735264483.html",
+        "is_available": true,
+        "last_seen": "2025-12-27T17:26:15.714112",
+        "min_price": 22.49,
+        "max_price": 22.49
+      },
+      {
+        "id": 91,
+        "product_id": 318,
+        "shop_name": "Pixelatoy",
+        "price": 19.99,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/catalogo/33803-raphael-motu-x-tmnt-turtles-of-grayskull-194735264315.html",
+        "is_available": true,
+        "last_seen": "2025-12-27T17:26:16.009947",
+        "min_price": 19.99,
+        "max_price": 19.99
+      },
+      {
+        "id": 78,
+        "product_id": 308,
+        "shop_name": "Pixelatoy",
+        "price": 22.39,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/catalogo/30438-leatherhead-deluxe-motu-x-tmnt-turtles-of-grayskull-194735190089.html",
+        "is_available": true,
+        "last_seen": "2025-12-27T17:26:16.892017",
+        "min_price": 22.39,
+        "max_price": 22.39
+      },
+      {
+        "id": 76,
+        "product_id": 320,
+        "shop_name": "Pixelatoy",
+        "price": 16.84,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/catalogo/27751-casey-jones-motu-x-tmnt-turtles-of-grayskull-194735190225.html",
+        "is_available": true,
+        "last_seen": "2025-12-27T17:26:17.153945",
+        "min_price": 16.84,
+        "max_price": 16.84
+      },
+      {
+        "id": 106,
+        "product_id": 324,
+        "shop_name": "Frikiverso",
+        "price": 5.15,
+        "currency": "EUR",
+        "url": "https://frikiverso.es/es/30-/7537-masters-of-the-universe-motu-turtles-of-grayskull-stealth-ninja-he-man-figura-de-accion-con-accesorios-inspirado-en-las-tortu-0194735190232.html",
+        "is_available": true,
+        "last_seen": "2025-12-27T19:59:24.547762",
+        "min_price": 5.15,
+        "max_price": 5.15
+      },
+      {
+        "id": 108,
+        "product_id": 294,
+        "shop_name": "Frikiverso",
+        "price": 6.88,
+        "currency": "EUR",
+        "url": "https://frikiverso.es/es/30-/7256-masters-of-the-universe-motu-turtles-of-grayskull-teela-figura-de-accion-con-accesorios-de-batalla-inspirado-en-las-tortugas-0194735190065.html",
+        "is_available": true,
+        "last_seen": "2025-12-27T19:59:24.969139",
+        "min_price": 6.88,
+        "max_price": 6.88
       }
     ],
     "pending_matches": [
@@ -3858,6 +3858,127 @@
         "shop_name": "SmokeShop",
         "image_url": null,
         "found_at": "2025-12-27T16:46:52.603670"
+      },
+      {
+        "id": 1056,
+        "scraped_name": "(OUTLET) Webstor. Masters of the Universe Origins.",
+        "ean": null,
+        "price": 21.59,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/outlet/33716-webstor-masters-of-the-universe-origins-887961982800.html",
+        "shop_name": "Pixelatoy",
+        "image_url": "https://www.pixelatoy.com/294872-home_default/webstor-masters-of-the-universe-origins.jpg",
+        "found_at": "2025-12-27T17:26:12.452434"
+      },
+      {
+        "id": 1057,
+        "scraped_name": "(OUTLET) Webstor. Masters of the Universe Origins",
+        "ean": null,
+        "price": 19.12,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/outlet/24351-webstor-masters-of-the-universe-origins-194735244256.html",
+        "shop_name": "Pixelatoy",
+        "image_url": "https://www.pixelatoy.com/203805-home_default/webstor-masters-of-the-universe-origins.jpg",
+        "found_at": "2025-12-27T17:26:12.452435"
+      },
+      {
+        "id": 1058,
+        "scraped_name": "Beast Man -Deluxe- (Cartoon Collection). Masters of the Universe Origins",
+        "ean": null,
+        "price": 29.99,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/catalogo/62259-beast-man-deluxe-masters-of-the-universe-origins-0194735333493.html",
+        "shop_name": "Pixelatoy",
+        "image_url": "https://www.pixelatoy.com/418595-home_default/beast-man-deluxe-masters-of-the-universe-origins.jpg",
+        "found_at": "2025-12-27T17:26:12.452436"
+      },
+      {
+        "id": 1059,
+        "scraped_name": "Megatron Armor Skeletor. Masters of the Universe x Transformers",
+        "ean": null,
+        "price": 33.99,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/catalogo/59911-megatron-armor-skeletor-masters-of-the-universe-x-transformers-0194735321575.html",
+        "shop_name": "Pixelatoy",
+        "image_url": "https://www.pixelatoy.com/398538-home_default/megatron-armor-skeletor-masters-of-the-universe-x-transformers.jpg",
+        "found_at": "2025-12-27T17:26:12.452437"
+      },
+      {
+        "id": 1060,
+        "scraped_name": "Bumblebee Armor Man-At-Arms. Masters of the Universe x Transformers",
+        "ean": null,
+        "price": 33.99,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/catalogo/59910-bumblebee-armor-man-at-arms-masters-of-the-universe-x-transformers-0194735321599.html",
+        "shop_name": "Pixelatoy",
+        "image_url": "https://www.pixelatoy.com/398530-home_default/bumblebee-armor-man-at-arms-masters-of-the-universe-x-transformers.jpg",
+        "found_at": "2025-12-27T17:26:12.452438"
+      },
+      {
+        "id": 1061,
+        "scraped_name": "Faker 1/10. Art Scale. Masters of the Universe",
+        "ean": null,
+        "price": 216.99,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/preventas/35945-faker-110-art-scale-masters-of-the-universe-618231957934.html",
+        "shop_name": "Pixelatoy",
+        "image_url": "https://www.pixelatoy.com/310420-home_default/faker-110-art-scale-masters-of-the-universe.jpg",
+        "found_at": "2025-12-27T17:26:12.452439"
+      },
+      {
+        "id": 1062,
+        "scraped_name": "Man-At-Arms (Cartoon Collection). Masters of the Universe Origins",
+        "ean": null,
+        "price": 20.61,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/catalogo/25264-man-at-arms-cartoon-collection-masters-of-the-universe-origins-194735244300.html",
+        "shop_name": "Pixelatoy",
+        "image_url": "https://www.pixelatoy.com/212144-home_default/man-at-arms-cartoon-collection-masters-of-the-universe-origins.jpg",
+        "found_at": "2025-12-27T17:26:12.452440"
+      },
+      {
+        "id": 1063,
+        "scraped_name": "Deluxe Super Shredder. MOTU x TMNT: Turtles of Grayskull",
+        "ean": null,
+        "price": 31.99,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/catalogo/57598-deluxe-super-shredder-motu-x-tmnt-turtles-of-grayskull-194735264285.html",
+        "shop_name": "Pixelatoy",
+        "image_url": "https://www.pixelatoy.com/379561-home_default/deluxe-super-shredder-motu-x-tmnt-turtles-of-grayskull.jpg",
+        "found_at": "2025-12-27T17:26:14.222479"
+      },
+      {
+        "id": 1064,
+        "scraped_name": "Cancer Deathmask. Art Scale 1/10. Saint Seiya",
+        "ean": null,
+        "price": 293.0,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/preventas/35019-cancer-deathmask-art-scale-110-saint-seiya-618231957552.html",
+        "shop_name": "Pixelatoy",
+        "image_url": "https://www.pixelatoy.com/303784-home_default/cancer-deathmask-art-scale-110-saint-seiya.jpg",
+        "found_at": "2025-12-27T17:26:18.489091"
+      },
+      {
+        "id": 1065,
+        "scraped_name": "Apollo 11 Astronaut. Art Scale 1/10. NASA.",
+        "ean": null,
+        "price": 228.9,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/preventas/29487-apollo-11-astronaut-art-scale-110-nasa-618231956432.html",
+        "shop_name": "Pixelatoy",
+        "image_url": "https://www.pixelatoy.com/254500-home_default/apollo-11-astronaut-art-scale-110-nasa.jpg",
+        "found_at": "2025-12-27T17:26:18.489095"
+      },
+      {
+        "id": 1066,
+        "scraped_name": "Figura King Randor Masters Of the Universe Articulada 14 cms",
+        "ean": null,
+        "price": 11.83,
+        "currency": "EUR",
+        "url": "https://frikiverso.es/es/20-/6102-masters-of-the-universe-origins-young-randor-figura-decorativa-14-cm-0194735104215.html",
+        "shop_name": "Frikiverso",
+        "image_url": "https://frikiverso.es/639220-home_default/masters-of-the-universe-origins-young-randor-figura-decorativa-14-cm.jpg",
+        "found_at": "2025-12-27T17:35:43.445046"
       },
       {
         "id": 710,
@@ -7512,6 +7633,39 @@
         "found_at": "2025-12-23T08:32:45.314736"
       },
       {
+        "id": 1067,
+        "scraped_name": "Figura Skeletor Battle Armor Masters del Universo Articulada 15 cms",
+        "ean": null,
+        "price": 10.31,
+        "currency": "EUR",
+        "url": "https://frikiverso.es/es/20-/473-masters-of-the-universe-masters-del-universo-origenes-figura-skeletor-muneco-articulado-de-juguete-con-accesorios-mattel-g-0887961929614.html",
+        "shop_name": "Frikiverso",
+        "image_url": "https://frikiverso.es/416233-home_default/masters-of-the-universe-masters-del-universo-origenes-figura-skeletor-muneco-articulado-de-juguete-con-accesorios-mattel-g.jpg",
+        "found_at": "2025-12-27T17:35:43.445050"
+      },
+      {
+        "id": 1068,
+        "scraped_name": "Figura Prince Adam & Sky Sled Masters del Universo Articulada 15 cms",
+        "ean": null,
+        "price": 24.05,
+        "currency": "EUR",
+        "url": "https://frikiverso.es/es/masters-del-universo/841-masters-of-the-universe-origins-prince-adam-with-sky-sled-figura-de-accion-para-ninos-y-ninas-6-anos-mattel-gpp30-0887961893243.html",
+        "shop_name": "Frikiverso",
+        "image_url": "https://frikiverso.es/397409-home_default/masters-of-the-universe-origins-prince-adam-with-sky-sled-figura-de-accion-para-ninos-y-ninas-6-anos-mattel-gpp30.jpg",
+        "found_at": "2025-12-27T17:35:43.445052"
+      },
+      {
+        "id": 1069,
+        "scraped_name": "Figura Battle Cat Masters del Universo Origins Articulada 18 cms",
+        "ean": null,
+        "price": 21.4,
+        "currency": "EUR",
+        "url": "https://frikiverso.es/es/masters-del-universo/865-masters-of-the-universe-origins-battle-cat-figura-de-accion-para-ninos-y-ninas-6-anos-mattel-gnn70-0887961874907.html",
+        "shop_name": "Frikiverso",
+        "image_url": "https://frikiverso.es/395857-home_default/masters-of-the-universe-origins-battle-cat-figura-de-accion-para-ninos-y-ninas-6-anos-mattel-gnn70.jpg",
+        "found_at": "2025-12-27T17:35:43.445053"
+      },
+      {
         "id": 499,
         "scraped_name": "Masters of Universe Origins Transformers Skeletor con Armadura de Mega...",
         "ean": null,
@@ -7521,6 +7675,17 @@
         "shop_name": "Electropolis",
         "image_url": null,
         "found_at": "2025-12-23T08:32:45.578270"
+      },
+      {
+        "id": 1070,
+        "scraped_name": "Figura Thunder Punch He-Man New Eternia Masterverse Masters Of The Universe Articulada 18 cms",
+        "ean": null,
+        "price": 8.53,
+        "currency": "EUR",
+        "url": "https://frikiverso.es/es/30-/7259-masters-of-the-universe-figuras-de-accion-multicolor-mattel-hyc56-0194735243655.html",
+        "shop_name": "Frikiverso",
+        "image_url": "https://frikiverso.es/726211-home_default/masters-of-the-universe-figuras-de-accion-multicolor-mattel-hyc56.jpg",
+        "found_at": "2025-12-27T17:35:44.013886"
       },
       {
         "id": 929,
@@ -8269,6 +8434,215 @@
         "shop_name": "ActionToys",
         "image_url": null,
         "found_at": "2025-12-27T13:49:54.378410"
+      },
+      {
+        "id": 1037,
+        "scraped_name": "Hordak & Hellfire-Man. Masters of the Universe x Stranger Things. Mattel",
+        "ean": null,
+        "price": 38.99,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/catalogo/63953-hordak-hellfire-man-masters-of-the-universe-x-stranger-things-mattelverse-mattel-194735331239.html",
+        "shop_name": "Pixelatoy",
+        "image_url": "https://www.pixelatoy.com/432423-home_default/hordak-hellfire-man-masters-of-the-universe-x-stranger-things-mattelverse-mattel.jpg",
+        "found_at": "2025-12-27T17:26:12.452413"
+      },
+      {
+        "id": 1038,
+        "scraped_name": "He-Man (Cartoon Collection). Masters of the Universe Origins. Mattel",
+        "ean": null,
+        "price": 22.99,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/catalogo/63952-he-man-cartoon-collection-masters-of-the-universe-origins-194735333219.html",
+        "shop_name": "Pixelatoy",
+        "image_url": "https://www.pixelatoy.com/432420-home_default/he-man-cartoon-collection-masters-of-the-universe-origins.jpg",
+        "found_at": "2025-12-27T17:26:12.452417"
+      },
+      {
+        "id": 1039,
+        "scraped_name": "King Randor (Cartoon Collection). Masters of the Universe Origins",
+        "ean": null,
+        "price": 21.99,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/preventas/62627-king-randor-cartoon-collection-masters-of-the-universe-origins-194735346554.html",
+        "shop_name": "Pixelatoy",
+        "image_url": "https://www.pixelatoy.com/420771-home_default/king-randor-cartoon-collection-masters-of-the-universe-origins.jpg",
+        "found_at": "2025-12-27T17:26:12.452418"
+      },
+      {
+        "id": 1040,
+        "scraped_name": "Stratos (Cartoon Collection). Masters of the Universe Origins.",
+        "ean": null,
+        "price": 21.99,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/preventas/62626-stratos-cartoon-collection-masters-of-the-universe-origins-194735333509.html",
+        "shop_name": "Pixelatoy",
+        "image_url": "https://www.pixelatoy.com/420780-home_default/stratos-cartoon-collection-masters-of-the-universe-origins.jpg",
+        "found_at": "2025-12-27T17:26:12.452419"
+      },
+      {
+        "id": 1041,
+        "scraped_name": "Tri-Klops (Cartoon Collection). Masters of the Universe Origins.",
+        "ean": null,
+        "price": 21.99,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/preventas/62623-tri-klops-cartoon-collection-masters-of-the-universe-origins-194735333448.html",
+        "shop_name": "Pixelatoy",
+        "image_url": "https://www.pixelatoy.com/420777-home_default/tri-klops-cartoon-collection-masters-of-the-universe-origins.jpg",
+        "found_at": "2025-12-27T17:26:12.452420"
+      },
+      {
+        "id": 1042,
+        "scraped_name": "Man-At-Arms (Cartoon Collection). Masters of the Universe Origins.",
+        "ean": null,
+        "price": 23.99,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/preventas/62204-man-at-arms-cartoon-collection-masters-of-the-universe-origins-194735333332.html",
+        "shop_name": "Pixelatoy",
+        "image_url": "https://www.pixelatoy.com/417549-home_default/man-at-arms-cartoon-collection-masters-of-the-universe-origins.jpg",
+        "found_at": "2025-12-27T17:26:12.452421"
+      },
+      {
+        "id": 1043,
+        "scraped_name": "Teela. Masters of the Universe: New Eternia. Masterverse",
+        "ean": null,
+        "price": 29.99,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/catalogo/61257-teela-masters-of-the-universe-new-eternia-masterverse-194735264926.html",
+        "shop_name": "Pixelatoy",
+        "image_url": "https://www.pixelatoy.com/421704-home_default/teela-masters-of-the-universe-new-eternia-masterverse.jpg",
+        "found_at": "2025-12-27T17:26:12.452422"
+      },
+      {
+        "id": 1044,
+        "scraped_name": "Orko (Cartoon). Masters of the Universe Origins.",
+        "ean": null,
+        "price": 19.99,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/catalogo/60204-orko-cartoon-masters-of-the-universe-origins-194735264254.html",
+        "shop_name": "Pixelatoy",
+        "image_url": "https://www.pixelatoy.com/400766-home_default/orko-cartoon-masters-of-the-universe-origins.jpg",
+        "found_at": "2025-12-27T17:26:12.452423"
+      },
+      {
+        "id": 1045,
+        "scraped_name": "Fang Man (Cartoon). Masters of the Universe Origins",
+        "ean": null,
+        "price": 19.99,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/catalogo/60203-fang-man-masters-of-the-universe-origins-194735264308.html",
+        "shop_name": "Pixelatoy",
+        "image_url": "https://www.pixelatoy.com/400760-home_default/fang-man-masters-of-the-universe-origins.jpg",
+        "found_at": "2025-12-27T17:26:12.452424"
+      },
+      {
+        "id": 1046,
+        "scraped_name": "Grizzlor (Cartoon). Masters of the Universe Origins",
+        "ean": null,
+        "price": 19.99,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/catalogo/60202-grizzlor-masters-of-the-universe-origins-194735264209.html",
+        "shop_name": "Pixelatoy",
+        "image_url": "https://www.pixelatoy.com/400754-home_default/grizzlor-masters-of-the-universe-origins.jpg",
+        "found_at": "2025-12-27T17:26:12.452425"
+      },
+      {
+        "id": 1047,
+        "scraped_name": "The Evil Horde: Fright Zone. Masters of the Universe Origins",
+        "ean": null,
+        "price": 99.99,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/catalogo/59041-the-evil-horde-fright-zone-masters-of-the-universe-origins--0194735307647.html",
+        "shop_name": "Pixelatoy",
+        "image_url": "https://www.pixelatoy.com/390973-home_default/the-evil-horde-fright-zone-masters-of-the-universe-origins-.jpg",
+        "found_at": "2025-12-27T17:26:12.452426"
+      },
+      {
+        "id": 1048,
+        "scraped_name": "Sketchbook Series: Sy-Klone. Masters of the Universe Origins",
+        "ean": null,
+        "price": 23.39,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/catalogo/58902-sketchbook-series-sy-klone-masters-of-the-universe-origins-0194735307616.html",
+        "shop_name": "Pixelatoy",
+        "image_url": "https://www.pixelatoy.com/389802-home_default/sketchbook-series-sy-klone-masters-of-the-universe-origins.jpg",
+        "found_at": "2025-12-27T17:26:12.452427"
+      },
+      {
+        "id": 1049,
+        "scraped_name": "Buzz-Off (Cartoon Collection). Masters of the Universe Origins",
+        "ean": null,
+        "price": 22.99,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/catalogo/57678-buzz-off-cartoon-collection-masters-of-the-universe-origins-194735264346.html",
+        "shop_name": "Pixelatoy",
+        "image_url": "https://www.pixelatoy.com/380367-home_default/buzz-off-cartoon-collection-masters-of-the-universe-origins.jpg",
+        "found_at": "2025-12-27T17:26:12.452428"
+      },
+      {
+        "id": 1050,
+        "scraped_name": "Invisible Skeletor (Cartoon Collection). Masters of the Universe Origins",
+        "ean": null,
+        "price": 20.69,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/catalogo/37107-plantilla-cartoon-collection-masters-of-the-universe-origins-194735264339.html",
+        "shop_name": "Pixelatoy",
+        "image_url": "https://www.pixelatoy.com/319204-home_default/plantilla-cartoon-collection-masters-of-the-universe-origins.jpg",
+        "found_at": "2025-12-27T17:26:12.452429"
+      },
+      {
+        "id": 1051,
+        "scraped_name": "Frosta (Cartoon Collection). Masters of the Universe Origins",
+        "ean": null,
+        "price": 21.84,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/catalogo/37106-frosta-cartoon-collection-masters-of-the-universe-origins-194735264230.html",
+        "shop_name": "Pixelatoy",
+        "image_url": "https://www.pixelatoy.com/319201-home_default/frosta-cartoon-collection-masters-of-the-universe-origins.jpg",
+        "found_at": "2025-12-27T17:26:12.452430"
+      },
+      {
+        "id": 1052,
+        "scraped_name": "Faker (Cartoon Collection). Masters of the Universe Origins",
+        "ean": null,
+        "price": 20.69,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/catalogo/36112-faker-cartoon-collection-masters-of-the-universe-origins-194735264261.html",
+        "shop_name": "Pixelatoy",
+        "image_url": "https://www.pixelatoy.com/311943-home_default/faker-cartoon-collection-masters-of-the-universe-origins.jpg",
+        "found_at": "2025-12-27T17:26:12.452430"
+      },
+      {
+        "id": 1053,
+        "scraped_name": "Deluxe Dragon Blaster Skeletor. Masters of the Universe Origins",
+        "ean": null,
+        "price": 28.41,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/catalogo/33732-deluxe-dragon-blaster-skeletor-masters-of-the-universe-origins-194735104338.html",
+        "shop_name": "Pixelatoy",
+        "image_url": "https://www.pixelatoy.com/294991-home_default/deluxe-dragon-blaster-skeletor-masters-of-the-universe-origins.jpg",
+        "found_at": "2025-12-27T17:26:12.452431"
+      },
+      {
+        "id": 1054,
+        "scraped_name": "The Evil Horde: Horde Trooper Prime. Masters of the Universe Origins",
+        "ean": null,
+        "price": 31.99,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/catalogo/32587-the-evil-horde-horde-trooper-prime-masters-of-the-universe-origins-194735237173.html",
+        "shop_name": "Pixelatoy",
+        "image_url": "https://www.pixelatoy.com/284210-home_default/the-evil-horde-horde-trooper-prime-masters-of-the-universe-origins.jpg",
+        "found_at": "2025-12-27T17:26:12.452432"
+      },
+      {
+        "id": 1055,
+        "scraped_name": "Sketchbook Series: Spikor. Masters of the Universe Origins",
+        "ean": null,
+        "price": 25.99,
+        "currency": "EUR",
+        "url": "https://www.pixelatoy.com/es/catalogo/60193-sketchbook-series-spikor-masters-of-the-universe-origins-194735307531.html",
+        "shop_name": "Pixelatoy",
+        "image_url": "https://www.pixelatoy.com/400687-home_default/sketchbook-series-spikor-masters-of-the-universe-origins.jpg",
+        "found_at": "2025-12-27T17:26:12.452433"
       },
       {
         "id": 980,
@@ -12266,6 +12640,346 @@
         "action_type": "PURGATORY",
         "details": "Match score too low (0.00). Moved to Purgatory.",
         "timestamp": "2025-12-27T17:15:23.770012"
+      },
+      {
+        "id": 340,
+        "offer_url": "https://www.pixelatoy.com/es/catalogo/63953-hordak-hellfire-man-masters-of-the-universe-x-stranger-things-mattelverse-mattel-194735331239.html",
+        "product_name": "Hordak & Hellfire-Man. Masters of the Universe x Stranger Things. Mattel",
+        "shop_name": "Pixelatoy",
+        "price": 38.99,
+        "action_type": "PURGATORY",
+        "details": "Match score too low (0.00). Moved to Purgatory.",
+        "timestamp": "2025-12-27T17:26:12.323773"
+      },
+      {
+        "id": 341,
+        "offer_url": "https://www.pixelatoy.com/es/catalogo/63952-he-man-cartoon-collection-masters-of-the-universe-origins-194735333219.html",
+        "product_name": "He-Man (Cartoon Collection). Masters of the Universe Origins. Mattel",
+        "shop_name": "Pixelatoy",
+        "price": 22.99,
+        "action_type": "PURGATORY",
+        "details": "Match score too low (0.00). Moved to Purgatory.",
+        "timestamp": "2025-12-27T17:26:12.323776"
+      },
+      {
+        "id": 342,
+        "offer_url": "https://www.pixelatoy.com/es/preventas/62627-king-randor-cartoon-collection-masters-of-the-universe-origins-194735346554.html",
+        "product_name": "King Randor (Cartoon Collection). Masters of the Universe Origins",
+        "shop_name": "Pixelatoy",
+        "price": 21.99,
+        "action_type": "PURGATORY",
+        "details": "Match score too low (0.00). Moved to Purgatory.",
+        "timestamp": "2025-12-27T17:26:12.323778"
+      },
+      {
+        "id": 343,
+        "offer_url": "https://www.pixelatoy.com/es/preventas/62626-stratos-cartoon-collection-masters-of-the-universe-origins-194735333509.html",
+        "product_name": "Stratos (Cartoon Collection). Masters of the Universe Origins.",
+        "shop_name": "Pixelatoy",
+        "price": 21.99,
+        "action_type": "PURGATORY",
+        "details": "Match score too low (0.00). Moved to Purgatory.",
+        "timestamp": "2025-12-27T17:26:12.323779"
+      },
+      {
+        "id": 344,
+        "offer_url": "https://www.pixelatoy.com/es/preventas/62623-tri-klops-cartoon-collection-masters-of-the-universe-origins-194735333448.html",
+        "product_name": "Tri-Klops (Cartoon Collection). Masters of the Universe Origins.",
+        "shop_name": "Pixelatoy",
+        "price": 21.99,
+        "action_type": "PURGATORY",
+        "details": "Match score too low (0.00). Moved to Purgatory.",
+        "timestamp": "2025-12-27T17:26:12.323780"
+      },
+      {
+        "id": 345,
+        "offer_url": "https://www.pixelatoy.com/es/preventas/62204-man-at-arms-cartoon-collection-masters-of-the-universe-origins-194735333332.html",
+        "product_name": "Man-At-Arms (Cartoon Collection). Masters of the Universe Origins.",
+        "shop_name": "Pixelatoy",
+        "price": 23.99,
+        "action_type": "PURGATORY",
+        "details": "Match score too low (0.67). Moved to Purgatory.",
+        "timestamp": "2025-12-27T17:26:12.323781"
+      },
+      {
+        "id": 346,
+        "offer_url": "https://www.pixelatoy.com/es/catalogo/61257-teela-masters-of-the-universe-new-eternia-masterverse-194735264926.html",
+        "product_name": "Teela. Masters of the Universe: New Eternia. Masterverse",
+        "shop_name": "Pixelatoy",
+        "price": 29.99,
+        "action_type": "PURGATORY",
+        "details": "Match score too low (0.00). Moved to Purgatory.",
+        "timestamp": "2025-12-27T17:26:12.323782"
+      },
+      {
+        "id": 347,
+        "offer_url": "https://www.pixelatoy.com/es/catalogo/60204-orko-cartoon-masters-of-the-universe-origins-194735264254.html",
+        "product_name": "Orko (Cartoon). Masters of the Universe Origins.",
+        "shop_name": "Pixelatoy",
+        "price": 19.99,
+        "action_type": "PURGATORY",
+        "details": "Match score too low (0.00). Moved to Purgatory.",
+        "timestamp": "2025-12-27T17:26:12.323783"
+      },
+      {
+        "id": 348,
+        "offer_url": "https://www.pixelatoy.com/es/catalogo/60203-fang-man-masters-of-the-universe-origins-194735264308.html",
+        "product_name": "Fang Man (Cartoon). Masters of the Universe Origins",
+        "shop_name": "Pixelatoy",
+        "price": 19.99,
+        "action_type": "PURGATORY",
+        "details": "Match score too low (0.00). Moved to Purgatory.",
+        "timestamp": "2025-12-27T17:26:12.323784"
+      },
+      {
+        "id": 349,
+        "offer_url": "https://www.pixelatoy.com/es/catalogo/60202-grizzlor-masters-of-the-universe-origins-194735264209.html",
+        "product_name": "Grizzlor (Cartoon). Masters of the Universe Origins",
+        "shop_name": "Pixelatoy",
+        "price": 19.99,
+        "action_type": "PURGATORY",
+        "details": "Match score too low (0.00). Moved to Purgatory.",
+        "timestamp": "2025-12-27T17:26:12.323785"
+      },
+      {
+        "id": 350,
+        "offer_url": "https://www.pixelatoy.com/es/catalogo/59041-the-evil-horde-fright-zone-masters-of-the-universe-origins--0194735307647.html",
+        "product_name": "The Evil Horde: Fright Zone. Masters of the Universe Origins",
+        "shop_name": "Pixelatoy",
+        "price": 99.99,
+        "action_type": "PURGATORY",
+        "details": "Match score too low (0.00). Moved to Purgatory.",
+        "timestamp": "2025-12-27T17:26:12.323786"
+      },
+      {
+        "id": 351,
+        "offer_url": "https://www.pixelatoy.com/es/catalogo/58902-sketchbook-series-sy-klone-masters-of-the-universe-origins-0194735307616.html",
+        "product_name": "Sketchbook Series: Sy-Klone. Masters of the Universe Origins",
+        "shop_name": "Pixelatoy",
+        "price": 23.39,
+        "action_type": "PURGATORY",
+        "details": "Match score too low (0.00). Moved to Purgatory.",
+        "timestamp": "2025-12-27T17:26:12.323787"
+      },
+      {
+        "id": 352,
+        "offer_url": "https://www.pixelatoy.com/es/catalogo/57678-buzz-off-cartoon-collection-masters-of-the-universe-origins-194735264346.html",
+        "product_name": "Buzz-Off (Cartoon Collection). Masters of the Universe Origins",
+        "shop_name": "Pixelatoy",
+        "price": 22.99,
+        "action_type": "PURGATORY",
+        "details": "Match score too low (0.00). Moved to Purgatory.",
+        "timestamp": "2025-12-27T17:26:12.323788"
+      },
+      {
+        "id": 353,
+        "offer_url": "https://www.pixelatoy.com/es/catalogo/37107-plantilla-cartoon-collection-masters-of-the-universe-origins-194735264339.html",
+        "product_name": "Invisible Skeletor (Cartoon Collection). Masters of the Universe Origins",
+        "shop_name": "Pixelatoy",
+        "price": 20.69,
+        "action_type": "PURGATORY",
+        "details": "Match score too low (0.00). Moved to Purgatory.",
+        "timestamp": "2025-12-27T17:26:12.323788"
+      },
+      {
+        "id": 354,
+        "offer_url": "https://www.pixelatoy.com/es/catalogo/37106-frosta-cartoon-collection-masters-of-the-universe-origins-194735264230.html",
+        "product_name": "Frosta (Cartoon Collection). Masters of the Universe Origins",
+        "shop_name": "Pixelatoy",
+        "price": 21.84,
+        "action_type": "PURGATORY",
+        "details": "Match score too low (0.00). Moved to Purgatory.",
+        "timestamp": "2025-12-27T17:26:12.323789"
+      },
+      {
+        "id": 355,
+        "offer_url": "https://www.pixelatoy.com/es/catalogo/36112-faker-cartoon-collection-masters-of-the-universe-origins-194735264261.html",
+        "product_name": "Faker (Cartoon Collection). Masters of the Universe Origins",
+        "shop_name": "Pixelatoy",
+        "price": 20.69,
+        "action_type": "PURGATORY",
+        "details": "Match score too low (0.00). Moved to Purgatory.",
+        "timestamp": "2025-12-27T17:26:12.323790"
+      },
+      {
+        "id": 356,
+        "offer_url": "https://www.pixelatoy.com/es/catalogo/33732-deluxe-dragon-blaster-skeletor-masters-of-the-universe-origins-194735104338.html",
+        "product_name": "Deluxe Dragon Blaster Skeletor. Masters of the Universe Origins",
+        "shop_name": "Pixelatoy",
+        "price": 28.41,
+        "action_type": "PURGATORY",
+        "details": "Match score too low (0.00). Moved to Purgatory.",
+        "timestamp": "2025-12-27T17:26:12.323791"
+      },
+      {
+        "id": 357,
+        "offer_url": "https://www.pixelatoy.com/es/catalogo/32587-the-evil-horde-horde-trooper-prime-masters-of-the-universe-origins-194735237173.html",
+        "product_name": "The Evil Horde: Horde Trooper Prime. Masters of the Universe Origins",
+        "shop_name": "Pixelatoy",
+        "price": 31.99,
+        "action_type": "PURGATORY",
+        "details": "Match score too low (0.00). Moved to Purgatory.",
+        "timestamp": "2025-12-27T17:26:12.323792"
+      },
+      {
+        "id": 358,
+        "offer_url": "https://www.pixelatoy.com/es/catalogo/60193-sketchbook-series-spikor-masters-of-the-universe-origins-194735307531.html",
+        "product_name": "Sketchbook Series: Spikor. Masters of the Universe Origins",
+        "shop_name": "Pixelatoy",
+        "price": 25.99,
+        "action_type": "PURGATORY",
+        "details": "Match score too low (0.00). Moved to Purgatory.",
+        "timestamp": "2025-12-27T17:26:12.323793"
+      },
+      {
+        "id": 359,
+        "offer_url": "https://www.pixelatoy.com/es/outlet/33716-webstor-masters-of-the-universe-origins-887961982800.html",
+        "product_name": "(OUTLET) Webstor. Masters of the Universe Origins.",
+        "shop_name": "Pixelatoy",
+        "price": 21.59,
+        "action_type": "PURGATORY",
+        "details": "Match score too low (0.00). Moved to Purgatory.",
+        "timestamp": "2025-12-27T17:26:12.323794"
+      },
+      {
+        "id": 360,
+        "offer_url": "https://www.pixelatoy.com/es/outlet/24351-webstor-masters-of-the-universe-origins-194735244256.html",
+        "product_name": "(OUTLET) Webstor. Masters of the Universe Origins",
+        "shop_name": "Pixelatoy",
+        "price": 19.12,
+        "action_type": "PURGATORY",
+        "details": "Match score too low (0.00). Moved to Purgatory.",
+        "timestamp": "2025-12-27T17:26:12.323795"
+      },
+      {
+        "id": 361,
+        "offer_url": "https://www.pixelatoy.com/es/catalogo/62259-beast-man-deluxe-masters-of-the-universe-origins-0194735333493.html",
+        "product_name": "Beast Man -Deluxe- (Cartoon Collection). Masters of the Universe Origins",
+        "shop_name": "Pixelatoy",
+        "price": 29.99,
+        "action_type": "PURGATORY",
+        "details": "Match score too low (0.00). Moved to Purgatory.",
+        "timestamp": "2025-12-27T17:26:12.323796"
+      },
+      {
+        "id": 362,
+        "offer_url": "https://www.pixelatoy.com/es/catalogo/59911-megatron-armor-skeletor-masters-of-the-universe-x-transformers-0194735321575.html",
+        "product_name": "Megatron Armor Skeletor. Masters of the Universe x Transformers",
+        "shop_name": "Pixelatoy",
+        "price": 33.99,
+        "action_type": "PURGATORY",
+        "details": "Match score too low (0.00). Moved to Purgatory.",
+        "timestamp": "2025-12-27T17:26:12.323797"
+      },
+      {
+        "id": 363,
+        "offer_url": "https://www.pixelatoy.com/es/catalogo/59910-bumblebee-armor-man-at-arms-masters-of-the-universe-x-transformers-0194735321599.html",
+        "product_name": "Bumblebee Armor Man-At-Arms. Masters of the Universe x Transformers",
+        "shop_name": "Pixelatoy",
+        "price": 33.99,
+        "action_type": "PURGATORY",
+        "details": "Match score too low (0.00). Moved to Purgatory.",
+        "timestamp": "2025-12-27T17:26:12.323798"
+      },
+      {
+        "id": 364,
+        "offer_url": "https://www.pixelatoy.com/es/preventas/35945-faker-110-art-scale-masters-of-the-universe-618231957934.html",
+        "product_name": "Faker 1/10. Art Scale. Masters of the Universe",
+        "shop_name": "Pixelatoy",
+        "price": 216.99,
+        "action_type": "PURGATORY",
+        "details": "Match score too low (0.00). Moved to Purgatory.",
+        "timestamp": "2025-12-27T17:26:12.323799"
+      },
+      {
+        "id": 365,
+        "offer_url": "https://www.pixelatoy.com/es/catalogo/25264-man-at-arms-cartoon-collection-masters-of-the-universe-origins-194735244300.html",
+        "product_name": "Man-At-Arms (Cartoon Collection). Masters of the Universe Origins",
+        "shop_name": "Pixelatoy",
+        "price": 20.61,
+        "action_type": "PURGATORY",
+        "details": "Match score too low (0.67). Moved to Purgatory.",
+        "timestamp": "2025-12-27T17:26:12.323800"
+      },
+      {
+        "id": 366,
+        "offer_url": "https://www.pixelatoy.com/es/catalogo/57598-deluxe-super-shredder-motu-x-tmnt-turtles-of-grayskull-194735264285.html",
+        "product_name": "Deluxe Super Shredder. MOTU x TMNT: Turtles of Grayskull",
+        "shop_name": "Pixelatoy",
+        "price": 31.99,
+        "action_type": "PURGATORY",
+        "details": "Match score too low (0.00). Moved to Purgatory.",
+        "timestamp": "2025-12-27T17:26:14.158722"
+      },
+      {
+        "id": 367,
+        "offer_url": "https://www.pixelatoy.com/es/preventas/35019-cancer-deathmask-art-scale-110-saint-seiya-618231957552.html",
+        "product_name": "Cancer Deathmask. Art Scale 1/10. Saint Seiya",
+        "shop_name": "Pixelatoy",
+        "price": 293.0,
+        "action_type": "PURGATORY",
+        "details": "Match score too low (0.00). Moved to Purgatory.",
+        "timestamp": "2025-12-27T17:26:18.424928"
+      },
+      {
+        "id": 368,
+        "offer_url": "https://www.pixelatoy.com/es/preventas/29487-apollo-11-astronaut-art-scale-110-nasa-618231956432.html",
+        "product_name": "Apollo 11 Astronaut. Art Scale 1/10. NASA.",
+        "shop_name": "Pixelatoy",
+        "price": 228.9,
+        "action_type": "PURGATORY",
+        "details": "Match score too low (0.00). Moved to Purgatory.",
+        "timestamp": "2025-12-27T17:26:18.424932"
+      },
+      {
+        "id": 369,
+        "offer_url": "https://frikiverso.es/es/20-/6102-masters-of-the-universe-origins-young-randor-figura-decorativa-14-cm-0194735104215.html",
+        "product_name": "Figura King Randor Masters Of the Universe Articulada 14 cms",
+        "shop_name": "Frikiverso",
+        "price": 11.83,
+        "action_type": "PURGATORY",
+        "details": "Match score too low (0.00). Moved to Purgatory.",
+        "timestamp": "2025-12-27T17:35:43.378799"
+      },
+      {
+        "id": 370,
+        "offer_url": "https://frikiverso.es/es/20-/473-masters-of-the-universe-masters-del-universo-origenes-figura-skeletor-muneco-articulado-de-juguete-con-accesorios-mattel-g-0887961929614.html",
+        "product_name": "Figura Skeletor Battle Armor Masters del Universo Articulada 15 cms",
+        "shop_name": "Frikiverso",
+        "price": 10.31,
+        "action_type": "PURGATORY",
+        "details": "Match score too low (0.00). Moved to Purgatory.",
+        "timestamp": "2025-12-27T17:35:43.378804"
+      },
+      {
+        "id": 371,
+        "offer_url": "https://frikiverso.es/es/masters-del-universo/841-masters-of-the-universe-origins-prince-adam-with-sky-sled-figura-de-accion-para-ninos-y-ninas-6-anos-mattel-gpp30-0887961893243.html",
+        "product_name": "Figura Prince Adam & Sky Sled Masters del Universo Articulada 15 cms",
+        "shop_name": "Frikiverso",
+        "price": 24.05,
+        "action_type": "PURGATORY",
+        "details": "Match score too low (0.00). Moved to Purgatory.",
+        "timestamp": "2025-12-27T17:35:43.378806"
+      },
+      {
+        "id": 372,
+        "offer_url": "https://frikiverso.es/es/masters-del-universo/865-masters-of-the-universe-origins-battle-cat-figura-de-accion-para-ninos-y-ninas-6-anos-mattel-gnn70-0887961874907.html",
+        "product_name": "Figura Battle Cat Masters del Universo Origins Articulada 18 cms",
+        "shop_name": "Frikiverso",
+        "price": 21.4,
+        "action_type": "PURGATORY",
+        "details": "Match score too low (0.00). Moved to Purgatory.",
+        "timestamp": "2025-12-27T17:35:43.378807"
+      },
+      {
+        "id": 373,
+        "offer_url": "https://frikiverso.es/es/30-/7259-masters-of-the-universe-figuras-de-accion-multicolor-mattel-hyc56-0194735243655.html",
+        "product_name": "Figura Thunder Punch He-Man New Eternia Masterverse Masters Of The Universe Articulada 18 cms",
+        "shop_name": "Frikiverso",
+        "price": 8.53,
+        "action_type": "PURGATORY",
+        "details": "Match score too low (0.00). Moved to Purgatory.",
+        "timestamp": "2025-12-27T17:35:43.952286"
       }
     ],
     "price_alerts": [],
@@ -17728,6 +18442,28 @@
         "proposed_solution": null,
         "status": "pending",
         "created_at": "2025-12-27T16:14:42.234180"
+      },
+      {
+        "id": 12,
+        "spider_name": "Pixelatoy",
+        "insight_type": "network_failure",
+        "severity": "error",
+        "content": "Failed after 3 attempts: Anti-bot block detected (Status: 200)",
+        "pattern_observed": null,
+        "proposed_solution": null,
+        "status": "pending",
+        "created_at": "2025-12-27T17:23:46.447113"
+      },
+      {
+        "id": 13,
+        "spider_name": "Pixelatoy",
+        "insight_type": "network_failure",
+        "severity": "error",
+        "content": "Failed after 3 attempts: name 'content' is not defined",
+        "pattern_observed": null,
+        "proposed_solution": null,
+        "status": "pending",
+        "created_at": "2025-12-27T17:25:20.068088"
       }
     ],
     "scraper_execution_logs": [
@@ -18388,6 +19124,90 @@
         "errors": 0,
         "start_time": "2025-12-27T18:13:59.905188",
         "end_time": "2025-12-27T18:15:24.083858",
+        "trigger_type": "manual",
+        "error_message": null
+      },
+      {
+        "id": 56,
+        "spider_name": "Pixelatoy",
+        "status": "success_empty",
+        "items_found": 0,
+        "new_items": 0,
+        "errors": 0,
+        "start_time": "2025-12-27T18:23:13.529663",
+        "end_time": "2025-12-27T18:23:46.773564",
+        "trigger_type": "manual",
+        "error_message": "Anti-bot block detected"
+      },
+      {
+        "id": 57,
+        "spider_name": "Pixelatoy",
+        "status": "success_empty",
+        "items_found": 0,
+        "new_items": 0,
+        "errors": 0,
+        "start_time": "2025-12-27T18:24:53.356365",
+        "end_time": "2025-12-27T18:25:20.359959",
+        "trigger_type": "manual",
+        "error_message": null
+      },
+      {
+        "id": 58,
+        "spider_name": "Pixelatoy",
+        "status": "success",
+        "items_found": 119,
+        "new_items": 0,
+        "errors": 0,
+        "start_time": "2025-12-27T18:25:27.728086",
+        "end_time": "2025-12-27T18:26:18.620285",
+        "trigger_type": "manual",
+        "error_message": null
+      },
+      {
+        "id": 59,
+        "spider_name": "Frikiverso",
+        "status": "success_empty",
+        "items_found": 0,
+        "new_items": 0,
+        "errors": 0,
+        "start_time": "2025-12-27T18:34:39.516264",
+        "end_time": "2025-12-27T18:34:56.785989",
+        "trigger_type": "manual",
+        "error_message": null
+      },
+      {
+        "id": 60,
+        "spider_name": "Frikiverso",
+        "status": "success",
+        "items_found": 32,
+        "new_items": 0,
+        "errors": 0,
+        "start_time": "2025-12-27T18:35:20.044144",
+        "end_time": "2025-12-27T18:35:45.166200",
+        "trigger_type": "manual",
+        "error_message": null
+      },
+      {
+        "id": 61,
+        "spider_name": "Frikiverso",
+        "status": "success",
+        "items_found": 32,
+        "new_items": 0,
+        "errors": 0,
+        "start_time": "2025-12-27T19:24:33.056078",
+        "end_time": "2025-12-27T19:24:54.818426",
+        "trigger_type": "manual",
+        "error_message": null
+      },
+      {
+        "id": 62,
+        "spider_name": "Frikiverso",
+        "status": "success",
+        "items_found": 32,
+        "new_items": 0,
+        "errors": 0,
+        "start_time": "2025-12-27T20:59:03.181945",
+        "end_time": "2025-12-27T20:59:26.027372",
         "trigger_type": "manual",
         "error_message": null
       }
