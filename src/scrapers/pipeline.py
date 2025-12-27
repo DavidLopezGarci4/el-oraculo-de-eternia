@@ -142,15 +142,22 @@ class ScrapingPipeline:
                     from src.domain.models import PendingMatchModel
                     existing = db.query(PendingMatchModel).filter(PendingMatchModel.url == str(offer.url)).first()
                     if not existing:
-                        pending = PendingMatchModel(
-                            scraped_name=offer.product_name,
-                            ean=getattr(offer, 'ean', None),
-                            price=offer.price,
-                            currency=offer.currency,
-                            url=str(offer.url),
-                            shop_name=offer.shop_name,
-                            image_url=offer.image_url if hasattr(offer, 'image_url') else None 
-                        )
+                        # Defensive instantiation: only pass keys that exist in the model
+                        # (Protects against version mismatches in production environments)
+                        pending_data = {
+                            "scraped_name": offer.product_name,
+                            "price": offer.price,
+                            "currency": getattr(offer, 'currency', 'EUR'),
+                            "url": str(offer.url),
+                            "shop_name": offer.shop_name,
+                            "image_url": offer.image_url if hasattr(offer, 'image_url') else None
+                        }
+                        
+                        # Only add EAN if the model supports it
+                        if hasattr(PendingMatchModel, 'ean'):
+                            pending_data["ean"] = getattr(offer, 'ean', None)
+                            
+                        pending = PendingMatchModel(**pending_data)
                         db.add(pending)
                         db.commit()
 
