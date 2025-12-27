@@ -142,21 +142,28 @@ class ScrapingPipeline:
                     from src.domain.models import PendingMatchModel
                     existing = db.query(PendingMatchModel).filter(PendingMatchModel.url == str(offer.url)).first()
                     if not existing:
-                        # Defensive instantiation: only pass keys that exist in the model
-                        # (Protects against version mismatches in production environments)
-                        pending_data = {
+                        # Defensive instantiation: Filter out keys that the model doesn't support
+                        # This is the ULTIMATE defensive pattern against schema mismatches
+                        all_data = {
                             "scraped_name": offer.product_name,
                             "price": offer.price,
                             "currency": getattr(offer, 'currency', 'EUR'),
                             "url": str(offer.url),
                             "shop_name": offer.shop_name,
-                            "image_url": offer.image_url if hasattr(offer, 'image_url') else None
+                            "image_url": offer.image_url if hasattr(offer, 'image_url') else None,
+                            "ean": getattr(offer, 'ean', None)
                         }
                         
-                        # Only add EAN if the model supports it
-                        if hasattr(PendingMatchModel, 'ean'):
-                            pending_data["ean"] = getattr(offer, 'ean', None)
-                            
+                        # Filter: Keep only keys present in the model class
+                        from sqlalchemy.inspect import inspect
+                        try:
+                            mapper = inspect(PendingMatchModel)
+                            allowed_keys = {c.key for c in mapper.attrs}
+                            pending_data = {k: v for k, v in all_data.items() if k in allowed_keys}
+                        except:
+                            # Fallback if inspection fails
+                            pending_data = {k: v for k, v in all_data.items() if hasattr(PendingMatchModel, k)}
+
                         pending = PendingMatchModel(**pending_data)
                         db.add(pending)
                         db.commit()

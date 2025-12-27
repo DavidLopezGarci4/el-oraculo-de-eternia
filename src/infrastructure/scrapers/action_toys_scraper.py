@@ -28,7 +28,7 @@ class ActionToysScraper(BaseScraper):
             # Start at page 1
             current_url = self.base_url
             page_num = 1
-            max_pages = 20 # Increased to capture all 11+ pages
+            max_pages = 100 # Future-proof: Follows the 'Next' link up to 100 pages
             
             while current_url and page_num <= max_pages:
                 logger.info(f"[{self.spider_name}] Scraping page {page_num}: {current_url}")
