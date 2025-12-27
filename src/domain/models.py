@@ -95,6 +95,7 @@ class PendingMatchModel(Base):
     
     # Scraped Data
     scraped_name: Mapped[str] = mapped_column(String)
+    ean: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     price: Mapped[float] = mapped_column(Float)
     currency: Mapped[str] = mapped_column(String, default="EUR")
     url: Mapped[str] = mapped_column(String, unique=True) # Avoid dupe pending items

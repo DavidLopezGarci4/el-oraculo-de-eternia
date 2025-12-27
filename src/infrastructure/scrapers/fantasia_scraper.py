@@ -105,6 +105,16 @@ class FantasiaScraper(BaseScraper):
                     price_val = self._normalize_price(meta_price['content'])
             
             if price_val == 0.0:
+                 # Super fallback: clean all text from price span
+                 if price_span:
+                     text = price_span.get_text(strip=True)
+                     import re
+                     # Extract numbers and dots/commas
+                     clean = re.sub(r'[^0-9,\.]', '', text)
+                     price_val = self._normalize_price(clean)
+
+            if price_val == 0.0:
+                logger.debug(f"[{self.spider_name}] Skipping item {name} - Price could not be parsed.")
                 return None
 
             # 3. Availability

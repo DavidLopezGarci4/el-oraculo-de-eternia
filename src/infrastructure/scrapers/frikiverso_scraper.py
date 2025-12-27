@@ -33,7 +33,13 @@ class FrikiversoScraper(BaseScraper):
                 if not await self._safe_navigate(page, current_url):
                     break
                 
-                await asyncio.sleep(2.0)
+                await asyncio.sleep(3.0) # Longer wait for Frikiverso
+                
+                # Human-like interaction (Kaizen Hardening)
+                await page.mouse.wheel(0, 500)
+                await asyncio.sleep(1.0)
+                await page.mouse.wheel(0, -200)
+                await asyncio.sleep(0.5)
                 
                 html_content = await page.content()
                 soup = BeautifulSoup(html_content, 'html.parser')

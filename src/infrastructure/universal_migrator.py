@@ -52,6 +52,16 @@ def migrate():
             conn.execute(text("ALTER TABLE offers ADD COLUMN max_price FLOAT DEFAULT 0.0"))
             conn.commit()
 
+        # --- Table: pending_matches ---
+        columns_pending = [c['name'] for c in inspector.get_columns("pending_matches")]
+        if "ean" not in columns_pending:
+            logger.info("Adding 'ean' to pending_matches table...")
+            try:
+                conn.execute(text("ALTER TABLE pending_matches ADD COLUMN ean VARCHAR(50)"))
+                conn.commit()
+            except Exception as e:
+                logger.warning(f"Could not add ean to pending_matches: {e}")
+
         # --- Table: price_alerts (Created by create_all, but check for created_at if old) ---
         # (Assuming it's new so skip for now)
 

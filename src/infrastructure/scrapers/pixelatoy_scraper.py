@@ -33,7 +33,11 @@ class PixelatoyScraper(BaseScraper):
                 if not await self._safe_navigate(page, current_url):
                     break
                 
-                await asyncio.sleep(2.0)
+                await asyncio.sleep(3.0) # Longer wait
+                
+                # Human-like interaction (Kaizen Hardening)
+                await page.mouse.wheel(0, 400)
+                await asyncio.sleep(1.0)
                 
                 html_content = await page.content()
                 soup = BeautifulSoup(html_content, 'html.parser')

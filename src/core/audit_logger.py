@@ -50,8 +50,9 @@ class AuditLogger:
         Maintains the quantitative markdown log in the .gemini/antigravity/brain dir.
         """
         import os
-        # Path derived from conversation metadata (simulated here)
-        brain_path = "c:/Users/dace8/.gemini/antigravity/brain/c8253c79-6713-4b80-994b-fcc3cfb22b08/kaizen_learning_log.md"
+        # Path derived from environment or fallback
+        brain_dir = os.environ.get("GEMINI_BRAIN_PATH", "c:/Users/dace8/.gemini/antigravity/brain/c8253c79-6713-4b80-994b-fcc3cfb22b08")
+        brain_path = os.path.join(brain_dir, "kaizen_learning_log.md")
         
         entry = f"\n### [{datetime.now().strftime('%Y-%m-%d %H:%M')}] {spider} - {type.upper()}\n"
         entry += f"- **Content:** {content}\n"

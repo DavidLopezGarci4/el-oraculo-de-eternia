@@ -15,7 +15,7 @@ class ActionToysScraper(BaseScraper):
     Scraper for ActionToys (WooCommerce).
     """
     def __init__(self):
-        super().__init__(name="ActionToys", base_url="https://actiontoys.es/categoria-producto/masters-of-the-universe-origins")
+        super().__init__(name="ActionToys", base_url="https://actiontoys.es/figuras-de-accion/masters-of-the-universe/origins/")
 
     async def run(self, context: BrowserContext) -> List[ScrapedOffer]:
         """
@@ -28,7 +28,7 @@ class ActionToysScraper(BaseScraper):
             # Start at page 1
             current_url = self.base_url
             page_num = 1
-            max_pages = 5 # Safety limit for now
+            max_pages = 10 # Increased for Origins
             
             while current_url and page_num <= max_pages:
                 logger.info(f"[{self.spider_name}] Scraping page {page_num}: {current_url}")
@@ -53,10 +53,20 @@ class ActionToysScraper(BaseScraper):
                         products.append(prod)
                         self.items_scraped += 1
                 
-                # Pagination
+                # Pagination (More robust selector: looking for current + 1 or next)
                 next_tag = soup.select_one('a.next.page-numbers')
+                if not next_tag:
+                    # Fallback: check the pagination list for the link AFTER the current one
+                    current_span = soup.select_one('span.page-numbers.current')
+                    if current_span and current_span.parent:
+                        next_li = current_span.parent.find_next_sibling('li')
+                        if next_li:
+                            next_tag = next_li.select_one('a.page-numbers')
+
                 if next_tag and next_tag.get('href'):
                     current_url = next_tag.get('href')
+                    if not current_url.startswith('http'):
+                        current_url = f"https://actiontoys.es{current_url}"
                     page_num += 1
                 else:
                     logger.info(f"[{self.spider_name}] No more pages found.")
