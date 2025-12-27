@@ -140,7 +140,14 @@ class ScrapingPipeline:
                         
                     # Check if already exists in Pending
                     from src.domain.models import PendingMatchModel
-                    existing = db.query(PendingMatchModel).filter(PendingMatchModel.url == str(offer.url)).first()
+                    try:
+                        existing = db.query(PendingMatchModel).filter(PendingMatchModel.url == str(offer.url)).first()
+                    except Exception as e:
+                        # Query Shield: If the query fails (likely due to a missing column like 'ean' in the DB)
+                        # we rollback and assume it doesn't exist yet in the DB.
+                        logger.warning(f"⚠️ Query for existing Pending item failed: {e}. Proceeding as new.")
+                        db.rollback()
+                        existing = None
                     if not existing:
                         # Defensive instantiation: Filter out keys that the model doesn't support
                         # This is the ULTIMATE defensive pattern against schema mismatches

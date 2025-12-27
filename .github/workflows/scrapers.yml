@@ -1,14 +1,13 @@
-name: Oracle Scraper (Staggered)
+name: Oracle Master Workflow (Daily Scan)
 
 on:
   schedule:
-    # Multiple triggers to cover different time windows
     - cron: '0 2 * * *'        # 2:00 AM UTC
     - cron: '30 14 * * *'      # 2:30 PM UTC
   workflow_dispatch:           # Manual trigger
     inputs:
       shops:
-        description: 'Specific shops to scrape (space separated, e.g. fantasia frikiverso)'
+        description: 'Specific shops to scrape (space separated, e.g. actiontoys fantasia)'
         required: false
         default: ''
 
@@ -29,13 +28,15 @@ jobs:
           pip install -r requirements.txt
           playwright install chromium
           
-      - name: Run Scrapers (with Kaizen Stagger)
+      - name: Run Scrapers (with Kaizen Stagger & Auto-Migration)
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          # Pass other secrets here
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          PYTHONPATH: .
         run: |
           # Use 60 min delay for scheduled runs, 0 for manual
           DELAY=60
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then DELAY=0; fi
           
-          python src/jobs/daily_scan.py --shops ${{ github.event.inputs.shops }} --random-delay $DELAY
+          python src/jobs/daily_scan.py --shops "${{ github.event.inputs.shops }}" --random-delay $DELAY

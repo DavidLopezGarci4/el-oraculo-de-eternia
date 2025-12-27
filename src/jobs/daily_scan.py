@@ -79,6 +79,14 @@ async def run_daily_scan(progress_callback=None):
         f.write(str(pid))
         
     try:
+        # PHASE 12: Ensure database schema is up to date before scanning
+        try:
+            from src.infrastructure.universal_migrator import UniversalMigrator
+            logger.info("🔧 Synchronizing database schema (Universal Migrator)...")
+            UniversalMigrator().upgrade_schema()
+        except Exception as e:
+            logger.warning(f"⚠️ Migration pre-check failed: {e}")
+
         # Initialize Pipeline
         pipeline = ScrapingPipeline([])
         

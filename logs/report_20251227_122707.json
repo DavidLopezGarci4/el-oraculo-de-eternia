@@ -1,0 +1,5 @@
+{
+  "ActionToys": {
+    "error": "(psycopg2.errors.UndefinedColumn) column pending_matches.ean does not exist\nLINE 1: ...hes.scraped_name AS pending_matches_scraped_name, pending_ma...\n                                                             ^\n\n[SQL: SELECT pending_matches.id AS pending_matches_id, pending_matches.scraped_name AS pending_matches_scraped_name, pending_matches.ean AS pending_matches_ean, pending_matches.price AS pending_matches_price, pending_matches.currency AS pending_matches_currency, pending_matches.url AS pending_matches_url, pending_matches.shop_name AS pending_matches_shop_name, pending_matches.image_url AS pending_matches_image_url, pending_matches.found_at AS pending_matches_found_at \nFROM pending_matches \nWHERE pending_matches.url = %(url_1)s \n LIMIT %(param_1)s]\n[parameters: {'url_1': 'https://actiontoys.es/figura-de-accion/demo-man-masters-of-the-universe-motu-origins-exclusiva/', 'param_1': 1}]\n(Background on this error at: https://sqlalche.me/e/20/f405)"
+  }
+}
