@@ -113,7 +113,7 @@ def render_inline_product_admin(db: Session, p, current_user_id: int):
                                     "shop_name": o.shop_name,
                                     "image_url": target_p.image_url
                                 }
-                                from sqlalchemy.inspect import inspect
+                                from sqlalchemy import inspect
                                 mapper = inspect(PendingMatchModel)
                                 allowed_keys = {c.key for c in mapper.attrs}
                                 pending_data = {k: v for k, v in all_data.items() if k in allowed_keys}
@@ -244,7 +244,7 @@ def render_inline_product_admin(db: Session, p, current_user_id: int):
                                      "shop_name": target_o.shop_name,
                                      "image_url": p.image_url
                                  }
-                                 from sqlalchemy.inspect import inspect
+                                 from sqlalchemy import inspect
                                  mapper = inspect(PendingMatchModel)
                                  allowed_keys = {c.key for c in mapper.attrs}
                                  pending_data = {k: v for k, v in all_data.items() if k in allowed_keys}

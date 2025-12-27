@@ -162,7 +162,7 @@ class ScrapingPipeline:
                         }
                         
                         # Filter: Keep only keys present in the model class
-                        from sqlalchemy.inspect import inspect
+                        from sqlalchemy import inspect
                         try:
                             mapper = inspect(PendingMatchModel)
                             allowed_keys = {c.key for c in mapper.attrs}
