@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from sqlalchemy.orm import Session, joinedload
 
 def render_inline_product_admin(db: Session, p, current_user_id: int):
-    from src.domain.models import ProductModel, OfferModel, CollectionItemModel
+    from src.domain.models import ProductModel, OfferModel, CollectionItemModel, PendingMatchModel, BlackcludedItemModel
     """
     Renders the Superuser Edit Panel for a single product.
     Includes Metadata editing, nuclear options (Purge/Blacklist Product), and Offer management.

@@ -2,9 +2,9 @@ import streamlit as st
 from sqlalchemy.orm import Session
 from src.infrastructure.repositories.product import ProductRepository
 from src.web.shared import toggle_ownership
-from src.domain.models import OfferModel, PendingMatchModel, BlackcludedItemModel
 
 def render(db: Session, img_dir, user, repo: ProductRepository):
+    from src.domain.models import OfferModel, PendingMatchModel, BlackcludedItemModel
     # Header
     c1, c2 = st.columns([1, 8])
     with c1:

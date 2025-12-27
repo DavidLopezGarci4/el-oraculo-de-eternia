@@ -60,7 +60,7 @@ async def run_daily_scan(progress_callback=None):
     # --- ARGUMENT PARSING ---
     import argparse
     parser = argparse.ArgumentParser(description="Oracle Scraper Runner")
-    parser.add_argument("--shops", nargs="+", help="Specific shops to scrape (e.g. electropolis fantasia)")
+    parser.add_argument("--shops", nargs="*", help="Specific shops to scrape (e.g. electropolis fantasia)")
     parser.add_argument("--random-delay", type=int, default=0, help="Wait up to X minutes before starting (jitter)")
     parser.add_argument("--deep-harvest", action="store_true", help="Visit individual product pages for EAN/GTIN extraction")
     args, unknown = parser.parse_known_args()

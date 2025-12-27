@@ -139,9 +139,9 @@ class ScrapingPipeline:
                         continue
                         
                     # Check if already exists in Pending
+                    from src.domain.models import PendingMatchModel
                     existing = db.query(PendingMatchModel).filter(PendingMatchModel.url == str(offer.url)).first()
                     if not existing:
-                        from src.domain.models import PendingMatchModel
                         pending = PendingMatchModel(
                             scraped_name=offer.product_name,
                             ean=getattr(offer, 'ean', None),
