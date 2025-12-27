@@ -306,7 +306,12 @@ def render_purgatory(db: Session, img_dir):
     st.markdown("---")
     
     # TABS structure
-    tab_purg, tab_mission, tab_history = st.tabs(["Purgatorio (Ofertas)", "Control de Misión (Robots)", "📜 Historial de Almas"])
+    tab_purg, tab_mission, tab_history, tab_bunker = st.tabs([
+        "Purgatorio (Ofertas)", 
+        "Control de Misión (Robots)", 
+        "📜 Historial de Almas",
+        "🏰 La Cámara de Grayskull (Búnker)"
+    ])
     
     with tab_purg:
         _render_purgatory_content(db)
@@ -316,6 +321,9 @@ def render_purgatory(db: Session, img_dir):
         
     with tab_history:
         _render_bastion_history(db)
+        
+    with tab_bunker:
+        _render_bunker_control(db)
 
 def _render_mission_control(db, img_dir):
     from src.domain.models import ScraperStatusModel, ScraperExecutionLogModel
@@ -671,3 +679,100 @@ def _render_purgatory_content(db):
                 db.commit()
                 st.toast("Descartado.")
                 st.rerun()
+
+def _render_bunker_control(db):
+    """
+    UI for managing backups and snapshots.
+    """
+    from pathlib import Path
+    import os
+    from datetime import datetime
+    
+    st.subheader("🛡️ La Cámara de Grayskull: Salvaguarda de Eternia")
+    st.info("Aquí residen los snapshots crudos de los scrapers y los sellos (backups) de la base de datos.")
+    
+    col1, col2 = st.columns(2)
+    
+    # 1. Database Vaults
+    with col1:
+        st.markdown("### 🏰 Bóvedas del Oráculo (Backups DB)")
+        vault_path = Path("backups/database")
+        if vault_path.exists():
+            vaults = sorted(list(vault_path.glob("*.json")), key=os.path.getmtime, reverse=True)
+            if vaults:
+                for idx, v in enumerate(vaults[:5]): # Show last 5
+                    mtime = datetime.fromtimestamp(v.stat().st_mtime).strftime("%Y-%m-%d %H:%M")
+                    size = v.stat().st_size / 1024
+                    
+                    c1_v, c2_v = st.columns([3, 1])
+                    c1_v.write(f"**{v.name}**\n\n({mtime}) - {size:.1f} KB")
+                    
+                    if c2_v.button("♻️", key=f"restore_v_{idx}", help="Restaurar este sello"):
+                        st.session_state[f"confirm_restore_{idx}"] = True
+                    
+                    if st.session_state.get(f"confirm_restore_{idx}"):
+                        st.warning(f"⚠️ **¡ADVERTENCIA DE ETERNIA!**\n\nEsto ELIMINARÁ todos los datos actuales y restaurará el sello: {v.name}")
+                        if st.button("SÍ, RESTAURAR AHORA", key=f"do_restore_{idx}", type="primary"):
+                            from src.jobs.restore_vault import restore_from_vault
+                            with st.spinner("Reconstruyendo Eternia..."):
+                                restore_from_vault(str(v))
+                                st.success("✅ Oráculo Restaurado.")
+                                del st.session_state[f"confirm_restore_{idx}"]
+                                st.rerun()
+                        if st.button("Abortar", key=f"cancel_restore_{idx}"):
+                            del st.session_state[f"confirm_restore_{idx}"]
+                            st.rerun()
+                
+                st.caption("Los sellos permiten volver a un estado previo en segundos.")
+            else:
+                st.write("No hay bóvedas selladas aún.")
+        else:
+            st.write("Cámara no inicializada.")
+
+    # 2. Raw Snapshots
+    with col2:
+        st.markdown("### 💾 Caja Negra (Snapshots Scrapers)")
+        snap_path = Path("backups/raw_snapshots")
+        if snap_path.exists():
+            snaps = sorted(list(snap_path.glob("*.json")), key=os.path.getmtime, reverse=True)
+            if snaps:
+                for s in snaps[:5]:
+                    mtime = datetime.fromtimestamp(s.stat().st_mtime).strftime("%Y-%m-%d %H:%M")
+                    st.write(f"- {s.name} ({mtime})")
+                
+                st.write(f"Total: {len(snaps)} snapshots guardados.")
+            else:
+                st.write("No hay snapshots crudos.")
+        else:
+            st.write("Caja negra no inicializada.")
+    
+    st.markdown("---")
+    if st.button("🛡️ Sellar Bóveda Ahora (Manual Backup)"):
+        from src.core.backup_manager import BackupManager
+        bm = BackupManager()
+        path = bm.create_database_backup(db)
+        if path:
+            st.success(f"Bóveda sellada con éxito: {Path(path).name}")
+            st.rerun()
+
+    with st.expander("📖 Protocolo de Grayskull (Manual de Recuperación)"):
+        st.markdown("""
+        ### 🧪 Procedimiento de Emergencia
+        Este panel permite al **Administrador** revertir el estado del Oráculo si se detectan anomalías tras un escaneo o un error manual.
+        
+        **1. Selección del Sello:**
+        - Revisa las fechas en la columna **Bóvedas del Oráculo**.
+        - El sello más reciente suele ser el más seguro.
+        
+        **2. Restauración (Botón ♻️):**
+        - Al pulsar el botón, el sistema entrará en modo de espera.
+        - Aparecerá una advertencia roja. Confirma solo si estás seguro.
+        - **⚠️ AVISO:** Se borrará TODO el catálogo actual para ser reemplazado por la copia de seguridad.
+        
+        **3. Sellado Manual:**
+        - Si vas a realizar acciones drásticas (borrados masivos), pulsa primero **Sellar Bóveda Ahora**.
+        - Esto creará un "punto de retorno" por si algo sale mal.
+        
+        **4. Recuperación Crítica (Terminal):**
+        - Si la web no carga, usa el terminal: `python src/jobs/restore_vault.py`
+        """)

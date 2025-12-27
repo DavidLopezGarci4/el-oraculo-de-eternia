@@ -53,7 +53,21 @@ class ScrapingPipeline:
     def update_database(self, offers: List[ScrapedOffer]):
         """
         Persists found offers to the database using SmartMatcher.
+        Includes Phase 18: Búnker & Circuit Breaker.
         """
+        if not offers:
+            logger.warning("🛡️ Circuit Breaker: No offers found to process. Skipping DB update for this batch.")
+            return
+
+        # 1. Save Raw Snapshot (Black Box)
+        try:
+            from src.core.backup_manager import BackupManager
+            bm = BackupManager()
+            shop_name = offers[0].shop_name if offers else "unknown"
+            bm.save_raw_snapshot(shop_name, offers)
+        except Exception as e:
+            logger.error(f"⚠️ Failed to save safety snapshot: {e}")
+
         db: Session = SessionLocal()
         from src.core.matching import SmartMatcher
         

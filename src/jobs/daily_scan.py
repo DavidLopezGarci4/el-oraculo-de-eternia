@@ -282,6 +282,21 @@ async def run_daily_scan(progress_callback=None):
     
     db.close()
 
+    # PHASE 18: Create Database Vault (Safe Backup)
+    try:
+        from src.core.backup_manager import BackupManager
+        from src.infrastructure.database import SessionLocal
+        
+        logger.info("🏰 Sealing the Data Vault (Database Backup)...")
+        backup_db = SessionLocal()
+        bm = BackupManager()
+        backup_path = bm.create_database_backup(backup_db)
+        if backup_path:
+            logger.info(f"🛡️ Vault sealed at: {backup_path}")
+        backup_db.close()
+    except Exception as e:
+        logger.error(f"⚠️ Failed to seal Data Vault: {e}")
+
     duration = datetime.now() - start_time
     logger.info(f"🏁 Daily Scan Complete in {duration}. Total: {total_stats}")
     
