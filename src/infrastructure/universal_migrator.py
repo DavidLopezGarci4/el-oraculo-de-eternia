@@ -21,7 +21,7 @@ def migrate():
     # 1. Ensure new tables exist (price_alerts)
     # create_all is safe, it only creates tables that don't exist
     Base.metadata.create_all(bind=engine)
-    logger.info("Checked/Created core tables.")
+    logger.info("Checked/Created core tables (including OfferHistory).")
 
     # 2. Check for missing columns in existing tables
     with engine.connect() as conn:

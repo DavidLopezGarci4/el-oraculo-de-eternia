@@ -117,6 +117,23 @@ def render_inline_product_admin(db: Session, p, current_user_id: int):
                         
                         db.delete(target_p)
                         db.commit()
+                        
+                        # LOG HISTORY: PURGE
+                        try:
+                            from src.domain.models import OfferHistoryModel
+                            for o in target_p.offers:
+                                history = OfferHistoryModel(
+                                    offer_url=o.url,
+                                    product_name=target_p.name,
+                                    shop_name=o.shop_name,
+                                    price=o.price,
+                                    action_type="PURGED",
+                                    details=f"Product '{target_p.name}' purged by admin."
+                                )
+                                db.add(history)
+                            db.commit()
+                        except: pass
+                        
                         st.toast(f"Producto {p.name} desintegrado.")
                         st.rerun()
                 except Exception as e:
@@ -224,6 +241,22 @@ def render_inline_product_admin(db: Session, p, current_user_id: int):
                                  db.add(pending)
                              db.delete(target_o)
                              db.commit()
+                             
+                             # LOG HISTORY: UNLINKED
+                             try:
+                                 from src.domain.models import OfferHistoryModel
+                                 history = OfferHistoryModel(
+                                     offer_url=target_o.url,
+                                     product_name=p.name,
+                                     shop_name=target_o.shop_name,
+                                     price=target_o.price,
+                                     action_type="UNLINKED",
+                                     details=f"Unlinked from product '{p.name}' by admin."
+                                 )
+                                 db.add(history)
+                                 db.commit()
+                             except: pass
+                             
                              st.toast("Desvinculado.")
                              st.rerun()
                      except Exception as e:
@@ -261,13 +294,16 @@ def render_purgatory(db: Session, img_dir):
     st.markdown("---")
     
     # TABS structure
-    tab_purg, tab_mission = st.tabs(["Purgatorio (Ofertas)", "Control de Misión (Robots)"])
+    tab_purg, tab_mission, tab_history = st.tabs(["Purgatorio (Ofertas)", "Control de Misión (Robots)", "📜 Historial de Almas"])
     
     with tab_purg:
         _render_purgatory_content(db)
 
     with tab_mission:
         _render_mission_control(db, img_dir)
+        
+    with tab_history:
+        _render_bastion_history(db)
 
 def _render_mission_control(db, img_dir):
     from src.domain.models import ScraperStatusModel, ScraperExecutionLogModel
@@ -394,6 +430,32 @@ def _render_mission_control(db, img_dir):
                     st.code(h.error_message, language="text")
     else:
         st.info("No hay historial disponible.")
+
+def _render_bastion_history(db: Session):
+    from src.domain.models import OfferHistoryModel
+    st.subheader("🛡️ Bastión de Datos: Historial de Movimientos")
+    st.caption("Registro imborrable de todas las ofertas que han pasado por el Oráculo.")
+    
+    limit = st.slider("Ver últimos X movimientos", 10, 200, 50, key="hist_limit")
+    
+    history = db.query(OfferHistoryModel).order_by(OfferHistoryModel.timestamp.desc()).limit(limit).all()
+    
+    if not history:
+        st.info("El Bastión aún no tiene registros. ¡Empieza a scrapear para generar historia!")
+        return
+        
+    for h in history:
+        with st.container(border=True):
+            c1, c2 = st.columns([1, 4])
+            with c1:
+                icon = "🔗" if "LINKED" in h.action_type else ("🌪️" if "PURGED" in h.action_type else "⏳")
+                st.markdown(f"### {icon}")
+            with c2:
+                st.markdown(f"**{h.product_name}**")
+                st.caption(f"{h.timestamp.strftime('%Y-%m-%d %H:%M:%S')} | {h.shop_name} | {h.action_type}")
+                if h.details:
+                    st.info(h.details)
+                st.code(h.offer_url, language="text")
 
 def _render_purgatory_content(db):
     from src.domain.models import ProductModel, OfferModel, PendingMatchModel, BlackcludedItemModel
@@ -568,6 +630,22 @@ def _render_purgatory_content(db):
                         })
                         db.delete(item)
                         db.commit()
+                        
+                        # LOG HISTORY: MANUAL_LINK
+                        try:
+                            from src.domain.models import OfferHistoryModel
+                            history = OfferHistoryModel(
+                                offer_url=item.url,
+                                product_name=item.scraped_name,
+                                shop_name=item.shop_name,
+                                price=item.price,
+                                action_type="LINKED_MANUAL",
+                                details=f"Manually linked to product '{fresh_p.name}' (ID: {fresh_p.id}) by admin."
+                            )
+                            db.add(history)
+                            db.commit()
+                        except: pass
+                        
                         st.toast("Vinculado.")
                         st.rerun()
                     else:

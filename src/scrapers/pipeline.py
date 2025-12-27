@@ -160,6 +160,21 @@ class ScrapingPipeline:
                         pending = PendingMatchModel(**pending_data)
                         db.add(pending)
                         db.commit()
+                        
+                        # LOG HISTORY: PURGATORY
+                        try:
+                            from src.domain.models import OfferHistoryModel
+                            history = OfferHistoryModel(
+                                offer_url=str(offer.url),
+                                product_name=offer.product_name,
+                                shop_name=offer.shop_name,
+                                price=offer.price,
+                                action_type="PURGATORY",
+                                details=f"Match score too low ({best_match_score:.2f}). Moved to Purgatory."
+                            )
+                            db.add(history)
+                            db.commit()
+                        except: pass
 
         finally:
             db.close()

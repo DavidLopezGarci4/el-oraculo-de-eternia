@@ -104,6 +104,25 @@ class PendingMatchModel(Base):
     
     found_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     
+    
+# --- AUDIT TRAIL (BASTIÓN DE DATOS) ---
+class OfferHistoryModel(Base):
+    """
+    Historial de movimientos de ofertas para recuperación y auditoría.
+    Registra cambios de estado (NUEVO, ENLAZADO, PURGATORIO, ELIMINADO).
+    """
+    __tablename__ = "offer_history"
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    offer_url: Mapped[str] = mapped_column(String, index=True)
+    product_name: Mapped[str] = mapped_column(String)
+    shop_name: Mapped[str] = mapped_column(String)
+    price: Mapped[float] = mapped_column(Float)
+    action_type: Mapped[str] = mapped_column(String) # NEW, LINKED, UNLINKED, PURGED
+    details: Mapped[Optional[str]] = mapped_column(String, nullable=True) # JSON or descriptive text
+    
+    timestamp: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
 # PriceAlertModel promoted to top (moved here for coherence)
 class PriceAlertModel(Base):
     """
