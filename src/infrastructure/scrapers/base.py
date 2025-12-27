@@ -19,6 +19,7 @@ class BaseScraper(ABC):
         self.base_url = base_url
         self.items_scraped = 0
         self.errors = 0
+        self.blocked = False # Phase 19: Anti-bot sensor
         self.audit_logger = None # Will be injected by the runner
 
     @abstractmethod
@@ -49,14 +50,27 @@ class BaseScraper(ABC):
             await asyncio.sleep(delay)
             
             try:
-                await page.goto(url, timeout=60000, wait_until="domcontentloaded")
+                response = await page.goto(url, timeout=60000, wait_until="domcontentloaded")
+                api_status = response.status if response else 0
+                
                 await self._handle_popups(page)
                 
                 # Check if we were blocked (Anti-bot detection)
                 content = await page.content()
-                if "captcha" in content.lower() or "blocked" in content.lower() or "connection reset" in content.lower():
-                     raise Exception("Anti-bot or Connection block detected")
+                is_blocked = (
+                    api_status in [403, 429] or
+                    "captcha" in content.lower() or 
+                    "blocked" in content.lower() or 
+                    "connection reset" in content.lower() or
+                    "access denied" in content.lower()
+                )
+
+                if is_blocked:
+                    self.blocked = True
+                    logger.error(f"[{self.spider_name}] 🚫 DESTIERRO DETECTADO (Status: {api_status}). Anti-bot trigger.")
+                    raise Exception(f"Anti-bot block detected (Status: {api_status})")
                 
+                self.blocked = False # Reset if successful
                 return True
             except Exception as e:
                 logger.error(f"[{self.spider_name}] Attempt {attempt+1} failed for {url}: {e}")

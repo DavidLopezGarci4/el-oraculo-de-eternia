@@ -5,7 +5,11 @@ import logging
 from pathlib import Path
 from sqlalchemy import text
 from src.infrastructure.database import SessionLocal, engine
-from src.domain.models import Base, ProductModel, OfferModel, PendingMatchModel, OfferHistoryModel
+from src.domain.models import (
+    Base, ProductModel, OfferModel, PendingMatchModel, OfferHistoryModel,
+    UserModel, PriceAlertModel, CollectionItemModel, BlackcludedItemModel,
+    KaizenInsightModel, ScraperExecutionLogModel, PriceHistoryModel
+)
 
 # Setup Logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s | %(levelname)-8s | %(message)s')
@@ -15,6 +19,7 @@ def restore_from_vault(file_path: str):
     """
     Restores the database from a JSON vault file.
     WARNING: This will clear current tables before restoring!
+    Now supports sequences sync for Postgres.
     """
     if not os.path.exists(file_path):
         logger.error(f"❌ File not found: {file_path}")
@@ -36,46 +41,67 @@ def restore_from_vault(file_path: str):
         try:
             # 1. DELETE CURRENT DATA (Reverse order of dependencies)
             logger.warning("🌪️ Clearing existing data for a clean restore...")
+            # Deleting in order that respects FKs
+            db.query(PriceHistoryModel).delete()
+            db.query(PriceAlertModel).delete()
+            db.query(CollectionItemModel).delete()
             db.query(OfferHistoryModel).delete()
             db.query(OfferModel).delete()
             db.query(PendingMatchModel).delete()
             db.query(ProductModel).delete()
+            db.query(BlackcludedItemModel).delete()
+            db.query(KaizenInsightModel).delete()
+            db.query(ScraperExecutionLogModel).delete()
+            db.query(UserModel).delete()
             db.commit()
             
-            # 2. RESTORE DATA
+            # 2. RESTORE DATA (Order of dependencies)
+            # Users
+            if "users" in data:
+                logger.info(f"👤 Restoring {len(data['users'])} users...")
+                for d in data["users"]: db.add(UserModel(**d))
+            
             # Products
             logger.info(f"📦 Restoring {len(data['products'])} products...")
-            for p_dict in data["products"]:
-                # Remove ID to let DB generate or keep it? 
-                # Better keep it to maintain relationships in the JSON
-                p = ProductModel(**p_dict)
-                db.add(p)
-            db.flush()
-            
-            # Pending Matches
-            logger.info(f"⏳ Restoring {len(data['pending_matches'])} pending matches...")
-            for pm_dict in data["pending_matches"]:
-                pm = PendingMatchModel(**pm_dict)
-                db.add(pm)
-            
-            # Offers
-            logger.info(f"💰 Restoring {len(data['offers'])} offers...")
-            for o_dict in data["offers"]:
-                o = OfferModel(**o_dict)
-                db.add(o)
-            
-            # History
-            logger.info(f"📜 Restoring {len(data['offer_history'])} history entries...")
-            for h_dict in data["offer_history"]:
-                h = OfferHistoryModel(**h_dict)
-                db.add(h)
+            for d in data["products"]: db.add(ProductModel(**d))
+            db.flush() 
+
+            # Rest of tables
+            table_map = {
+                "pending_matches": PendingMatchModel,
+                "offers": OfferModel,
+                "offer_history": OfferHistoryModel,
+                "price_alerts": PriceAlertModel,
+                "collection_items": CollectionItemModel,
+                "blackcluded_items": BlackcludedItemModel,
+                "kaizen_insights": KaizenInsightModel,
+                "scraper_execution_logs": ScraperExecutionLogModel,
+                "price_history": PriceHistoryModel
+            }
+
+            for key, model in table_map.items():
+                if key in data:
+                    logger.info(f"🔄 Restoring {len(data[key])} {key}...")
+                    for d in data[key]: db.add(model(**d))
                 
             db.commit()
-            logger.info("✅ RESTORE COMPLETE. Eternia has been restored.")
+            
+            # 3. SYNC SEQUENCES (CRITICAL FOR POSTGRES/SUPABASE)
+            if "postgresql" in str(engine.url):
+                logger.info("⚡ Synchronizing Postgres ID sequences...")
+                for table in ["users", "products", "offers", "pending_matches", "offer_history", 
+                              "price_alerts", "collection_items", "blackcluded_items", 
+                              "kaizen_insights", "scraper_execution_logs", "price_history"]:
+                    db.execute(text(f"SELECT setval(pg_get_serial_sequence('{table}', 'id'), COALESCE(MAX(id), 1)) FROM {table}"))
+                db.commit()
+
+            logger.info("✅ RESTORE COMPLETE. Eternia has been restored and sequences synced.")
             
         except Exception as e:
             db.rollback()
             logger.error(f"❌ Restore failed during DB operations: {e}")
+            import traceback
+            traceback.print_exc()
         finally:
             db.close()
             

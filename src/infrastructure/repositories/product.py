@@ -14,7 +14,7 @@ class ProductRepository(BaseRepository[ProductModel]):
     def get_offer_by_url(self, url: str) -> Optional[OfferModel]:
         return self.db.query(OfferModel).filter(OfferModel.url == url).first()
     
-    def add_offer(self, product: ProductModel, offer_data: dict) -> tuple[OfferModel, Optional[float]]:
+    def add_offer(self, product: ProductModel, offer_data: dict, commit: bool = True) -> tuple[OfferModel, Optional[float]]:
         from src.domain.models import PriceHistoryModel
         
         target_url = offer_data["url"]
@@ -58,8 +58,11 @@ class ProductRepository(BaseRepository[ProductModel]):
             existing_offer.last_seen = datetime.utcnow()
             
             self.db.add(existing_offer)
-            self.db.commit()
-            self.db.refresh(existing_offer)
+            if commit:
+                self.db.commit()
+                self.db.refresh(existing_offer)
+            else:
+                self.db.flush()
             return existing_offer, alert_discount
         else:
             # Create new Offer
@@ -80,8 +83,11 @@ class ProductRepository(BaseRepository[ProductModel]):
             ph = PriceHistoryModel(offer_id=new_offer.id, price=current_price)
             self.db.add(ph)
             
-            self.db.commit()
-            self.db.refresh(new_offer)
+            if commit:
+                self.db.commit()
+                self.db.refresh(new_offer)
+            else:
+                self.db.flush()
             return new_offer, None
 
     def get_active_deals(self, min_discount: float = 0.20, max_original_price: float = None):

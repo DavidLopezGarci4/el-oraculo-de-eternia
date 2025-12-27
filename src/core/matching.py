@@ -61,20 +61,31 @@ class SmartMatcher:
     def match(self, product_name: str, scraped_title: str, scraped_url: str, db_ean: str = None, scraped_ean: str = None) -> Tuple[bool, float, str]:
         """
         Returns (IsMatch, Score, Reason)
-        Priority 1: EAN/GTIN Match (Universal Fingerprint)
-        Priority 2: Semantic Score (Jaccard)
+        Priority 1: EAN/GTIN Match (Universal Fingerprint - Optional)
+        Priority 2: Semantic Score (Jaccard - Fallback Default)
+        
+        NOTE: EAN is a trust multiplier, NOT a gatekeeper. If EAN is missing or invalid, 
+        the system MUST proceed to semantic fallback.
         """
-        # --- EAN MATCH (PHASE 10: PRECISION) ---
+        # --- EAN MATCH (PHASE 10 & 19: PRECISION) ---
         if db_ean and scraped_ean:
             # Clean both EANs (remove spaces/dashes)
             clean_db = re.sub(r'[^0-9]', '', str(db_ean))
             clean_scraped = re.sub(r'[^0-9]', '', str(scraped_ean))
             
-            if clean_db == clean_scraped and len(clean_db) >= 8: # Basic safety length
-                return True, 1.0, f"Perfect EAN Match: {db_ean}"
-            elif clean_db and clean_scraped:
-                # If both have EAN but differ, it's a high-confidence MISMATCH
-                return False, 0.0, f"EAN Mismatch: {db_ean} vs {scraped_ean}"
+            # EAN-13 Validation (Phase 19)
+            is_valid_ean = lambda x: len(x) == 13 and x.isdigit()
+            
+            if is_valid_ean(clean_db) and is_valid_ean(clean_scraped):
+                if clean_db == clean_scraped:
+                    return True, 1.0, f"Perfect EAN-13 Match: {db_ean}"
+                else:
+                    return False, 0.0, f"EAN-13 Mismatch: {db_ean} vs {scraped_ean}"
+            elif clean_db == clean_scraped and len(clean_db) >= 8: # Fallback for shorter codes
+                return True, 1.0, f"Perfect GTIN Match: {db_ean}"
+            
+            # If EANs are invalid or mismatching formats, we DON'T return False yet.
+            # We let the Semantic Fallback decide to avoid blocking items with "dirty" EAN data.
 
         # --- SEMANTIC FALLBACK ---
         # 1. DB Tokens (The Truth)

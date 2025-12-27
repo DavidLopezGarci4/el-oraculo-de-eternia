@@ -586,21 +586,71 @@ def _render_purgatory_content(db):
             st.session_state.purgatory_selection.clear()
             st.rerun()
 
+    # --- UNDO LAST ACTION (PHASE 19) ---
+    from src.domain.models import OfferHistoryModel, OfferModel
+    last_action = db.query(OfferHistoryModel).filter(OfferHistoryModel.action_type == "LINKED_MANUAL").order_by(OfferHistoryModel.timestamp.desc()).first()
+    
+    if last_action:
+        if st.button(f"⏪ Deshacer: Desvincular '{last_action.product_name}'", use_container_width=True):
+            try:
+                # 1. Fetch the actual Offer to trigger cascades (PriceHistory)
+                offer_to_remove = db.query(OfferModel).filter(OfferModel.url == last_action.offer_url).first()
+                if offer_to_remove:
+                    db.delete(offer_to_remove)
+                
+                # 2. Re-create PendingMatch (Atomic with the delete)
+                import json
+                meta = {}
+                try: meta = json.loads(last_action.details) if last_action.details else {}
+                except: pass
+                
+                undone_item = PendingMatchModel(
+                    scraped_name=last_action.product_name,
+                    shop_name=last_action.shop_name,
+                    price=last_action.price,
+                    url=last_action.offer_url,
+                    currency=meta.get("currency", "EUR"),
+                    image_url=meta.get("image_url"),
+                    ean=meta.get("ean")
+                )
+                db.add(undone_item)
+                
+                # 3. Mark action as undone
+                last_action.action_type = "LINKED_MANUAL_UNDONE"
+                db.commit()
+                st.toast("⏪ Acción revertida. El ítem ha vuelto al Purgatorio.")
+                # Clear suggestions cache to force re-calculation if needed
+                if "purgatory_suggestions" in st.session_state:
+                    st.session_state.purgatory_suggestions.clear()
+                st.rerun()
+            except Exception as e:
+                st.error(f"Error al deshacer: {e}")
+                db.rollback()
+
     st.divider()
 
-    # Group controls
-    for item in pending_items:
-        # Lógica de Sugerencia Inteligente
-        best_match = None
-        best_score = 0.0
-        
-        # Solo buscamos sugerencias si hay productos y es la página actual (ahorro CPU)
-        for p in all_products:
-            is_m, score, _ = matcher.match(p.name, item.scraped_name, item.url)
-            if score > best_score:
-                best_score = score
-                best_match = p
-        
+    # --- CACHE DE SUGERENCIAS (PHASE 19: Performance) ---
+    if "purgatory_suggestions" not in st.session_state:
+        st.session_state.purgatory_suggestions = {}
+
+    @st.fragment
+    def render_purgatory_item(item, all_products, matcher):
+        # Usar caché si existe para este item
+        if item.id in st.session_state.purgatory_suggestions:
+            best_match, best_score = st.session_state.purgatory_suggestions[item.id]
+            # Verificar si el producto aún existe en el catálogo actual
+            if best_match and best_match not in all_products:
+                 best_match = None # Reset if catálogo changed
+        else:
+            best_match = None
+            best_score = 0.0
+            for p in all_products:
+                _, score, _ = matcher.match(p.name, item.scraped_name, item.url, db_ean=p.ean, scraped_ean=item.ean)
+                if score > best_score:
+                    best_score = score
+                    best_match = p
+            st.session_state.purgatory_suggestions[item.id] = (best_match, best_score)
+
         col_select, col_expander = st.columns([0.1, 9.9])
         
         with col_select:
@@ -613,7 +663,8 @@ def _render_purgatory_content(db):
         with col_expander:
             with st.expander(f"{item.scraped_name} - {item.shop_name} ({item.price}€)", expanded=(best_score > 0.8)):
                 if item.image_url:
-                    st.image(item.image_url, width=100)
+                    # Optimized Thumbnails: Using CSS to limit height and avoid layout shift
+                    st.markdown(f'<img src="{item.image_url}" style="height:150px; border-radius:10px; margin-bottom:10px; object-fit: contain;">', unsafe_markdown=True)
                 
                 if best_match:
                     st.info(f"🎯 **Sugerencia del Oráculo:** {best_match.name} (Confianza: {best_score:.2%})")
@@ -622,63 +673,72 @@ def _render_purgatory_content(db):
                 render_external_link(item.url, "Abrir Enlace", key_suffix=f"purg_{item.id}")
                 
                 c1, c2, c3 = st.columns([2, 1, 1])
-            
-            # Match
-            from src.infrastructure.repositories.product import ProductRepository
-            repo = ProductRepository(db)
-            
-            # Selection con sugerencia por defecto
-            idx_suggestion = 0
-            if best_match:
-                try:
-                    idx_suggestion = all_products.index(best_match)
-                except ValueError: pass
+                
+                # Selection logic (syncing with outside state)
+                idx_suggestion = 0
+                if best_match:
+                    try:
+                        idx_suggestion = all_products.index(best_match)
+                    except ValueError: pass
 
-            target_p = c1.selectbox("Vincular a:", all_products, index=idx_suggestion, format_func=lambda x: x.name, key=f"purg_sel_{item.id}")
-            
-            if c2.button("✅ Vincular", key=f"purg_ok_{item.id}"):
-                if target_p:
-                    # RE-FETCH to attach to current session
-                    fresh_p = db.query(ProductModel).filter(ProductModel.id == target_p.id).first()
-                    if fresh_p:
-                        repo.add_offer(fresh_p, {
-                            "shop_name": item.shop_name,
-                            "price": item.price,
-                            "currency": item.currency,
-                            "url": item.url,
-                            "is_available": True
-                        })
-                        db.delete(item)
-                        db.commit()
-                        
-                        # LOG HISTORY: MANUAL_LINK
-                        try:
-                            from src.domain.models import OfferHistoryModel
-                            history = OfferHistoryModel(
-                                offer_url=item.url,
-                                product_name=item.scraped_name,
-                                shop_name=item.shop_name,
-                                price=item.price,
-                                action_type="LINKED_MANUAL",
-                                details=f"Manually linked to product '{fresh_p.name}' (ID: {fresh_p.id}) by admin."
-                            )
-                            db.add(history)
-                            db.commit()
-                        except: pass
-                        
-                        st.toast("Vinculado.")
-                        st.rerun()
-                    else:
-                        st.error("Producto no encontrado.")
-            
-            if c3.button("🔥 Descartar", key=f"purg_del_{item.id}"):
-                # Blacklist
-                bl = BlackcludedItemModel(url=item.url, scraped_name=item.scraped_name, reason="purgatory_discard")
-                db.add(bl)
-                db.delete(item)
-                db.commit()
-                st.toast("Descartado.")
-                st.rerun()
+                target_p = c1.selectbox("Vincular a:", all_products, index=idx_suggestion, format_func=lambda x: x.name, key=f"purg_sel_{item.id}")
+                
+                if c2.button("✅ Vincular", key=f"purg_ok_{item.id}", type="primary"):
+                    if target_p:
+                        # RE-FETCH in a local session inside fragment? No, better use a tool or helper.
+                        # For now, we'll use a direct DB action.
+                        from src.infrastructure.database import SessionLocal
+                        with SessionLocal() as local_db:
+                            from src.infrastructure.repositories.product import ProductRepository
+                            local_repo = ProductRepository(local_db)
+                            fresh_p = local_db.query(ProductModel).filter(ProductModel.id == target_p.id).first()
+                            fresh_item = local_db.query(PendingMatchModel).filter(PendingMatchModel.id == item.id).first()
+                            
+                            if fresh_p and fresh_item:
+                                local_repo.add_offer(fresh_p, {
+                                    "shop_name": fresh_item.shop_name,
+                                    "price": fresh_item.price,
+                                    "currency": fresh_item.currency,
+                                    "url": fresh_item.url,
+                                    "is_available": True,
+                                    "ean": fresh_item.ean
+                                })
+                                # LOG HISTORY
+                                try:
+                                    import json
+                                    from src.domain.models import OfferHistoryModel
+                                    metadata = {"currency": fresh_item.currency, "image_url": fresh_item.image_url, "ean": fresh_item.ean}
+                                    history = OfferHistoryModel(
+                                        offer_url=fresh_item.url,
+                                        product_name=fresh_item.scraped_name,
+                                        shop_name=fresh_item.shop_name,
+                                        price=fresh_item.price,
+                                        action_type="LINKED_MANUAL",
+                                        details=json.dumps(metadata)
+                                    )
+                                    local_db.add(history)
+                                except: pass
+                                
+                                local_db.delete(fresh_item)
+                                local_db.commit()
+                                st.toast("Vinculado con éxito.")
+                                st.rerun()
+                
+                if c3.button("🔥 Descartar", key=f"purg_del_{item.id}"):
+                     from src.infrastructure.database import SessionLocal
+                     with SessionLocal() as local_db:
+                        fresh_item = local_db.query(PendingMatchModel).filter(PendingMatchModel.id == item.id).first()
+                        if fresh_item:
+                            bl = BlackcludedItemModel(url=fresh_item.url, scraped_name=fresh_item.scraped_name, reason="purgatory_discard")
+                            local_db.add(bl)
+                            local_db.delete(fresh_item)
+                            local_db.commit()
+                            st.toast("Descartado.")
+                            st.rerun()
+
+    # Render items
+    for item in pending_items:
+        render_purgatory_item(item, all_products, matcher)
 
 def _render_bunker_control(db):
     """
@@ -757,22 +817,26 @@ def _render_bunker_control(db):
 
     with st.expander("📖 Protocolo de Grayskull (Manual de Recuperación)"):
         st.markdown("""
-        ### 🧪 Procedimiento de Emergencia
-        Este panel permite al **Administrador** revertir el estado del Oráculo si se detectan anomalías tras un escaneo o un error manual.
+        ### 🧪 Procedimiento de Emergencia y Salvaguarda Total
+        Este panel es la **Llave Maestra** para revertir el estado del Oráculo si ocurre un desastre.
         
+        **📍 ¿A dónde van los datos?**
+        La restauración es un "Efecto Espejo". El sistema toma el sello JSON y sobrescribe la base de datos que esté activa en ese momento (**Supabase** si estás en la nube, **SQLite** si estás en local). No necesitas configurar nada adicional; el Oráculo sabe dónde vive su poder.
+
+        **⚙️ ¿Qué es automático y qué no?**
+        - **Auto-Protección (Activa):** El sistema ya tiene un *Circuit Breaker* que frena actualizaciones locas y un *Query Shield* que evita errores de esquema. Si algo falla durante el día, el robot intentará auto-corregirse solo.
+        - **Restauración (Manual por Seguridad):** La vuelta al pasado (Time Machine) es manual para evitar que el sistema borre datos nuevos por error al intentar "ayudarte" tras un fallo de red. Tú tienes el control final.
+
         **1. Selección del Sello:**
-        - Revisa las fechas en la columna **Bóvedas del Oráculo**.
-        - El sello más reciente suele ser el más seguro.
+        - El sello más reciente es el punto de retorno estándar.
         
         **2. Restauración (Botón ♻️):**
-        - Al pulsar el botón, el sistema entrará en modo de espera.
-        - Aparecerá una advertencia roja. Confirma solo si estás seguro.
-        - **⚠️ AVISO:** Se borrará TODO el catálogo actual para ser reemplazado por la copia de seguridad.
+        - Se borrará TODO el catálogo actual para ser reemplazado por la copia. 
+        - **Acción Post-Rescate:** Ninguna. Solo recarga la pestaña del navegador para ver tu catálogo restaurado.
         
         **3. Sellado Manual:**
-        - Si vas a realizar acciones drásticas (borrados masivos), pulsa primero **Sellar Bóveda Ahora**.
-        - Esto creará un "punto de retorno" por si algo sale mal.
+        - Usa **Sellar Bóveda Ahora** antes de hacer limpiezas masivas en el Purgatorio.
         
-        **4. Recuperación Crítica (Terminal):**
-        - Si la web no carga, usa el terminal: `python src/jobs/restore_vault.py`
+        **4. Último Recurso (Terminal):**
+        - Si la web cae: `python src/jobs/restore_vault.py`
         """)

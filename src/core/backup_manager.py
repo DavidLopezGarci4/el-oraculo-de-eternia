@@ -65,13 +65,19 @@ class BackupManager:
         vault = {
             "metadata": {
                 "timestamp": datetime.now().isoformat(),
-                "version": "1.0"
+                "version": "1.1-TOTAL"
             },
             "data": {
+                "users": [],
                 "products": [],
                 "offers": [],
                 "pending_matches": [],
-                "offer_history": []
+                "offer_history": [],
+                "price_alerts": [],
+                "collection_items": [],
+                "blackcluded_items": [],
+                "kaizen_insights": [],
+                "scraper_execution_logs": []
             }
         }
 
@@ -86,11 +92,23 @@ class BackupManager:
                     d[column.name] = val
                 return d
 
+            from src.domain.models import (
+                UserModel, ProductModel, OfferModel, PendingMatchModel, 
+                OfferHistoryModel, PriceAlertModel, CollectionItemModel,
+                BlackcludedItemModel, KaizenInsightModel, ScraperExecutionLogModel
+            )
+
             # Extract data
+            vault["data"]["users"] = [to_dict(u) for u in db_session.query(UserModel).all()]
             vault["data"]["products"] = [to_dict(p) for p in db_session.query(ProductModel).all()]
             vault["data"]["offers"] = [to_dict(o) for o in db_session.query(OfferModel).all()]
             vault["data"]["pending_matches"] = [to_dict(pm) for pm in db_session.query(PendingMatchModel).all()]
             vault["data"]["offer_history"] = [to_dict(h) for h in db_session.query(OfferHistoryModel).all()]
+            vault["data"]["price_alerts"] = [to_dict(a) for a in db_session.query(PriceAlertModel).all()]
+            vault["data"]["collection_items"] = [to_dict(ci) for ci in db_session.query(CollectionItemModel).all()]
+            vault["data"]["blackcluded_items"] = [to_dict(bi) for bi in db_session.query(BlackcludedItemModel).all()]
+            vault["data"]["kaizen_insights"] = [to_dict(ki) for ki in db_session.query(KaizenInsightModel).all()]
+            vault["data"]["scraper_execution_logs"] = [to_dict(el) for el in db_session.query(ScraperExecutionLogModel).all()]
 
             file_path = self.db_backups_path / filename
             with open(file_path, "w", encoding="utf-8") as f:

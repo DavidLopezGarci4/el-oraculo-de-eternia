@@ -200,6 +200,23 @@ async def run_daily_scan(progress_callback=None):
                 # 1. Scrape
                 offers = await scraper.run(context)
                 
+                # PHASE 19: Health & Block Alerts (Sentinel)
+                from src.core.notifier import NotifierService
+                notifier = NotifierService()
+                if not offers:
+                    if getattr(scraper, 'blocked', False):
+                        logger.error(f"[{scraper.spider_name}] 🚫 Blocked by anti-bot measures.")
+                        msg = f"🚫 **DESTIERRO DETECTADO**\n\nEl Oráculo ha sido bloqueado por **{scraper.spider_name}**. Se requieren medidas de evasión táctica."
+                        await notifier.send_message(msg)
+                        log_entry.status = "blocked"
+                        log_entry.error_message = "Anti-bot block detected"
+                    else:
+                        logger.warning(f"[{scraper.spider_name}] ⚠️ Empty scan results.")
+                        # Alert if this is a shop that usually has items (most of them)
+                        msg = f"⚠️ **SALUD COMPROMETIDA**\n\nEl scraper de **{scraper.spider_name}** ha devuelto 0 resultados. Podría ser un cambio de estructura HTML o falta de stock real."
+                        await notifier.send_message(msg)
+                        log_entry.status = "empty_warning"
+                
                 # 2. Persist
                 if offers:
                     # PHASE 10: Deep Harvest (Precision)

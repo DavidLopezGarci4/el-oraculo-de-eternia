@@ -42,8 +42,8 @@ class PixelatoyScraper(BaseScraper):
                 html_content = await page.content()
                 soup = BeautifulSoup(html_content, 'html.parser')
                 
-                # Container
-                items = soup.select('article.product-miniature')
+                # Container (Refined with js- variant for PrestaShop modern themes)
+                items = soup.select('article.product-miniature, article.js-product-miniature')
                 logger.info(f"[{self.spider_name}] Found {len(items)} items on page {page_num}")
                 
                 for item in items:
@@ -53,7 +53,7 @@ class PixelatoyScraper(BaseScraper):
                         self.items_scraped += 1
                 
                 # Pagination
-                next_tag = soup.select_one('a.next.js-search-link')
+                next_tag = soup.select_one('a.next.js-search-link, .pagination .next a')
                 if next_tag and next_tag.get('href'):
                     current_url = next_tag.get('href')
                     page_num += 1
@@ -140,4 +140,15 @@ class PixelatoyScraper(BaseScraper):
         return {}
 
     async def _handle_popups(self, page: Page):
-        pass
+        """
+        Pixelatoy specific: Close cookie banners and newsletters.
+        """
+        try:
+            # Common PrestaShop cookie accept button
+            accept_btn = page.locator("button:has-text('ACEPTAR'), .btn-primary:has-text('Aceptar'), button[aria-label='Accept']")
+            if await accept_btn.is_visible(timeout=3000):
+                logger.info(f"[{self.spider_name}] 🍪 Accepting cookies...")
+                await accept_btn.click()
+                await asyncio.sleep(0.5)
+        except Exception:
+            pass

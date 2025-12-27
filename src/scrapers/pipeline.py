@@ -99,7 +99,7 @@ class ScrapingPipeline:
                         "currency": offer.currency, 
                         "url": str(offer.url),
                         "is_available": offer.is_available
-                    })
+                    }, commit=False) # PHASE 19: Batching
                     
                     # Centinela Check
                     from src.core.notifier import NotifierService
@@ -132,11 +132,13 @@ class ScrapingPipeline:
                         "currency": offer.currency, 
                         "url": str(offer.url),
                         "is_available": offer.is_available
-                    })
+                    }, commit=False) # PHASE 19: Batching
                     
                     if alert_discount:
                         from src.core.notifier import NotifierService
                         notifier = NotifierService()
+                        # Note: Notification stays sync but repo didn't commit yet. 
+                        # This works because add_offer did a flush.
                         notifier.send_deal_alert_sync(best_match_product, saved_offer, alert_discount)
                     
                     # Centinela Check (Fase 15)
@@ -188,7 +190,7 @@ class ScrapingPipeline:
                         try:
                             pending = PendingMatchModel(**pending_data)
                             db.add(pending)
-                            db.commit()
+                            # NO INDIVIDUAL COMMIT HERE (PHASE 19)
                         except TypeError as e:
                             # Level 4 Safeguard: If instantiation fails due to keyword args, 
                             # try a safe fallback without extra metadata
@@ -197,7 +199,6 @@ class ScrapingPipeline:
                             safe_data = {k: v for k, v in pending_data.items() if k not in ['ean', 'image_url']}
                             pending = PendingMatchModel(**safe_data)
                             db.add(pending)
-                            db.commit()
                         except Exception as e:
                             logger.error(f"❌ Critical DB failure in Purgatory routing: {e}")
                             db.rollback()
@@ -214,8 +215,11 @@ class ScrapingPipeline:
                                 details=f"Match score too low ({best_match_score:.2f}). Moved to Purgatory."
                             )
                             db.add(history)
-                            db.commit()
                         except: pass
+            
+            # FINAL BATCH COMMIT (PHASE 19)
+            db.commit()
+            logger.info("⚡ Batch Commit Complete: All offers persisted in a single spark.")
 
         finally:
             db.close()

@@ -8,15 +8,31 @@ from datetime import datetime
 logger = logging.getLogger("notifier")
 
 class NotifierService:
+    _last_sent = {} # Class-level cache to persist across instances in same process
+
     def __init__(self):
         self.token = settings.TELEGRAM_BOT_TOKEN
         self.chat_id = settings.TELEGRAM_CHAT_ID
         self.api_url = f"https://api.telegram.org/bot{self.token}/sendMessage" if self.token else None
 
+    def _should_throttle(self, key: str, minutes: int = 60) -> bool:
+        """
+        Returns True if the message should be throttled.
+        """
+        now = datetime.utcnow()
+        if key in self._last_sent:
+            last_time = self._last_sent[key]
+            if (now - last_time).total_seconds() < (minutes * 60):
+                return True
+        self._last_sent[key] = now
+        return False
+
     async def send_deal_alert(self, product, offer, discount: float):
-        from src.domain.models import ProductModel, OfferModel
         if not self.api_url or not self.chat_id:
-            logger.warning("Telegram NOT configured. Skipping alert.")
+            return
+
+        # Rate limit per product to avoid spamming the same deal
+        if self._should_throttle(f"deal_{product.name}", minutes=120): # 2 hours
             return
 
         savings = offer.max_price - offer.price
@@ -48,9 +64,12 @@ class NotifierService:
             logger.error(f"❌ Failed to send Telegram alert: {e}")
 
     def send_deal_alert_sync(self, product, offer, discount: float):
-        from src.domain.models import ProductModel, OfferModel
         """Synchronous version for use in sync pipeline context"""
         if not self.api_url or not self.chat_id:
+            return
+
+        # Rate limit per product
+        if self._should_throttle(f"deal_{product.name}", minutes=120):
             return
 
         savings = offer.max_price - offer.price
@@ -82,8 +101,15 @@ class NotifierService:
             logger.error(f"❌ Failed to send Telegram alert: {e}")
 
     async def send_message(self, text: str):
-        """Generic message sender"""
+        """Generic message sender with anti-spam protection"""
         if not self.api_url or not self.chat_id:
+            return
+
+        # Rate limit based on message content to avoid alert loops
+        import hashlib
+        msg_hash = hashlib.md5(text.encode()).hexdigest()
+        if self._should_throttle(f"msg_{msg_hash}", minutes=30):
+            logger.warning(f"Throttling duplicate message: {text[:50]}...")
             return
 
         payload = {
