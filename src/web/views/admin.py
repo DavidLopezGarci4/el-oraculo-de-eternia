@@ -667,21 +667,31 @@ def _render_purgatory_content(db):
                     st.markdown(f'<img src="{item.image_url}" style="height:150px; border-radius:10px; margin-bottom:10px; object-fit: contain;">', unsafe_markdown=True)
                 
                 if best_match:
-                    st.info(f"🎯 **Sugerencia del Oráculo:** {best_match.name} (Confianza: {best_score:.2%})")
+                    confidence_color = "green" if best_score > 0.9 else ("orange" if best_score > 0.7 else "gray")
+                    st.markdown(f"""
+                        <div style="border: 1px solid {confidence_color}; border-left: 5px solid {confidence_color}; padding: 10px; border-radius: 5px; background-color: rgba(0,0,0,0.05); margin-bottom: 10px;">
+                            <span style="color: {confidence_color}; font-weight: bold;">🎯 Sugerencia del Oráculo:</span> {best_match.name} 
+                            <br><small>Nivel de Confianza: {best_score:.2%}</small>
+                        </div>
+                    """, unsafe_markdown=True)
                 
                 from src.web.shared import render_external_link
                 render_external_link(item.url, "Abrir Enlace", key_suffix=f"purg_{item.id}")
                 
                 c1, c2, c3 = st.columns([2, 1, 1])
                 
-                # Selection logic (syncing with outside state)
+                # Robust selection logic
                 idx_suggestion = 0
                 if best_match:
                     try:
-                        idx_suggestion = all_products.index(best_match)
-                    except ValueError: pass
+                        # Find the index by ID to avoid reference issues
+                        for i, p in enumerate(all_products):
+                            if p.id == best_match.id:
+                                idx_suggestion = i
+                                break
+                    except Exception: pass
 
-                target_p = c1.selectbox("Vincular a:", all_products, index=idx_suggestion, format_func=lambda x: x.name, key=f"purg_sel_{item.id}")
+                target_p = c1.selectbox("Vincular a:", all_products, index=idx_suggestion, format_func=lambda x: f"{'✨ ' if best_match and x.id == best_match.id else ''}{x.name}", key=f"purg_sel_{item.id}", help="El Oráculo ha pre-seleccionado la opción más probable.")
                 
                 if c2.button("✅ Vincular", key=f"purg_ok_{item.id}", type="primary"):
                     if target_p:
