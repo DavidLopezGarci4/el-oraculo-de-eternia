@@ -25,7 +25,7 @@ class FantasiaScraper(BaseScraper):
         try:
             current_url = self.base_url
             page_num = 1
-            max_pages = 5
+            max_pages = 20 # Increased limit for sanity, 8+ seen by user
             
             while current_url and page_num <= max_pages:
                 logger.info(f"[{self.spider_name}] Scraping page {page_num}: {current_url}")
@@ -33,32 +33,33 @@ class FantasiaScraper(BaseScraper):
                 if not await self._safe_navigate(page, current_url):
                     break
                 
-                await asyncio.sleep(2.0)
+                await self._handle_popups(page)
+                await asyncio.sleep(1.5)
                 
                 html_content = await page.content()
                 soup = BeautifulSoup(html_content, 'html.parser')
                 
-                # Strategy 1: Auditor's Recommendation (JSON-LD)
-                json_products = self._extract_from_json_ld(soup)
-                if json_products:
-                    logger.info(f"[{self.spider_name}] ⚡ Used JSON-LD extraction for {len(json_products)} items.")
-                    products.extend(json_products)
-                    self.items_scraped += len(json_products)
-                else:
-                    # Strategy 2: Verified CSS Selectors (Fallback)
-                    items = soup.select('article.product-miniature')
-                    logger.info(f"[{self.spider_name}] Found {len(items)} items using CSS.")
-                    
-                    for item in items:
-                        prod = self._parse_html_item(item)
-                        if prod:
-                            products.append(prod)
-                            self.items_scraped += 1
+                # Strategy 1: Verified CSS Selectors (Primary for results)
+                items = soup.select('article.product-miniature')
+                logger.info(f"[{self.spider_name}] Found {len(items)} items using CSS.")
                 
-                # Pagination
-                next_tag = soup.select_one('a.next.js-search-link')
-                if next_tag and next_tag.get('href'):
+                if not items:
+                    # Fallback to secondary container pattern
+                    items = soup.select('.product-miniature')
+                    
+                for item in items:
+                    prod = self._parse_html_item(item)
+                    if prod:
+                        products.append(prod)
+                        self.items_scraped += 1
+                
+                # Pagination: PrestaShop .next.js-search-link
+                next_tag = soup.select_one('a.next.js-search-link, li.next a')
+                if next_tag and next_tag.get('href') and 'javascript:void' not in next_tag.get('href'):
                     current_url = next_tag.get('href')
+                    # PrestaShop relative link check
+                    if current_url.startswith('/'):
+                        current_url = f"https://fantasiapersonajes.es{current_url}"
                     page_num += 1
                 else:
                     logger.info(f"[{self.spider_name}] End of pagination.")
@@ -76,51 +77,51 @@ class FantasiaScraper(BaseScraper):
     def _parse_html_item(self, item) -> Optional[ScrapedOffer]:
         try:
             # 1. Link & Name
-            a_tag = item.select_one('h3.h3.product-title a')
+            # Site changed h3 to h2 in current structure
+            a_tag = item.select_one('h2.product-title a, h3.product-title a, .product-title a')
             if not a_tag: return None
             
             link = a_tag.get('href')
             name = a_tag.get_text(strip=True)
             
+            if link and link.startswith('/'):
+                 link = f"https://fantasiapersonajes.es{link}"
+
             # 2. Price (PrestaShop Content Attribute Pattern)
             price_val = 0.0
-            price_span = item.select_one('span.price')
+            # Current display price selector
+            price_span = item.select_one('span.product-price, span.price')
             
             if price_span:
-                # Try attribute first
+                # Try attribute first (very reliable for EUR)
                 if price_span.has_attr('content'):
                     try:
-                        price_val = float(price_span['content'])
+                        price_val = float(price_span['content'].replace(',', '.'))
                     except:
                         pass
                 
-                # Fallback to text cleaning if attribute fails or is missing
+                # Fallback to text cleaning
                 if price_val == 0.0:
                     price_val = self._normalize_price(price_span.get_text(strip=True))
             
             if price_val == 0.0:
-                # One last attempt: look for meta[itemprop="price"] inside item
+                # One last attempt: look for meta[itemprop="price"]
                 meta_price = item.select_one('meta[itemprop="price"]')
                 if meta_price and meta_price.has_attr('content'):
-                    price_val = self._normalize_price(meta_price['content'])
+                    try:
+                        price_val = float(meta_price['content'].replace(',', '.'))
+                    except:
+                        pass
             
-            if price_val == 0.0:
-                 # Super fallback: clean all text from price span
-                 if price_span:
-                     text = price_span.get_text(strip=True)
-                     import re
-                     # Extract numbers and dots/commas
-                     clean = re.sub(r'[^0-9,\.]', '', text)
-                     price_val = self._normalize_price(clean)
-
             if price_val == 0.0:
                 logger.debug(f"[{self.spider_name}] Skipping item {name} - Price could not be parsed.")
                 return None
 
             # 3. Availability
             is_avl = True
-            # Check for 'product-unavailable' class
-            if item.select_one('.product-unavailable'):
+            # Check for badges or classes indicating out of stock
+            out_of_stock = item.select_one('.product-flags .out-of-stock, .product-unavailable')
+            if out_of_stock:
                 is_avl = False
             
             # 4. Image
@@ -128,6 +129,8 @@ class FantasiaScraper(BaseScraper):
             img_url = None
             if img_tag:
                  img_url = img_tag.get('data-src') or img_tag.get('src') 
+                 if img_url and img_url.startswith('/'):
+                     img_url = f"https://fantasiapersonajes.es{img_url}"
 
             return ScrapedOffer(
                 product_name=name,
