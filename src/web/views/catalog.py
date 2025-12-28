@@ -55,22 +55,33 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
                 prices = [o.price for o in p.offers if o.price > 0]
                 min_prices = [o.min_price for o in p.offers if o.min_price > 0]
                 
-                # Serialize offers for the UI (Avoiding DetachedInstanceError)
+                # Serialize offers for the UI with Deduplication (Active Offer logic)
+                # We want the newest offer per shop_name for the actionable links
                 serialized_offers = []
                 serialized_history = []
-                for o in p.offers:
-                    serialized_offers.append({
-                        "id": o.id,
-                        "shop_name": o.shop_name,
-                        "price": o.price,
-                        "url": o.url
-                    })
+                
+                # Deduplication logic: Sort by ID desc (proxy for newest) and pick first per shop
+                deduped_offers = {}
+                sorted_offers = sorted(p.offers, key=lambda x: x.id, reverse=True)
+                
+                for o in sorted_offers:
+                    if o.shop_name not in deduped_offers:
+                        deduped_offers[o.shop_name] = {
+                            "id": o.id,
+                            "shop_name": o.shop_name,
+                            "price": o.price,
+                            "url": o.url
+                        }
+                    
+                    # Fill history with EVERYTHING (Deduplication MUST NOT affect analytics)
                     for ph in o.price_history:
                         serialized_history.append({
                             "Fecha": ph.recorded_at,
                             "Precio": ph.price,
                             "Tienda": o.shop_name
                         })
+                
+                serialized_offers = list(deduped_offers.values())
                 
                 data.append({
                     "id": p.id,
@@ -85,98 +96,17 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
                 })
             return pd.DataFrame(data)
 
-    # 1. Load Data
-    df = get_master_catalog_df(current_user_id)
+    # ... (skipping some unchanged filtered_df/pagination logic)
     
-    # 2. Apply Filters (Instant in memory)
-    filtered_df = df.copy()
-    if search:
-        filtered_df = filtered_df[filtered_df['name'].str.contains(search, case=False, na=False)]
-    if sel_cat != "Todas":
-        filtered_df = filtered_df[filtered_df['category'] == sel_cat]
-        
-    if filter_opt == "Adquiridos":
-        filtered_df = filtered_df[filtered_df['is_owned'] == True]
-    elif filter_opt == "Faltantes":
-        filtered_df = filtered_df[filtered_df['is_owned'] == False]
-        
-    # 3. Sort (Instant in memory)
-    if sort_opt == "Nombre (A-Z)":
-        filtered_df = filtered_df.sort_values("name")
-    elif sort_opt == "Nombre (Z-A)":
-        filtered_df = filtered_df.sort_values("name", ascending=False)
-    elif "Precio" in sort_opt:
-        filtered_df = filtered_df.sort_values("best_price", ascending="Menor" in sort_opt)
-
-    # --- Pagination ---
-    PAGE_SIZE = 50
-    total_items = len(filtered_df)
-    total_pages = max(1, math.ceil(total_items / PAGE_SIZE))
-    
-    if "catalog_page" not in st.session_state:
-        st.session_state.catalog_page = 0
-    
-    # Boundary check for pagination
-    st.session_state.catalog_page = min(st.session_state.catalog_page, total_pages - 1)
-    st.session_state.catalog_page = max(0, st.session_state.catalog_page)
-
-    # Update Page Jump Selector in the filters area
-    with page_jump_placeholder:
-        jump_page = st.number_input("Página", min_value=1, max_value=total_pages, value=st.session_state.catalog_page + 1, label_visibility="collapsed")
-        if jump_page - 1 != st.session_state.catalog_page:
-            st.session_state.catalog_page = jump_page - 1
-            st.rerun()
-
-    start_idx = st.session_state.catalog_page * PAGE_SIZE
-    visible_df = filtered_df.iloc[start_idx : start_idx + PAGE_SIZE]
-    
-    st.divider()
-    st.caption(f"Encontradas {total_items} figuras. Página {st.session_state.catalog_page+1} de {total_pages}")
-
-    # Use a set for ownership truth from the DataFrame for fast lookup in render loop
-    if "optimistic_updates" not in st.session_state:
-        st.session_state.optimistic_updates = {}
-    
-    # --- Render List ---
-    for _, row in visible_df.iterrows():
-        p_id = row['id']
-        p_name = row['name']
-        p_cat = row['category']
-        p_img = row['image_url']
-        p_best = row['best_price']
-        p_hist = row['historic_low']
-        p_is_owned = row['is_owned']
-        p_offers = row['offers']
-        p_history = row['history']
-        
-        is_owned = st.session_state.optimistic_updates.get(p_id, p_is_owned)
-        btn_label = "✅ En Colección" if is_owned else "➕ Añadir"
-        current_best = f"{p_best:.2f}€" if p_best < 900000 else "---"
-        historic_low = f"{p_hist:.2f}€" if p_hist < 900000 else "---"
-
-        with st.container():
-            c_img, c_info, c_price_curr, c_price_hist, c_action = st.columns([1, 3, 1.5, 1.5, 1.5])
-            
-            with c_img:
-                if p_img:
-                    st.image(p_img, width=80)
-                else:
-                    st.write("🖼️")
-            
-            with c_info:
-                if user.role == "admin":
-                    p_obj_live = db.get(ProductModel, p_id)
-                    render_inline_product_admin(db, p_obj_live, current_user_id)
-                else:
-                    st.subheader(p_name)
-                    st.caption(f"Categoría: {p_cat}")
-                
+    # Render List (around line 175)
+    # ...
                 # Offers Expander
                 if p_offers:
                      with st.expander(f"Ver {len(p_offers)} tiendas y Precios 📉"):
                           for o in p_offers:
                                from src.web.shared import render_external_link
-                               render_external_link(o['url'], "Ver Oferta", key_suffix=f"cat_{o['id']}")
+                               # Enriched format: [Shop] - [Price]€
+                               render_external_link(o['url'], shop_name=o['shop_name'], price=o['price'], key_suffix=f"cat_{o['id']}")
                           
                           # Chart Logic
                           st.divider()

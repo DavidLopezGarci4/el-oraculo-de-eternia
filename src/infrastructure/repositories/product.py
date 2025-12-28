@@ -93,8 +93,12 @@ class ProductRepository(BaseRepository[ProductModel]):
     def get_active_deals(self, min_discount: float = 0.20, max_original_price: float = None):
         """
         Find offers where current price is lower than max_price by at least min_discount.
+        Deduplication: Only returns the most recent offer per (product, shop).
         Returns list of (Product, Offer, discount_percent) sorted by discount.
         """
+        from sqlalchemy import desc
+        
+        # 1. Base query for active, discounted offers
         query = self.db.query(OfferModel).join(ProductModel).filter(
             OfferModel.is_available == True,
             OfferModel.max_price > 0,
@@ -103,13 +107,20 @@ class ProductRepository(BaseRepository[ProductModel]):
         
         if max_original_price is not None:
              query = query.filter(OfferModel.max_price <= max_original_price)
-             
-        offers = query.all()
         
-        results = []
+        # 2. Get all candidates and deduplicate in Python for maximum compatibility (SQLite/Postgres)
+        # We sort by last_seen desc to ensure the first one we find is the latest
+        offers = query.order_by(desc(OfferModel.last_seen)).all()
+        
+        deduped = {}
         for o in offers:
-            discount = 1 - (o.price / o.max_price)
-            results.append((o.product, o, discount))
-            # Sort by discount desc
+            key = (o.product_id, o.shop_name)
+            if key not in deduped:
+                discount = 1 - (o.price / o.max_price)
+                deduped[key] = (o.product, o, discount)
+        
+        results = list(deduped.values())
+        
+        # 3. Final sort by discount desc
         results.sort(key=lambda x: x[2], reverse=True)
         return results

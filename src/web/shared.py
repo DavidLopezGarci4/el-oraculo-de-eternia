@@ -35,9 +35,14 @@ def toggle_ownership(db, product_id: int, user_id: int):
         st.error(f"Error actualizando colección: {e}")
         return False
 
-def render_external_link(url: str, text: str = "Ver Oferta", key_suffix: str = ""):
+def render_external_link(url: str, shop_name: str = None, price: float = None, text: str = "Ver Oferta", key_suffix: str = ""):
     """
-    Renders a safe external link using native Streamlit components.
+    Renders an enriched external link button.
+    Format: [Shop Name] - [Price]€
     """
-    # Use native link_button which handles external links securely and reliably
-    st.link_button(f"🔗 {text}", url, use_container_width=True)
+    if shop_name and price is not None:
+        button_text = f"{shop_name} - {price:.2f}€"
+    else:
+        button_text = text
+        
+    st.link_button(f"🔗 {button_text}", url, use_container_width=True)

@@ -55,7 +55,7 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
                 st.markdown(f"**{offer.price:.2f}€**")
                 st.caption(f"Antes: ~{offer.max_price:.2f}€~")
                 from src.web.shared import render_external_link
-                render_external_link(offer.url, f"Visitar {offer.shop_name}", key_suffix=f"hunt_{offer.id}")
+                render_external_link(offer.url, shop_name=offer.shop_name, price=offer.price, key_suffix=f"hunt_{offer.id}")
                 
                 # Actions
                 c_act1, c_act2 = st.columns(2)
