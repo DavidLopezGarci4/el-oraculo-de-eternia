@@ -78,7 +78,7 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
                         serialized_history.append({
                             "Fecha": ph.recorded_at,
                             "Precio": ph.price,
-                            "Tienda": o.shop_name
+                            "Tienda": "Fantasía Personajes" if o.shop_name == "Fantasia Personajes" else o.shop_name
                         })
                 
                 serialized_offers = list(deduped_offers.values())
