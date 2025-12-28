@@ -664,7 +664,7 @@ def _render_purgatory_content(db):
             with st.expander(f"{item.scraped_name} - {item.shop_name} ({item.price}€)", expanded=(best_score > 0.8)):
                 if item.image_url:
                     # Optimized Thumbnails: Using CSS to limit height and avoid layout shift
-                    st.markdown(f'<img src="{item.image_url}" style="height:150px; border-radius:10px; margin-bottom:10px; object-fit: contain;">', unsafe_markdown=True)
+                    st.markdown(f'<img src="{item.image_url}" style="height:150px; border-radius:10px; margin-bottom:10px; object-fit: contain;">', unsafe_allow_html=True)
                 
                 if best_match:
                     confidence_color = "green" if best_score > 0.9 else ("orange" if best_score > 0.7 else "gray")
@@ -673,7 +673,7 @@ def _render_purgatory_content(db):
                             <span style="color: {confidence_color}; font-weight: bold;">🎯 Sugerencia del Oráculo:</span> {best_match.name} 
                             <br><small>Nivel de Confianza: {best_score:.2%}</small>
                         </div>
-                    """, unsafe_markdown=True)
+                    """, unsafe_allow_html=True)
                 
                 from src.web.shared import render_external_link
                 render_external_link(item.url, "Abrir Enlace", key_suffix=f"purg_{item.id}")
