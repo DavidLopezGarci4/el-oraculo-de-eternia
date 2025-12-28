@@ -331,15 +331,25 @@ def _render_mission_control(db, img_dir):
     
     active_scrapers = db.query(ScraperStatusModel).filter(ScraperStatusModel.status == "running").all()
     
-    # Target Selector
+    # Target Selector - Kaizen: Display with Accents but process without them
     import os
-    selected_shops = st.multiselect(
+    DISPLAY_MAP = {
+        "ActionToys": "ActionToys",
+        "Fantasia Personajes": "Fantasía Personajes",
+        "Frikiverso": "Frikiverso",
+        "Pixelatoy": "Pixelatoy",
+        "Electropolis": "Electropolis"
+    }
+    REVERSE_MAP = {v: k for k, v in DISPLAY_MAP.items()}
+
+    selected_shops_disp = st.multiselect(
         "Objetivos de Escaneo",
-        options=["ActionToys", "Fantasía Personajes", "Frikiverso", "Pixelatoy", "Electropolis"],
+        options=list(DISPLAY_MAP.values()),
         default=[],
         placeholder="Todos los objetivos (Por defecto)",
         disabled=bool(active_scrapers)
     )
+    selected_shops = [REVERSE_MAP[s] for s in selected_shops_disp]
     
     # Cooldown Check
     hot_targets = []

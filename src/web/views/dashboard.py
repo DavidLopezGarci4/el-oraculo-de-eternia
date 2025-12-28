@@ -117,8 +117,15 @@ def render(db: Session, img_dir, user):
             
         with c_stats2:
             st.caption("Resumen")
+            # Apply display mapping for the table/chart labels if needed
+            display_counts = counts.copy()
+            display_counts.index = [
+                "Fantasía Personajes" if x == "Fantasia Personajes" else x 
+                for x in display_counts.index
+            ]
+            
             st.dataframe(
-                counts, 
+                display_counts, 
                 column_config={"shop_name": "Tienda", "count": "Figuras"},
                 width="stretch"
             )

@@ -16,7 +16,7 @@ class FantasiaScraper(BaseScraper):
     Uses 'content' attribute for price reliability.
     """
     def __init__(self):
-        super().__init__(name="Fantasía Personajes", base_url="https://fantasiapersonajes.es/busqueda?controller=search&s=masters+of+the+universe")
+        super().__init__(name="Fantasia Personajes", base_url="https://fantasiapersonajes.es/busqueda?controller=search&s=masters+of+the+universe")
 
     async def run(self, context: BrowserContext) -> List[ScrapedOffer]:
         products: List[ScrapedOffer] = []
