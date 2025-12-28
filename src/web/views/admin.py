@@ -492,6 +492,18 @@ def _render_purgatory_content(db):
     from src.core.matching import SmartMatcher
     matcher = SmartMatcher()
     
+    # --- PHASE 20: Reactivity Fix ---
+    import streamlit as st
+    if "purgatory_selection" not in st.session_state:
+        st.session_state.purgatory_selection = set()
+
+    def _toggle_purg_sel(p_id):
+        if st.session_state.get(f"sel_{p_id}"):
+            st.session_state.purgatory_selection.add(p_id)
+        else:
+            st.session_state.purgatory_selection.discard(p_id)
+    # --------------------------------
+    
     # 1. Cargar catálogo para sugerencias (Cacheado por ejecución de renderizado)
     all_products = db.query(ProductModel).options(joinedload(ProductModel.offers)).all()
     
@@ -542,8 +554,7 @@ def _render_purgatory_content(db):
     pending_items = db.query(PendingMatchModel).offset(offset).limit(PAGE_SIZE).all()
 
     # --- Barra de Acciones en Bloque ---
-    if "purgatory_selection" not in st.session_state:
-        st.session_state.purgatory_selection = set()
+    # (Selection set already initialized at the top)
 
     c_bulk1, c_bulk2, c_bulk3 = st.columns([1, 1, 1])
     with c_bulk1:
@@ -643,35 +654,51 @@ def _render_purgatory_content(db):
     if "purgatory_suggestions" not in st.session_state:
         st.session_state.purgatory_suggestions = {}
 
-    @st.fragment
+    # --- RENDER LOOP ---
     def render_purgatory_item(item, all_products, matcher):
-        # Usar caché si existe para este item
+        # 1. Sugerencia Inteligente: Usar caché de IDs para evitar fallos de instancia
+        best_match = None
+        best_score = 0.0
+        
         if item.id in st.session_state.purgatory_suggestions:
-            best_match, best_score = st.session_state.purgatory_suggestions[item.id]
-            # Verificar si el producto aún existe en el catálogo actual
-            if best_match and best_match not in all_products:
-                 best_match = None # Reset if catálogo changed
+            sug_id, best_score = st.session_state.purgatory_suggestions[item.id]
+            # Recuperar el objeto de la lista actual (all_products)
+            if sug_id:
+                for p in all_products:
+                    if p.id == sug_id:
+                        best_match = p
+                        break
         else:
-            best_match = None
-            best_score = 0.0
+            # Recalcular
             for p in all_products:
                 _, score, _ = matcher.match(p.name, item.scraped_name, item.url, db_ean=p.ean, scraped_ean=item.ean)
                 if score > best_score:
                     best_score = score
                     best_match = p
-            st.session_state.purgatory_suggestions[item.id] = (best_match, best_score)
+            
+            # Guardar ID en caché
+            st.session_state.purgatory_suggestions[item.id] = (best_match.id if best_match else None, best_score)
 
         col_select, col_expander = st.columns([0.1, 9.9])
         
         with col_select:
             is_selected = item.id in st.session_state.purgatory_selection
-            if st.checkbox("Select", value=is_selected, key=f"sel_{item.id}", label_visibility="collapsed"):
-                st.session_state.purgatory_selection.add(item.id)
-            else:
-                st.session_state.purgatory_selection.discard(item.id)
+            st.checkbox(
+                "Select", 
+                value=is_selected, 
+                key=f"sel_{item.id}", 
+                label_visibility="collapsed",
+                on_change=_toggle_purg_sel,
+                args=(item.id,)
+            )
 
         with col_expander:
-            with st.expander(f"{item.scraped_name} - {item.shop_name} ({item.price}€)", expanded=(best_score > 0.8)):
+            from src.web.shared import normalize_shop_name
+            v_shop = normalize_shop_name(item.shop_name, mode="visual")
+            
+            # Etiqueta de confianza en el título
+            confidence_tag = f" | ✨ {best_score:.0%}" if best_score > 0.4 else ""
+            with st.expander(f"{item.scraped_name} - {v_shop} ({item.price}€){confidence_tag}", expanded=(best_score > 0.8)):
                 if item.image_url:
                     # Optimized Thumbnails: Using CSS to limit height and avoid layout shift
                     st.markdown(f'<img src="{item.image_url}" style="height:150px; border-radius:10px; margin-bottom:10px; object-fit: contain;">', unsafe_allow_html=True)
@@ -715,8 +742,10 @@ def _render_purgatory_content(db):
                             fresh_item = local_db.query(PendingMatchModel).filter(PendingMatchModel.id == item.id).first()
                             
                             if fresh_p and fresh_item:
+                                from src.web.shared import normalize_shop_name
+                                tech_shop = normalize_shop_name(fresh_item.shop_name, mode="technical")
                                 local_repo.add_offer(fresh_p, {
-                                    "shop_name": fresh_item.shop_name,
+                                    "shop_name": tech_shop,
                                     "price": fresh_item.price,
                                     "currency": fresh_item.currency,
                                     "url": fresh_item.url,

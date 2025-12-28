@@ -108,6 +108,10 @@ def render(db: Session, img_dir, user):
     
     offers_df = get_offers_overview()
     if not offers_df.empty:
+        # Normalización Visual Definitiva (KAIZEN) using shared helper
+        from src.web.shared import normalize_shop_name
+        offers_df['shop_name'] = offers_df['shop_name'].map(lambda x: normalize_shop_name(x, mode="visual"))
+        
         c_stats1, c_stats2 = st.columns([2, 1])
         
         with c_stats1:
@@ -117,15 +121,8 @@ def render(db: Session, img_dir, user):
             
         with c_stats2:
             st.caption("Resumen")
-            # Apply display mapping for the table/chart labels if needed
-            display_counts = counts.copy()
-            display_counts.index = [
-                "Fantasía Personajes" if x == "Fantasia Personajes" else x 
-                for x in display_counts.index
-            ]
-            
             st.dataframe(
-                display_counts, 
+                counts, 
                 column_config={"shop_name": "Tienda", "count": "Figuras"},
                 width="stretch"
             )

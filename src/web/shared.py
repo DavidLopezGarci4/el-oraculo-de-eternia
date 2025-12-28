@@ -46,3 +46,17 @@ def render_external_link(url: str, shop_name: str = None, price: float = None, t
         button_text = text
         
     st.link_button(f"🔗 {button_text}", url, use_container_width=True)
+
+def normalize_shop_name(name: str, mode: str = "technical") -> str:
+    """
+    Normalizes shop names to avoid duplicates due to accents/variants.
+    'technical': Fantasia Personajes (for DB)
+    'visual': Fantasía Personajes (for UI)
+    """
+    if not name: return name
+    
+    fantasia_variants = ["Fantasia", "Fantasia Personajes", "Fantasía Personajes"]
+    if name in fantasia_variants:
+        return "Fantasia Personajes" if mode == "technical" else "Fantasía Personajes"
+        
+    return name

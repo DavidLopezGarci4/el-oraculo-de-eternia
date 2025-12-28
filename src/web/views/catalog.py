@@ -65,10 +65,14 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
                 sorted_offers = sorted(p.offers, key=lambda x: x.id, reverse=True)
                 
                 for o in sorted_offers:
-                    if o.shop_name not in deduped_offers:
-                        deduped_offers[o.shop_name] = {
+                    # Normalize shop name for deduplication (Kaizen: Identity Union)
+                    from src.web.shared import normalize_shop_name
+                    norm_shop = normalize_shop_name(o.shop_name, mode="visual")
+                    
+                    if norm_shop not in deduped_offers:
+                        deduped_offers[norm_shop] = {
                             "id": o.id,
-                            "shop_name": o.shop_name,
+                            "shop_name": norm_shop,
                             "price": o.price,
                             "url": o.url
                         }
@@ -78,7 +82,7 @@ def render(db: Session, img_dir, user, repo: ProductRepository):
                         serialized_history.append({
                             "Fecha": ph.recorded_at,
                             "Precio": ph.price,
-                            "Tienda": "Fantasía Personajes" if o.shop_name == "Fantasia Personajes" else o.shop_name
+                            "Tienda": normalize_shop_name(o.shop_name, mode="visual")
                         })
                 
                 serialized_offers = list(deduped_offers.values())
