@@ -9,11 +9,14 @@ sys.path.append(str(root_path))
 
 from src.infrastructure.database import engine
 
-def run_rebrand():
-    # Force UTF-8 if possible or use safe strings
-    print("Iniciando Rebrand: Fantasia -> Fantasia Personajes...")
+def run_rebrand_v2():
+    print("Iniciando Rebrand Final: Unificacion tecnica (sin tildes)...")
     
-    updates = [
+    # Identidades a unificar hacia 'Fantasia Personajes'
+    variants = ["Fantasia", "Fantasía Personajes", "Fantasia Personajes"]
+    target = "Fantasia Personajes"
+    
+    tables = [
         ("offers", "shop_name"),
         ("pending_matches", "shop_name"),
         ("offer_history", "shop_name"),
@@ -25,26 +28,26 @@ def run_rebrand():
     total_affected = 0
     
     with engine.connect() as conn:
-        for table, column in updates:
+        for table, column in tables:
             try:
-                # Check if table exists
-                check = conn.execute(text(f"SELECT COUNT(*) FROM {table} WHERE {column} = 'Fantasia'"))
-                count = check.scalar()
+                # Unify all variants to the target
+                for variant in variants:
+                    if variant == target: continue
+                    
+                    check = conn.execute(text(f"SELECT COUNT(*) FROM {table} WHERE {column} = :var"), {"var": variant})
+                    count = check.scalar()
+                    
+                    if count > 0:
+                        stmt = text(f"UPDATE {table} SET {column} = :target WHERE {column} = :var")
+                        conn.execute(stmt, {"target": target, "var": variant})
+                        print(f"Tabla '{table}': {count} filas migradas de '{variant}' -> '{target}'")
+                        total_affected += count
                 
-                if count > 0:
-                    # Note: Using 'Fantasía Personajes' with accent. SQLAlchemy handles this via parameters usually.
-                    # But the print should be safe.
-                    stmt = text(f"UPDATE {table} SET {column} = :new_name WHERE {column} = 'Fantasia'")
-                    conn.execute(stmt, {"new_name": "Fantasía Personajes"})
-                    conn.commit()
-                    print(f"Tabla '{table}': {count} filas actualizadas.")
-                    total_affected += count
-                else:
-                    print(f"Tabla '{table}': Sin registros de 'Fantasia'.")
+                conn.commit()
             except Exception as e:
                 print(f"Error en tabla '{table}': {e}")
     
-    print(f"\nRebrand completado. Filas totales afectadas: {total_affected}")
+    print(f"\nRebrand tecnico completado. Filas totales afectadas: {total_affected}")
 
 if __name__ == "__main__":
-    run_rebrand()
+    run_rebrand_v2()
