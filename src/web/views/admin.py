@@ -335,7 +335,7 @@ def _render_mission_control(db, img_dir):
     import os
     selected_shops = st.multiselect(
         "Objetivos de Escaneo",
-        options=["ActionToys", "Fantasia", "Frikiverso", "Pixelatoy", "Electropolis"],
+        options=["ActionToys", "Fantasía Personajes", "Frikiverso", "Pixelatoy", "Electropolis"],
         default=[],
         placeholder="Todos los objetivos (Por defecto)",
         disabled=bool(active_scrapers)
